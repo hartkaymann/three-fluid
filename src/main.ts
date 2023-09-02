@@ -3,13 +3,20 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
-import fragmentShaderCode from './shaders/fragment.glsl'
+import fragmentShaderDiffuse from './shaders/diffuse.frag'
+import fragmentShaderSource from './shaders/source.frag'
+import vertexShaderBasic from './shaders/basic.vert'
 
-const width = window.innerWidth;
-const height = window.innerHeight;
+import PingPongBuffer from './lib/PingPongBuffer';
+
+let width = window.innerWidth;
+let height = window.innerHeight;
+
+const gridSize = new THREE.Vector2(30, 20);
+const gridResolution = new THREE.Vector2(300, 200);
 
 let scene: THREE.Scene;
-let camera: THREE.Camera;
+let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
 
 let controls: OrbitControls;
@@ -17,49 +24,66 @@ let stats: Stats;
 
 const init = () => {
   scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.z = 100;
+  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.z = 20;
 
   renderer = new THREE.WebGLRenderer();
+  renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
   document.body.appendChild(renderer.domElement);
 }
+init();
 
 let bufferScene: THREE.Scene;
 let bufferCamera: THREE.OrthographicCamera;
 
-let fbo1: THREE.WebGLRenderTarget;
-let fbo2: THREE.WebGLRenderTarget;
-let bufferObject: THREE.Mesh;
-let bufferMaterial: THREE.ShaderMaterial;
-let quad: THREE.Mesh;
-let finalMaterial: THREE.MeshBasicMaterial;
+let density: PingPongBuffer;
+let velocity: PingPongBuffer;
 
-const plane = new THREE.PlaneGeometry(width, height);
+let bufferObject: THREE.Mesh;
+let densityMaterial: THREE.ShaderMaterial;
+let sourceMaterial: THREE.ShaderMaterial;
+
+const plane = new THREE.PlaneGeometry(gridSize.x, gridSize.y);
 
 const init_rtt = () => {
   bufferScene = new THREE.Scene();
-  bufferCamera = new THREE.OrthographicCamera(width / -2, width / 2, height / 2, height / -2, 1, 1000);
+  bufferCamera = new THREE.OrthographicCamera(gridSize.x / -2, gridSize.x / 2, gridSize.y / 2, gridSize.y / -2, 1, 1000);
   bufferCamera.position.z = 2;
-
-  fbo1 = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter });
-  fbo2 = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.LinearFilter, magFilter: THREE.NearestFilter });
-
-  bufferMaterial = new THREE.ShaderMaterial({
+  
+  density = new PingPongBuffer(gridResolution.x, gridResolution.y);
+  velocity = new PingPongBuffer(gridResolution.x, gridResolution.y);
+  
+  sourceMaterial  = new THREE.RawShaderMaterial({
     uniforms: {
-      bufferTexture: { value: fbo1.texture },
-      res: { value: new THREE.Vector2(width, height) }
+      bufferTexture: { value: density.read.texture },
+      res: { value: new THREE.Vector2(gridResolution.x, gridResolution.y) },
+      source: { value: new THREE.Vector3(0, 0, 0) }
     },
-    fragmentShader: fragmentShaderCode
+    fragmentShader: fragmentShaderSource,
+    vertexShader: vertexShaderBasic
   });
 
-  bufferObject = new THREE.Mesh(plane, bufferMaterial)
+  densityMaterial = new THREE.RawShaderMaterial({
+    uniforms: {
+      bufferTexture: { value: density.read.texture },
+      res: { value: new THREE.Vector2(gridResolution.x, gridResolution.y) },
+    },
+    fragmentShader: fragmentShaderDiffuse,
+    vertexShader: vertexShaderBasic
+  });
+  
+  bufferObject = new THREE.Mesh(plane, densityMaterial)
   bufferScene.add(bufferObject);
-
+  
 }
+init_rtt();
+
+let quad: THREE.Mesh;
+let finalMaterial: THREE.MeshBasicMaterial;
 
 const init_scene = () => {
-  finalMaterial = new THREE.MeshBasicMaterial({ map: fbo2.texture });
+  finalMaterial = new THREE.MeshBasicMaterial({ map: density.write.texture, side: THREE.DoubleSide });
   quad = new THREE.Mesh(plane, finalMaterial);
   scene.add(quad);
 
@@ -67,24 +91,32 @@ const init_scene = () => {
   document.body.appendChild(stats.dom);
 
   controls = new OrbitControls(camera, renderer.domElement);
+  controls.enabled = false;
 }
+init_scene();
 
 const tick = () => {
   setTimeout(() => {
     requestAnimationFrame(tick);
   }, 1000 / 30);
 
-  // Draw to textureB
-  renderer.setRenderTarget(fbo2);
+  bufferObject.material = sourceMaterial;
+  sourceMaterial.uniforms.bufferTexture.value = density.read.texture;
+  renderer.setRenderTarget(density.write);
   renderer.clear();
   renderer.render(bufferScene, bufferCamera);
-
+  density.swap();
+  
+  bufferObject.material = densityMaterial;
+  densityMaterial.uniforms.bufferTexture.value = density.read.texture;
+  renderer.setRenderTarget(density.write);
+  renderer.clear();
+  renderer.render(bufferScene, bufferCamera);
+  density.swap();
+  
   // Swap textures
-  let temp = fbo1;
-  fbo1 = fbo2;
-  fbo2 = temp;
-  (quad.material as THREE.MeshBasicMaterial).map = fbo2.texture;
-  bufferMaterial.uniforms.bufferTexture.value = fbo1.texture;
+  (quad.material as THREE.MeshBasicMaterial).map = density.write.texture;
+
 
   // Required updates
   stats.update();
@@ -95,9 +127,51 @@ const tick = () => {
   renderer.clear();
   renderer.render(scene, camera);
 }
-
-init();
-init_rtt();
-init_scene();
 tick();
+
+
+// Controls
+let mouseDown = false;
+const update_mouse = (x: number, y: number) => {
+  let mouseX = x;
+  let mouseY = y;
+  sourceMaterial.uniforms.source.value.x = mouseX;
+  sourceMaterial.uniforms.source.value.y = mouseY;
+}
+
+document.onmousemove = function (event) {
+  let x = (event.clientX / width) * gridResolution.x;
+  let y = gridResolution.y - (event.clientY / height) * gridResolution.y;
+  update_mouse(x, y);
+}
+
+document.onmousedown = function (_) {
+  mouseDown = true;
+  sourceMaterial.uniforms.source.value.z = 0.1;
+}
+
+document.onmouseup = function (_) {
+  mouseDown = false;
+  sourceMaterial.uniforms.source.value.z = 0;
+}
+
+document.onkeydown = function (event) {
+  if (event.key == 'Control') {
+    controls.enabled = true;
+  }
+}
+
+document.onkeyup = function (event) {
+  if (event.key == 'Control') {
+    controls.enabled = false;
+  }
+}
+
+window.addEventListener('resize', () => {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+});
 
