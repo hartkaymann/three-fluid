@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { Clock } from 'three/src/core/Clock.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import fragmentShaderDiffuse from './shaders/diffuse.frag'
@@ -12,8 +13,8 @@ import PingPongBuffer from './lib/PingPongBuffer';
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const gridSize = new THREE.Vector2(30, 20);
-const gridResolution = new THREE.Vector2(300, 200);
+const domain = new THREE.Vector2(30, 20);
+const grid = new THREE.Vector2(300, 200);
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
@@ -21,11 +22,12 @@ let renderer: THREE.WebGLRenderer;
 
 let controls: OrbitControls;
 let stats: Stats;
+let clock: Clock;
 
 const init = () => {
   scene = new THREE.Scene();
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.z = 20;
+  camera.position.z = 15;
 
   renderer = new THREE.WebGLRenderer();
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -44,20 +46,20 @@ let bufferObject: THREE.Mesh;
 let densityMaterial: THREE.ShaderMaterial;
 let sourceMaterial: THREE.ShaderMaterial;
 
-const plane = new THREE.PlaneGeometry(gridSize.x, gridSize.y);
 
 const init_rtt = () => {
+  const plane = new THREE.PlaneGeometry(grid.x - 2, grid.y - 2);
   bufferScene = new THREE.Scene();
-  bufferCamera = new THREE.OrthographicCamera(gridSize.x / -2, gridSize.x / 2, gridSize.y / 2, gridSize.y / -2, 1, 1000);
-  bufferCamera.position.z = 2;
-  
-  density = new PingPongBuffer(gridResolution.x, gridResolution.y);
-  velocity = new PingPongBuffer(gridResolution.x, gridResolution.y);
-  
-  sourceMaterial  = new THREE.RawShaderMaterial({
+  bufferCamera = new THREE.OrthographicCamera(grid.x / -2, grid.x / 2, grid.y / 2, grid.y / -2, 0.1, 100);
+  bufferCamera.position.z = 1;
+
+  density = new PingPongBuffer(grid.x, grid.y);
+  velocity = new PingPongBuffer(grid.x, grid.y);
+
+  sourceMaterial = new THREE.RawShaderMaterial({
     uniforms: {
       bufferTexture: { value: density.read.texture },
-      res: { value: new THREE.Vector2(gridResolution.x, gridResolution.y) },
+      res: { value: new THREE.Vector2(grid.x, grid.y) },
       source: { value: new THREE.Vector3(0, 0, 0) }
     },
     fragmentShader: fragmentShaderSource,
@@ -67,15 +69,16 @@ const init_rtt = () => {
   densityMaterial = new THREE.RawShaderMaterial({
     uniforms: {
       bufferTexture: { value: density.read.texture },
-      res: { value: new THREE.Vector2(gridResolution.x, gridResolution.y) },
+      res: { value: new THREE.Vector2(grid.x, grid.y) },
+      dt: { value: 0.0 }
     },
     fragmentShader: fragmentShaderDiffuse,
     vertexShader: vertexShaderBasic
   });
-  
+
   bufferObject = new THREE.Mesh(plane, densityMaterial)
   bufferScene.add(bufferObject);
-  
+
 }
 init_rtt();
 
@@ -84,14 +87,21 @@ let finalMaterial: THREE.MeshBasicMaterial;
 
 const init_scene = () => {
   finalMaterial = new THREE.MeshBasicMaterial({ map: density.write.texture, side: THREE.DoubleSide });
-  quad = new THREE.Mesh(plane, finalMaterial);
+  quad = new THREE.Mesh(
+    new THREE.PlaneGeometry(domain.x, domain.y),
+    finalMaterial
+  );
   scene.add(quad);
+  scene.background = new THREE.Color(0x050505);
 
   stats = new Stats();
   document.body.appendChild(stats.dom);
 
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enabled = false;
+
+  clock = new Clock();
+  clock.start();
 }
 init_scene();
 
@@ -106,16 +116,17 @@ const tick = () => {
   renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   density.swap();
-  
+
   bufferObject.material = densityMaterial;
   densityMaterial.uniforms.bufferTexture.value = density.read.texture;
+  densityMaterial.uniforms.dt.value = clock.getDelta();
   renderer.setRenderTarget(density.write);
   renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   density.swap();
-  
+
   // Swap textures
-  (quad.material as THREE.MeshBasicMaterial).map = density.write.texture;
+  (quad.material as THREE.MeshBasicMaterial).map = density.read.texture;
 
 
   // Required updates
@@ -140,8 +151,8 @@ const update_mouse = (x: number, y: number) => {
 }
 
 document.onmousemove = function (event) {
-  let x = (event.clientX / width) * gridResolution.x;
-  let y = gridResolution.y - (event.clientY / height) * gridResolution.y;
+  let x = (event.clientX / width) * grid.x;
+  let y = grid.y - (event.clientY / height) * grid.y;
   update_mouse(x, y);
 }
 
