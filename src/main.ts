@@ -6,8 +6,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import fragmentShaderSource from './shaders/source.frag'
 import fragmentShaderAdvect from './shaders/advect.frag'
-import fragmentShaderDiffuse from './shaders/jacobivector.frag'
-import fragmentShaderPressure from './shaders/jacobiscalar.frag'
+import fragmentShaderJacobi from './shaders/jacobi.frag'
 import fragmentShaderDivergence from './shaders/divergence.frag'
 import fragmentShaderGradient from './shaders/divergence.frag'
 
@@ -45,7 +44,6 @@ let bufferObject: THREE.Mesh;
 let sourceMaterial: THREE.ShaderMaterial;
 let diffuseMaterial: THREE.ShaderMaterial;
 let advectionMaterial: THREE.ShaderMaterial;
-let pressureMaterial: THREE.ShaderMaterial;
 let divergenceMaterial: THREE.ShaderMaterial;
 let gradientMaterial: THREE.ShaderMaterial;
 
@@ -55,7 +53,7 @@ let matFinal: THREE.MeshBasicMaterial;
 
 type DebugMaterial = {
   name: string;
-  map: THREE.Texture;
+  buffer: PingPongBuffer;
 }
 const arrDebug: DebugMaterial[] = [];
 
@@ -70,10 +68,10 @@ function init() {
   pressure = new PingPongBuffer(grid.x, grid.y);
   divergence = new PingPongBuffer(grid.x, grid.y);
 
-  arrDebug.push({ name: "Density", map: density.read.texture });
-  arrDebug.push({ name: "Velocity", map: velocity.read.texture });
-  arrDebug.push({ name: "Pressure", map: pressure.read.texture });
-  arrDebug.push({ name: "Divergence", map: divergence.read.texture });
+  arrDebug.push({ name: "Density", buffer: density });
+  arrDebug.push({ name: "Velocity", buffer: velocity });
+  arrDebug.push({ name: "Pressure", buffer: pressure });
+  arrDebug.push({ name: "Divergence", buffer: divergence });
 
   for (let i = 0; i < 4; i++) {
     const scene = new THREE.Scene();
@@ -103,7 +101,9 @@ function init() {
     scene.userData.controls = controls;
 
     const geometry = new THREE.PlaneGeometry(grid.x, grid.y)
-    const material = new THREE.MeshBasicMaterial({ map: arrDebug[i].map });
+    const material = new THREE.MeshBasicMaterial({ map: arrDebug[i].buffer.read.texture });
+    scene.userData.buffer = arrDebug[i].buffer;
+
     let mesh = new THREE.Mesh(geometry, material);
     mesh.name = "plane"
     scene.add(mesh);
@@ -120,7 +120,7 @@ function init() {
     uniforms: {
       res: { value: grid },
       source: { value: new THREE.Vector3(0, 0, 0) },
-      texDensity: { value: density.read.texture }
+      x: { value: density.read.texture }
     },
     fragmentShader: fragmentShaderSource,
     vertexShader: vertexShaderBasic
@@ -128,12 +128,13 @@ function init() {
 
   diffuseMaterial = new THREE.RawShaderMaterial({
     uniforms: {
-      density: { value: density.read.texture },
       res: { value: grid },
+      x: { value: density.read.texture },
+      b: { value: density.read.texture },
       alpha: { value: -1.0 },
-      beta: { value: 4.0 }
+      rbeta: { value: 4.0 }
     },
-    fragmentShader: fragmentShaderDiffuse,
+    fragmentShader: fragmentShaderJacobi,
     vertexShader: vertexShaderBasic
   });
 
@@ -156,18 +157,6 @@ function init() {
       velocity: { value: velocity.read.texture }
     },
     fragmentShader: fragmentShaderDivergence,
-    vertexShader: vertexShaderBasic
-  });
-
-  pressureMaterial = new THREE.RawShaderMaterial({
-    uniforms: {
-      res: { value: grid },
-      pressure: { value: pressure.read.texture },
-      divergence: { value: divergence.read.texture },
-      alpha: { value: -1.0 },
-      rbeta: { value: 4.0 }
-    },
-    fragmentShader: fragmentShaderPressure,
     vertexShader: vertexShaderBasic
   });
 
@@ -228,7 +217,6 @@ function step() {
   const timestep = clock.getDelta();
 
   // 1 - Advection
-  // 1.1 - Advect velocity
   //TODO: Dissipation should not affect velocity, so set it to one here and change value to original before advecting density
   bufferObject.material = advectionMaterial;
   advectionMaterial.uniforms.dt.value = timestep;
@@ -239,48 +227,34 @@ function step() {
   renderer.render(bufferScene, bufferCamera);
   velocity.swap(); //TODO: Maybe do this only after advection is finished, otherwise density advection will happen with "future" velocity already
 
-  // 1.2 - Advect density
-  advectionMaterial.uniforms.advected.value = density.read.texture;
-  advectionMaterial.uniforms.velocity.value = velocity.read.texture;
-  renderer.setRenderTarget(density.write);
-  renderer.clear();
-  renderer.render(bufferScene, bufferCamera);
-  density.swap();
-
-  // 2 - Diffuse
+  // 2 - Diffusion
   bufferObject.material = diffuseMaterial;
   let alpha = 1.0 / (viscosity * timestep);
   diffuseMaterial.uniforms.alpha.value = alpha;
-  diffuseMaterial.uniforms.beta.value = 4 + alpha;
+  diffuseMaterial.uniforms.rbeta.value = 1 / (4 + alpha);
   for (let i = 0; i < 20; i++) {
-    diffuseMaterial.uniforms.density.value = density.read.texture;
-    renderer.setRenderTarget(density.write);
+    diffuseMaterial.uniforms.x.value = velocity.read.texture;
+    diffuseMaterial.uniforms.b.value = velocity.read.texture;
+    renderer.setRenderTarget(velocity.write);
     renderer.clear();
     renderer.render(bufferScene, bufferCamera);
-    density.swap();
+    velocity.swap();
   }
-
+  
   // 3 - Add external forces  
+  // 3.1 - Add velocity
   bufferObject.material = sourceMaterial;
-  sourceMaterial.uniforms.texDensity.value = density.read.texture;
-  renderer.setRenderTarget(density.write);
-  renderer.clear();
-  renderer.render(bufferScene, bufferCamera);
-  density.swap();
-
-  bufferObject.material = sourceMaterial;
-  sourceMaterial.uniforms.texDensity.value = velocity.read.texture;
+  sourceMaterial.uniforms.x.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write);
   renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   velocity.swap();
-
+  
   // 4 - Projection
   project();
-
   // 5 - Render 
   // 5.1 - Render app scene
-  (quad.material as THREE.MeshBasicMaterial).map = density.read.texture;
+  (quad.material as THREE.MeshBasicMaterial).map = velocity.read.texture;
   renderer.setRenderTarget(null);
   renderer.clear();
   renderer.setViewport(0, 0, width, height);
@@ -305,12 +279,17 @@ function step() {
     renderer.setViewport(left, bottom, width, height);
     renderer.setScissor(left, bottom, width, height);
 
+    let plane = scene.getObjectByName("plane") as THREE.Mesh;
+    let material = plane.material as THREE.MeshBasicMaterial;
+    material.map = scene.userData.buffer.read.texture;
+
     const camera = scene.userData.camera;
     renderer.render(scene, camera);
   });
 }
 
 function project() {
+  
   // 4.1 - Divergence
   bufferObject.material = divergenceMaterial;
   divergenceMaterial.uniforms.velocity.value = velocity.read.texture;
@@ -318,20 +297,20 @@ function project() {
   renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   divergence.swap();
-
+  
   // 4.2 - Poisson Pressure
-  bufferObject.material = pressureMaterial;
-  pressureMaterial.uniforms.alpha.value = -1.0;
-  pressureMaterial.uniforms.rbeta.value = 1 / 4;
-  pressureMaterial.uniforms.divergence.value = divergence.read.texture;
-  for (let i = 0; i < 20; i++) {
-    pressureMaterial.uniforms.pressure.value = pressure.read.texture;
+  bufferObject.material = diffuseMaterial;
+  diffuseMaterial.uniforms.alpha.value = -1.0;
+  diffuseMaterial.uniforms.rbeta.value = 1 / 4;
+  diffuseMaterial.uniforms.b.value = divergence.read.texture;
+  for (let i = 0; i < 40; i++) {
+    diffuseMaterial.uniforms.x.value = pressure.read.texture;
     renderer.setRenderTarget(pressure.write);
-    renderer.clear();
+    renderer.clear(); 
     renderer.render(bufferScene, bufferCamera);
     pressure.swap();
   }
-
+  
   // 4.3 - Gradient
   bufferObject.material = gradientMaterial;
   gradientMaterial.uniforms.pressure.value = pressure.read.texture;

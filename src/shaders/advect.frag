@@ -2,6 +2,7 @@ precision highp float;
 
 uniform float dt; // detla time
 uniform vec2 res; // grid resolution
+uniform float dissipation;
 
 uniform sampler2D advected;
 uniform sampler2D velocity;
@@ -27,4 +28,5 @@ void main( ) {
 
     vec2 pos = gl_FragCoord.xy - dt * texture2D( velocity, uv ).xy;
     gl_FragColor = vec4( bilerp( advected, pos ), 0.0, 1.0 );
+    //gl_FragColor = vec4(texture2D(advected, pos).xy, 0.0, 1.0);
 }
