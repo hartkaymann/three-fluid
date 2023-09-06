@@ -1,12 +1,12 @@
 precision highp float;
 
-uniform vec2 res; // renderer resolution
-uniform sampler2D bufferTexture;
+uniform vec2 res; // grid resolution
+uniform sampler2D texDensity;
 uniform vec3 source;
 
 void main( ) {
     vec2 pixel = gl_FragCoord.xy / res.xy;
-    gl_FragColor = texture2D( bufferTexture, pixel );
+    gl_FragColor = texture2D( texDensity, pixel );
 
     float dist = distance( source.xy, gl_FragCoord.xy );
     gl_FragColor.rgb += source.z * max( 15.0 - dist, 0.0 );
