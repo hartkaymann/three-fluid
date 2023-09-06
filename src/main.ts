@@ -23,25 +23,15 @@ const grid = new THREE.Vector2(300, 200);
 
 let viscosity = 0.3;
 
-let scene: THREE.Scene;
-let camera: THREE.PerspectiveCamera;
 let renderer: THREE.WebGLRenderer;
+
+const scenes: THREE.Scene[] = [];
+let sceneApp: THREE.Scene;
+let cameraApp: THREE.PerspectiveCamera;
 
 let controls: OrbitControls;
 let stats: Stats;
 let clock: Clock;
-
-const init = () => {
-  scene = new THREE.Scene();
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.z = 15;
-
-  renderer = new THREE.WebGLRenderer();
-  renderer.setPixelRatio(window.devicePixelRatio);
-  renderer.setSize(width, height);
-  document.body.appendChild(renderer.domElement);
-}
-init();
 
 let bufferScene: THREE.Scene;
 let bufferCamera: THREE.OrthographicCamera;
@@ -60,16 +50,71 @@ let divergenceMaterial: THREE.ShaderMaterial;
 let gradientMaterial: THREE.ShaderMaterial;
 
 
-const init_rtt = () => {
-  const plane = new THREE.PlaneGeometry(grid.x - 2, grid.y - 2);
-  bufferScene = new THREE.Scene();
-  bufferCamera = new THREE.OrthographicCamera(grid.x / -2, grid.x / 2, grid.y / 2, grid.y / -2, 0.1, 100);
-  bufferCamera.position.z = 1;
+let quad: THREE.Mesh;
+let matFinal: THREE.MeshBasicMaterial;
+
+type DebugMaterial = {
+  name: string;
+  map: THREE.Texture;
+}
+const arrDebug: DebugMaterial[] = [];
+
+function init() {
+  let canvas = <HTMLCanvasElement>document.getElementById('c');
+  let container = document.getElementById('content');
+
+  sceneApp = new THREE.Scene();
 
   density = new PingPongBuffer(grid.x, grid.y);
   velocity = new PingPongBuffer(grid.x, grid.y);
   pressure = new PingPongBuffer(grid.x, grid.y);
   divergence = new PingPongBuffer(grid.x, grid.y);
+
+  arrDebug.push({ name: "Density", map: density.read.texture });
+  arrDebug.push({ name: "Velocity", map: velocity.read.texture });
+  arrDebug.push({ name: "Pressure", map: pressure.read.texture });
+  arrDebug.push({ name: "Divergence", map: divergence.read.texture });
+
+  for (let i = 0; i < 4; i++) {
+    const scene = new THREE.Scene();
+
+    const element = document.createElement('div');
+    element.className = 'debug-item';
+
+    const sceneElement = document.createElement('div');
+    element.appendChild(sceneElement);
+
+    const descriptionElemen = document.createElement('div');
+    descriptionElemen.innerText = arrDebug[i].name;
+    element.appendChild(descriptionElemen);
+
+    scene.userData.element = sceneElement;
+    container?.appendChild(element);
+
+    const camera = new THREE.OrthographicCamera(grid.x / -2, grid.x / 2, grid.y / 2, grid.y / -2, 1, 10);
+    camera.position.z = 2;
+    scene.userData.camera = camera;
+
+    const controls = new OrbitControls(scene.userData.camera, scene.userData.element);
+    controls.minDistance = 2;
+    controls.maxDistance = 5;
+    controls.enablePan = false;
+    controls.enableZoom = false;
+    scene.userData.controls = controls;
+
+    const geometry = new THREE.PlaneGeometry(grid.x, grid.y)
+    const material = new THREE.MeshBasicMaterial({ map: arrDebug[i].map });
+    let mesh = new THREE.Mesh(geometry, material);
+    mesh.name = "plane"
+    scene.add(mesh);
+
+    scenes.push(scene);
+  }
+
+  cameraApp = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+  cameraApp.position.z = 15;
+
+  const plane = new THREE.PlaneGeometry(grid.x - 2, grid.y - 2);
 
   sourceMaterial = new THREE.RawShaderMaterial({
     uniforms: {
@@ -85,8 +130,8 @@ const init_rtt = () => {
     uniforms: {
       density: { value: density.read.texture },
       res: { value: grid },
-      alpha: { value: 0.0 },
-      rbeta: { value: 0.0 }
+      alpha: { value: -1.0 },
+      beta: { value: 4.0 }
     },
     fragmentShader: fragmentShaderDiffuse,
     vertexShader: vertexShaderBasic
@@ -119,8 +164,8 @@ const init_rtt = () => {
       res: { value: grid },
       pressure: { value: pressure.read.texture },
       divergence: { value: divergence.read.texture },
-      alpha: { value: 0.0 },
-      rbeta: { value: 0.0 }
+      alpha: { value: -1.0 },
+      rbeta: { value: 4.0 }
     },
     fragmentShader: fragmentShaderPressure,
     vertexShader: vertexShaderBasic
@@ -137,39 +182,44 @@ const init_rtt = () => {
     fragmentShader: fragmentShaderGradient
   })
 
+
+  bufferScene = new THREE.Scene();
+  bufferCamera = new THREE.OrthographicCamera(grid.x / -2, grid.x / 2, grid.y / 2, grid.y / -2, 0.1, 100);
+  bufferCamera.position.z = 1;
+
   bufferObject = new THREE.Mesh(plane, diffuseMaterial)
   bufferScene.add(bufferObject);
 
-}
-init_rtt();
-
-let quad: THREE.Mesh;
-let finalMaterial: THREE.MeshBasicMaterial;
-
-const init_scene = () => {
-  finalMaterial = new THREE.MeshBasicMaterial({ map: density.write.texture, side: THREE.DoubleSide });
+  matFinal = new THREE.MeshBasicMaterial({ map: density.write.texture, side: THREE.DoubleSide });
   quad = new THREE.Mesh(
     new THREE.PlaneGeometry(domain.x, domain.y),
-    finalMaterial
+    matFinal
   );
-  scene.add(quad);
-  scene.background = new THREE.Color(0x050505);
+  sceneApp.add(quad);
+
+
+  renderer = new THREE.WebGLRenderer({ canvas: canvas });
+  renderer.setClearColor(0x0e0e0e)
+  renderer.setPixelRatio(window.devicePixelRatio);
+  renderer.setSize(width, height);
+  renderer.setScissorTest(true);
+  renderer.setAnimationLoop(step);
 
   stats = new Stats();
   document.body.appendChild(stats.dom);
 
-  controls = new OrbitControls(camera, renderer.domElement);
+  controls = new OrbitControls(cameraApp, renderer.domElement);
   controls.enabled = false;
 
   clock = new Clock();
   clock.start();
 }
-init_scene();
+init();
 
-const step = () => {
-  setTimeout(() => {
-    requestAnimationFrame(step);
-  }, 1000 / 30);
+function step() {
+  // setTimeout(() => {
+  //   requestAnimationFrame(step);
+  // }, 1000 / 30);
 
   // Required updates
   stats.update();
@@ -199,10 +249,9 @@ const step = () => {
 
   // 2 - Diffuse
   bufferObject.material = diffuseMaterial;
-  diffuseMaterial.uniforms.dt.value = timestep;
-  let alpha = viscosity * timestep;
+  let alpha = 1.0 / (viscosity * timestep);
   diffuseMaterial.uniforms.alpha.value = alpha;
-  diffuseMaterial.uniforms.beta.value = 1 / (4 + alpha);
+  diffuseMaterial.uniforms.beta.value = 4 + alpha;
   for (let i = 0; i < 20; i++) {
     diffuseMaterial.uniforms.density.value = density.read.texture;
     renderer.setRenderTarget(density.write);
@@ -219,9 +268,49 @@ const step = () => {
   renderer.render(bufferScene, bufferCamera);
   density.swap();
 
+  bufferObject.material = sourceMaterial;
+  sourceMaterial.uniforms.texDensity.value = velocity.read.texture;
+  renderer.setRenderTarget(velocity.write);
+  renderer.clear();
+  renderer.render(bufferScene, bufferCamera);
+  velocity.swap();
 
   // 4 - Projection
+  project();
 
+  // 5 - Render 
+  // 5.1 - Render app scene
+  (quad.material as THREE.MeshBasicMaterial).map = density.read.texture;
+  renderer.setRenderTarget(null);
+  renderer.clear();
+  renderer.setViewport(0, 0, width, height);
+  renderer.setScissor(0, 0, width - 350, height);
+  renderer.render(sceneApp, cameraApp);
+
+  // 5.2 - Render debug scenes
+  scenes.forEach(function (scene) {
+    const element = <HTMLElement>scene.userData.element;
+    const rect = element.getBoundingClientRect();
+
+    if (rect.bottom < 0 || rect.top > renderer.domElement.clientHeight ||
+      rect.right < 0 || rect.left > renderer.domElement.clientWidth) {
+      return; // it's off screen
+    }
+
+    const width = rect.right - rect.left;
+    const height = rect.bottom - rect.top;
+    const left = rect.left;
+    const bottom = renderer.domElement.clientHeight - rect.bottom;
+
+    renderer.setViewport(left, bottom, width, height);
+    renderer.setScissor(left, bottom, width, height);
+
+    const camera = scene.userData.camera;
+    renderer.render(scene, camera);
+  });
+}
+
+function project() {
   // 4.1 - Divergence
   bufferObject.material = divergenceMaterial;
   divergenceMaterial.uniforms.velocity.value = velocity.read.texture;
@@ -245,20 +334,14 @@ const step = () => {
 
   // 4.3 - Gradient
   bufferObject.material = gradientMaterial;
-  pressureMaterial.uniforms.pressure.value = pressure.read.texture;
-  pressureMaterial.uniforms.velocity.value = velocity.read.texture;
+  gradientMaterial.uniforms.pressure.value = pressure.read.texture;
+  gradientMaterial.uniforms.velocity.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write);
   renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   velocity.swap();
-
-  // Render scene
-  (quad.material as THREE.MeshBasicMaterial).map = density.read.texture;
-  renderer.setRenderTarget(null);
-  renderer.clear();
-  renderer.render(scene, camera);
 }
-step();
+//step();
 
 
 // Controls
@@ -301,8 +384,8 @@ document.onkeyup = function (event) {
 window.addEventListener('resize', () => {
   width = window.innerWidth;
   height = window.innerHeight;
-  camera.aspect = width / height;
-  camera.updateProjectionMatrix();
+  cameraApp.aspect = width / height;
+  cameraApp.updateProjectionMatrix();
   renderer.setSize(width, height);
 });
 

@@ -18,9 +18,5 @@ void main( ) {
   float up      = texture2D( pressure, vec2( uv.x, uv.y + dyp ) ).x;
   float down    = texture2D( pressure, vec2( uv.x, uv.y - dyp ) ).x;
 
-    //float minimum = 0.003;
-
-    //if ( factor >= -minimum && factor < 0.0 )
-      //  factor = -minimum;
   gl_FragColor = vec4( ( left + right + up + down + alpha * center ) * rbeta, 0.0, 0.0, 1.0 );
 }

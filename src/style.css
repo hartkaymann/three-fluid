@@ -1,10 +1,46 @@
-html, body {
+html,
+body {
   margin: 0;
   height: 100%;
 }
 
-#app {
-  width: 100%;
+#c {
+  position: absolute;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+#content {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 350px;
   height: 100%;
-  display: block;
+  display: flex;
+  flex-flow: column nowrap;
+  justify-content: flex-start;
+  align-items: flex-end;
+  align-content: flex-start;
+  overflow: hidden;
+}
+
+.debug-item {
+  display: inline-block;
+  margin: 1em;
+  padding: 1em;
+  box-shadow: 1px 2px 4px 0px rgba(0, 0, 0, 0.25);
+}
+
+.debug-item>div:nth-child(1) {
+  width: 300px;
+  height: 200px;
+}
+
+.debug-item>div:nth-child(2) {
+  color: #888;
+  font-family: sans-serif;
+  font-size: large;
+  width: 200px;
+  margin-top: 0.5em;
 }
