@@ -10,6 +10,7 @@ import fragmentShaderJacobi from './shaders/jacobi.frag'
 import fragmentShaderDivergence from './shaders/divergence.frag'
 import fragmentShaderGradient from './shaders/gradient.frag'
 import fragmentShaderDisplay from './shaders/display.frag'
+import fragmentShaderBoundary from './shaders/boundary.frag'
 
 import vertexShaderBasic from './shaders/basic.vert'
 
@@ -38,6 +39,8 @@ let clock: Clock;
 
 let bufferScene: THREE.Scene;
 let bufferCamera: THREE.OrthographicCamera;
+let boundaryScene: THREE.Scene;
+let boundaryLines: THREE.Mesh[] = [];
 
 let density: PingPongBuffer;
 let velocity: PingPongBuffer;
@@ -50,6 +53,7 @@ let diffuseMaterial: THREE.RawShaderMaterial;
 let advectionMaterial: THREE.RawShaderMaterial;
 let divergenceMaterial: THREE.RawShaderMaterial;
 let gradientMaterial: THREE.RawShaderMaterial;
+let boundaryMaterial: THREE.RawShaderMaterial;
 let displayMaterial: THREE.RawShaderMaterial;
 
 let quad: THREE.Mesh;
@@ -138,7 +142,7 @@ function init() {
       x: { value: density.read.texture },
       b: { value: density.read.texture },
       alpha: { value: -1.0 },
-      rbeta: { value: 4.0 }
+      rbeta: { value: 1.0 / 4.0 }
     },
     fragmentShader: fragmentShaderJacobi,
     vertexShader: vertexShaderBasic
@@ -175,7 +179,18 @@ function init() {
     },
     vertexShader: vertexShaderBasic,
     fragmentShader: fragmentShaderGradient
-  })
+  });
+
+  boundaryMaterial = new THREE.RawShaderMaterial({
+    uniforms: {
+      res: { value: grid },
+      read: { value: velocity.read.texture },
+      offset: { value: new THREE.Vector2(0.0, 0.0) },
+      scale: { value: 1.0 },
+    },
+    vertexShader: vertexShaderBasic,
+    fragmentShader: fragmentShaderBoundary
+  });
 
   displayMaterial = new THREE.RawShaderMaterial({
     uniforms: {
@@ -186,8 +201,7 @@ function init() {
     vertexShader: vertexShaderBasic,
     fragmentShader: fragmentShaderDisplay,
     side: THREE.DoubleSide
-  })
-
+  });
 
   bufferScene = new THREE.Scene();
   bufferCamera = new THREE.OrthographicCamera(grid.x / -2, grid.x / 2, grid.y / 2, grid.y / -2, 0.1, 100);
@@ -196,19 +210,32 @@ function init() {
   bufferObject = new THREE.Mesh(plane, diffuseMaterial)
   bufferScene.add(bufferObject);
 
+  boundaryScene = new THREE.Scene();
+  const points = [];
+  points.push(new THREE.Vector2(0, 0));
+  points.push(new THREE.Vector2(grid.x, grid.y / 2));
+  points.push(new THREE.Vector2(grid.x / 2, grid.y / 2));
+  points.push(new THREE.Vector2(grid.x / -2, grid.y / 2));
+
+  let line1 = new THREE.Mesh(
+    new THREE.BufferGeometry().setFromPoints([points[0], points[1]]),
+    boundaryMaterial
+  );
+
+  boundaryLines.push(line1);
+
   quad = new THREE.Mesh(
     new THREE.PlaneGeometry(domain.x, domain.y),
     displayMaterial
   );
   sceneApp.add(quad);
 
-
   renderer = new THREE.WebGLRenderer({ canvas: canvas });
   renderer.setClearColor(0x0e0e0e)
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
   renderer.setScissorTest(true);
-  renderer.setAnimationLoop(step);
+  renderer.autoClear = false;
 
   stats = new Stats();
   document.body.appendChild(stats.dom);
@@ -222,9 +249,9 @@ function init() {
 init();
 
 function step() {
-  // setTimeout(() => {
-  //   requestAnimationFrame(step);
-  // }, 1000 / 30);
+  setTimeout(() => {
+    requestAnimationFrame(step);
+  }, 1000 / 60);
 
   // Required updates
   stats.update();
@@ -241,14 +268,16 @@ function step() {
   renderer.setRenderTarget(velocity.write)
   renderer.clear();
   renderer.render(bufferScene, bufferCamera);
-  velocity.swap(); //TODO: Maybe do this only after advection is finished, otherwise density advection will happen with "future" velocity already
+  velocity.swap(); 
+
+  boundary();
 
   // 2 - Diffusion
   bufferObject.material = diffuseMaterial;
   let alpha = 1.0 / (viscosity * timestep);
   diffuseMaterial.uniforms.alpha.value = alpha;
-  diffuseMaterial.uniforms.rbeta.value = 1 / (4 + alpha);
-  for (let i = 0; i < 20; i++) {
+  diffuseMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
+  for (let i = 0; i < 0; i++) {
     diffuseMaterial.uniforms.x.value = velocity.read.texture;
     diffuseMaterial.uniforms.b.value = velocity.read.texture;
     renderer.setRenderTarget(velocity.write);
@@ -261,15 +290,15 @@ function step() {
   addForce();
 
   // 4 - Projection
-  project();
+  //project();
 
   // 5 - Render 
   // 5.1 - Render app scene
-  displayMaterial.uniforms.read.value = velocity.read.texture;
+  //displayMaterial.uniforms.read.value = velocity.read.texture;
   renderer.setRenderTarget(null);
-  renderer.clear();
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
+  renderer.clear();
   renderer.render(sceneApp, cameraApp);
 
   // 5.2 - Render debug scenes
@@ -298,13 +327,14 @@ function step() {
     renderer.render(scene, camera);
   });
 }
+step();
 
 function addForce() {
   if (!mouse.left)
     return;
-  
-    if(mouse.motions.length == 0) 
-  return;
+
+  if (mouse.motions.length == 0)
+    return;
 
   bufferObject.material = sourceMaterial;
   sourceMaterial.uniforms.read.value = velocity.read.texture;
@@ -329,7 +359,7 @@ function project() {
   // 4.2 - Poisson Pressure
   bufferObject.material = diffuseMaterial;
   diffuseMaterial.uniforms.alpha.value = -1.0;
-  diffuseMaterial.uniforms.rbeta.value = 1 / 4;
+  diffuseMaterial.uniforms.rbeta.value = 1.0 / 4.0;
   diffuseMaterial.uniforms.b.value = divergence.read.texture;
   for (let i = 0; i < 40; i++) {
     diffuseMaterial.uniforms.x.value = pressure.read.texture;
@@ -348,7 +378,19 @@ function project() {
   renderer.render(bufferScene, bufferCamera);
   velocity.swap();
 }
-//step();
+
+function boundary() {
+  boundaryMaterial.uniforms.read.value = velocity.read.texture;
+  renderer.setRenderTarget(velocity.write);
+
+  boundaryLines.forEach(line => {
+    boundaryMaterial.uniforms.offset.value = new THREE.Vector2(0, 0);
+    boundaryMaterial.uniforms.scale.value = 1;
+    boundaryScene.add(line);
+    renderer.render(boundaryScene, bufferCamera);
+    boundaryScene.remove(line);
+  });
+}
 
 window.addEventListener('resize', () => {
   width = window.innerWidth;

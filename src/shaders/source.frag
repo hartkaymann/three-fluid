@@ -13,14 +13,14 @@ void main( ) {
     float radius = 0.1;
 
     // position comes in normalized and upside down
-    vec2 pos = vec2(position.x, 1.0 - position.y) * res.xy;
-    vec3 col = color * res.xyy;
+    vec2 pos = vec2( position.x, 1.0 - position.y ) * res.xy;
+    vec2 col = color.xy * res.xy;
 
     vec2 uv = gl_FragCoord.xy / res.xy;
-    vec3 base = texture2D( read, uv ).xyz;
+    vec2 base = texture2D( read, uv ).xy;
     vec2 coord = pos.xy - gl_FragCoord.xy;
-    vec3 splat = col * gauss( coord, res.x * radius );
-    gl_FragColor = vec4( base + splat, 1.0 );
+    vec2 splat = col * gauss( coord, res.x * radius );
+    gl_FragColor = vec4( base + splat, 0.0, 1.0 );
     //gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
-    gl_FragColor = vec4(position.xy, 0.0, 1.0);
+    //gl_FragColor = vec4(position.xy, 0.0, 1.0);
 }
