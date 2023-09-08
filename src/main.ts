@@ -8,11 +8,13 @@ import fragmentShaderSource from './shaders/source.frag'
 import fragmentShaderAdvect from './shaders/advect.frag'
 import fragmentShaderJacobi from './shaders/jacobi.frag'
 import fragmentShaderDivergence from './shaders/divergence.frag'
-import fragmentShaderGradient from './shaders/divergence.frag'
+import fragmentShaderGradient from './shaders/gradient.frag'
+import fragmentShaderDisplay from './shaders/display.frag'
 
 import vertexShaderBasic from './shaders/basic.vert'
 
 import PingPongBuffer from './lib/PingPongBuffer';
+import Mouse from './lib/Mouse';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
@@ -23,6 +25,8 @@ const grid = new THREE.Vector2(300, 200);
 let viscosity = 0.3;
 
 let renderer: THREE.WebGLRenderer;
+
+let mouse: Mouse;
 
 const scenes: THREE.Scene[] = [];
 let sceneApp: THREE.Scene;
@@ -41,15 +45,14 @@ let pressure: PingPongBuffer;
 let divergence: PingPongBuffer;
 
 let bufferObject: THREE.Mesh;
-let sourceMaterial: THREE.ShaderMaterial;
-let diffuseMaterial: THREE.ShaderMaterial;
-let advectionMaterial: THREE.ShaderMaterial;
-let divergenceMaterial: THREE.ShaderMaterial;
-let gradientMaterial: THREE.ShaderMaterial;
-
+let sourceMaterial: THREE.RawShaderMaterial;
+let diffuseMaterial: THREE.RawShaderMaterial;
+let advectionMaterial: THREE.RawShaderMaterial;
+let divergenceMaterial: THREE.RawShaderMaterial;
+let gradientMaterial: THREE.RawShaderMaterial;
+let displayMaterial: THREE.RawShaderMaterial;
 
 let quad: THREE.Mesh;
-let matFinal: THREE.MeshBasicMaterial;
 
 type DebugMaterial = {
   name: string;
@@ -60,6 +63,8 @@ const arrDebug: DebugMaterial[] = [];
 function init() {
   let canvas = <HTMLCanvasElement>document.getElementById('c');
   let container = document.getElementById('content');
+
+  mouse = new Mouse();
 
   sceneApp = new THREE.Scene();
 
@@ -119,8 +124,9 @@ function init() {
   sourceMaterial = new THREE.RawShaderMaterial({
     uniforms: {
       res: { value: grid },
-      source: { value: new THREE.Vector3(0, 0, 0) },
-      x: { value: density.read.texture }
+      position: { value: new THREE.Vector2(0, 0) },
+      color: { value: new THREE.Vector3(0, 0, 0) },
+      read: { value: density.read.texture }
     },
     fragmentShader: fragmentShaderSource,
     vertexShader: vertexShaderBasic
@@ -163,12 +169,23 @@ function init() {
   gradientMaterial = new THREE.RawShaderMaterial({
     uniforms: {
       res: { value: grid },
-      halfdrx: { value: 0.5 / 1.0 },
+      halfrdx: { value: 0.5 / 1.0 },
       pressure: { value: pressure.read.texture },
       velocity: { value: velocity.read.texture },
     },
     vertexShader: vertexShaderBasic,
     fragmentShader: fragmentShaderGradient
+  })
+
+  displayMaterial = new THREE.RawShaderMaterial({
+    uniforms: {
+      read: { value: velocity.read.texture },
+      bias: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
+      scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
+    },
+    vertexShader: vertexShaderBasic,
+    fragmentShader: fragmentShaderDisplay,
+    side: THREE.DoubleSide
   })
 
 
@@ -179,10 +196,9 @@ function init() {
   bufferObject = new THREE.Mesh(plane, diffuseMaterial)
   bufferScene.add(bufferObject);
 
-  matFinal = new THREE.MeshBasicMaterial({ map: density.write.texture, side: THREE.DoubleSide });
   quad = new THREE.Mesh(
     new THREE.PlaneGeometry(domain.x, domain.y),
-    matFinal
+    displayMaterial
   );
   sceneApp.add(quad);
 
@@ -240,21 +256,16 @@ function step() {
     renderer.render(bufferScene, bufferCamera);
     velocity.swap();
   }
-  
+
   // 3 - Add external forces  
-  // 3.1 - Add velocity
-  bufferObject.material = sourceMaterial;
-  sourceMaterial.uniforms.x.value = velocity.read.texture;
-  renderer.setRenderTarget(velocity.write);
-  renderer.clear();
-  renderer.render(bufferScene, bufferCamera);
-  velocity.swap();
-  
+  addForce();
+
   // 4 - Projection
   project();
+
   // 5 - Render 
   // 5.1 - Render app scene
-  (quad.material as THREE.MeshBasicMaterial).map = velocity.read.texture;
+  displayMaterial.uniforms.read.value = velocity.read.texture;
   renderer.setRenderTarget(null);
   renderer.clear();
   renderer.setViewport(0, 0, width, height);
@@ -288,8 +299,25 @@ function step() {
   });
 }
 
-function project() {
+function addForce() {
+  if (!mouse.left)
+    return;
   
+    if(mouse.motions.length == 0) 
+  return;
+
+  bufferObject.material = sourceMaterial;
+  sourceMaterial.uniforms.read.value = velocity.read.texture;
+  sourceMaterial.uniforms.position.value = mouse.position;
+  sourceMaterial.uniforms.color.value = mouse.motions[mouse.motions.length - 1]?.drag;
+  renderer.setRenderTarget(velocity.write);
+  renderer.clear();
+  renderer.render(bufferScene, bufferCamera);
+  velocity.swap();
+}
+
+function project() {
+
   // 4.1 - Divergence
   bufferObject.material = divergenceMaterial;
   divergenceMaterial.uniforms.velocity.value = velocity.read.texture;
@@ -297,7 +325,7 @@ function project() {
   renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   divergence.swap();
-  
+
   // 4.2 - Poisson Pressure
   bufferObject.material = diffuseMaterial;
   diffuseMaterial.uniforms.alpha.value = -1.0;
@@ -306,11 +334,11 @@ function project() {
   for (let i = 0; i < 40; i++) {
     diffuseMaterial.uniforms.x.value = pressure.read.texture;
     renderer.setRenderTarget(pressure.write);
-    renderer.clear(); 
+    renderer.clear();
     renderer.render(bufferScene, bufferCamera);
     pressure.swap();
   }
-  
+
   // 4.3 - Gradient
   bufferObject.material = gradientMaterial;
   gradientMaterial.uniforms.pressure.value = pressure.read.texture;
@@ -321,44 +349,6 @@ function project() {
   velocity.swap();
 }
 //step();
-
-
-// Controls
-let mouseDown = false;
-const update_mouse = (x: number, y: number) => {
-  let mouseX = x;
-  let mouseY = y;
-  sourceMaterial.uniforms.source.value.x = mouseX;
-  sourceMaterial.uniforms.source.value.y = mouseY;
-}
-
-document.onmousemove = function (event) {
-  let x = (event.clientX / width) * grid.x;
-  let y = grid.y - (event.clientY / height) * grid.y;
-  update_mouse(x, y);
-}
-
-document.onmousedown = function (_) {
-  mouseDown = true;
-  sourceMaterial.uniforms.source.value.z = 0.1;
-}
-
-document.onmouseup = function (_) {
-  mouseDown = false;
-  sourceMaterial.uniforms.source.value.z = 0;
-}
-
-document.onkeydown = function (event) {
-  if (event.key == 'Control') {
-    controls.enabled = true;
-  }
-}
-
-document.onkeyup = function (event) {
-  if (event.key == 'Control') {
-    controls.enabled = false;
-  }
-}
 
 window.addEventListener('resize', () => {
   width = window.innerWidth;

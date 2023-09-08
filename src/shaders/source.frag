@@ -1,15 +1,26 @@
 precision highp float;
 
 uniform vec2 res; // grid resolution
-uniform sampler2D x;
-uniform vec3 source;
+uniform sampler2D read;
+uniform vec2 position;
+uniform vec3 color;
+
+float gauss( vec2 p, float r ) {
+    return exp( -dot( p, p ) / r );
+}
 
 void main( ) {
-    vec2 pixel = gl_FragCoord.xy / res.xy;
-    gl_FragColor = texture2D( x, pixel );
+    float radius = 0.1;
 
-    float dist = distance( source.xy, gl_FragCoord.xy );
-    gl_FragColor.rgb += source.z * max( 15.0 - dist, 0.0 );
+    // position comes in normalized and upside down
+    vec2 pos = vec2(position.x, 1.0 - position.y) * res.xy;
+    vec3 col = color * res.xyy;
 
+    vec2 uv = gl_FragCoord.xy / res.xy;
+    vec3 base = texture2D( read, uv ).xyz;
+    vec2 coord = pos.xy - gl_FragCoord.xy;
+    vec3 splat = col * gauss( coord, res.x * radius );
+    gl_FragColor = vec4( base + splat, 1.0 );
     //gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+    gl_FragColor = vec4(position.xy, 0.0, 1.0);
 }

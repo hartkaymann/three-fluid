@@ -2,7 +2,7 @@ precision highp float;
 
 uniform vec2 res; // grid resolution
 
-uniform float halfdrx;
+uniform float halfrdx;
 
 uniform sampler2D pressure;
 uniform sampler2D velocity;
@@ -18,7 +18,7 @@ void main( ) {
     float up    = texture2D(pressure, uv + vec2(0.0, dyp)).x;
 
     vec2 center = texture2D(velocity, uv).xy;
-    vec2 gradient = halfdrx * vec2(right - left,  up - down);
+    vec2 gradient = halfrdx * vec2(right - left,  up - down);
 
     gl_FragColor = vec4(center - gradient, 0.0, 1.0);
 }
