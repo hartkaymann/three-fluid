@@ -40,7 +40,7 @@ let clock: Clock;
 let bufferScene: THREE.Scene;
 let bufferCamera: THREE.OrthographicCamera;
 let boundaryScene: THREE.Scene;
-let boundaryLines: THREE.Mesh[] = [];
+let boundaries: THREE.LineSegments[] = [];
 
 let density: PingPongBuffer;
 let velocity: PingPongBuffer;
@@ -212,17 +212,31 @@ function init() {
 
   boundaryScene = new THREE.Scene();
   const points = [];
-  points.push(new THREE.Vector2(0, 0));
-  points.push(new THREE.Vector2(grid.x, grid.y / 2));
+  points.push(new THREE.Vector2(grid.x / -2 + 1, grid.y / 2));
   points.push(new THREE.Vector2(grid.x / 2, grid.y / 2));
-  points.push(new THREE.Vector2(grid.x / -2, grid.y / 2));
+  points.push(new THREE.Vector2(grid.x / 2, grid.y / -2 + 1));
+  points.push(new THREE.Vector2(grid.x / -2, grid.y / -2 + 1));
 
-  let line1 = new THREE.Mesh(
+  // Top
+  boundaries.push(new THREE.LineSegments(
     new THREE.BufferGeometry().setFromPoints([points[0], points[1]]),
     boundaryMaterial
-  );
-
-  boundaryLines.push(line1);
+  ));
+  // Right
+  boundaries.push(new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints([points[1], points[2]]),
+    boundaryMaterial
+  ));
+  // Bottom
+  boundaries.push(new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints([points[2], points[3]]),
+    boundaryMaterial
+  ));
+  // Left
+  boundaries.push(new THREE.LineSegments(
+    new THREE.BufferGeometry().setFromPoints([points[3], points[0]]),
+    boundaryMaterial
+  ));
 
   quad = new THREE.Mesh(
     new THREE.PlaneGeometry(domain.x, domain.y),
@@ -230,7 +244,7 @@ function init() {
   );
   sceneApp.add(quad);
 
-  renderer = new THREE.WebGLRenderer({ canvas: canvas });
+  renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
   renderer.setClearColor(0x0e0e0e)
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
@@ -266,11 +280,12 @@ function step() {
   advectionMaterial.uniforms.advected.value = velocity.read.texture;
   advectionMaterial.uniforms.velocity.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write)
-  renderer.clear();
   renderer.render(bufferScene, bufferCamera);
-  velocity.swap(); 
+  velocity.swap();
 
-  boundary();
+  // 3 - Add external forces  
+  addForce();
+  //boundary();
 
   // 2 - Diffusion
   bufferObject.material = diffuseMaterial;
@@ -281,13 +296,11 @@ function step() {
     diffuseMaterial.uniforms.x.value = velocity.read.texture;
     diffuseMaterial.uniforms.b.value = velocity.read.texture;
     renderer.setRenderTarget(velocity.write);
-    renderer.clear();
     renderer.render(bufferScene, bufferCamera);
     velocity.swap();
   }
+  boundary();
 
-  // 3 - Add external forces  
-  addForce();
 
   // 4 - Projection
   //project();
@@ -298,7 +311,6 @@ function step() {
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
-  renderer.clear();
   renderer.render(sceneApp, cameraApp);
 
   // 5.2 - Render debug scenes
@@ -341,7 +353,6 @@ function addForce() {
   sourceMaterial.uniforms.position.value = mouse.position;
   sourceMaterial.uniforms.color.value = mouse.motions[mouse.motions.length - 1]?.drag;
   renderer.setRenderTarget(velocity.write);
-  renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   velocity.swap();
 }
@@ -352,7 +363,6 @@ function project() {
   bufferObject.material = divergenceMaterial;
   divergenceMaterial.uniforms.velocity.value = velocity.read.texture;
   renderer.setRenderTarget(divergence.write);
-  renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   divergence.swap();
 
@@ -374,7 +384,6 @@ function project() {
   gradientMaterial.uniforms.pressure.value = pressure.read.texture;
   gradientMaterial.uniforms.velocity.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write);
-  renderer.clear();
   renderer.render(bufferScene, bufferCamera);
   velocity.swap();
 }
@@ -383,7 +392,7 @@ function boundary() {
   boundaryMaterial.uniforms.read.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write);
 
-  boundaryLines.forEach(line => {
+  boundaries.forEach(line => {
     boundaryMaterial.uniforms.offset.value = new THREE.Vector2(0, 0);
     boundaryMaterial.uniforms.scale.value = 1;
     boundaryScene.add(line);

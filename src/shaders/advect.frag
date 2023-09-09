@@ -8,7 +8,6 @@ uniform sampler2D advected;
 uniform sampler2D velocity;
 
 // Biliear Interpolation
-// Source: https://github.com/dushyantbehl/2D-fluid-simulation/blob/master/pShader.cg
 vec3 f4texRECTbilerp( sampler2D tex, vec2 p ) {
   vec4 ij; // i0, j0, i1, j1
   ij.xy = floor( p - 0.5 ) + 0.5;
@@ -30,9 +29,9 @@ void main( ) {
 
   vec2 pos = gl_FragCoord.xy - dt * texture2D( velocity, uv ).xy;
   
-  gl_FragColor = vec4( dissipation * f4texRECTbilerp( advected, pos ), 1.0 );
+  gl_FragColor = vec4( dissipation * f4texRECTbilerp( advected, pos ).xyz, 1.0 );
   
-  vec2 vel = texture2D(velocity, uv).xy; 
-  vec3 newVel = texture2D( advected, uv - vel ).xyz;
-  gl_FragColor = vec4( newVel, 1.0 );
+  //vec2 vel = dt * texture2D(velocity, uv).xy; 
+  //vec3 newVel = texture2D( advected, uv - vel ).xyz;
+  //gl_FragColor = vec4( newVel, 1.0 );
 }

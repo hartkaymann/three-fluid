@@ -9,8 +9,8 @@ uniform float rbeta;
 
 void main( ) {
     vec2 uv = gl_FragCoord.xy / res.xy;
-    float dxp = 2.0 / res.x; // size of a single x pixel
-    float dyp = 2.0 / res.y; // size of a single y pixel
+    float dxp = 1.0 / res.x; // size of a single x pixel
+    float dyp = 1.0 / res.y; // size of a single y pixel
 
     vec2 center = texture2D( b, uv ).xy;
     vec2 right  = texture2D( x, uv + vec2( dxp, 0.0 ) ).xy;
