@@ -43,7 +43,7 @@ export default class Mouse {
 
         if (this.left || this.right) {
             let dx = x - this.position.x;
-            let dy = y - this.position.y;
+            let dy = -1.0 *( y - this.position.y);
 
             let drag = new THREE.Vector2(
                 Math.min(Math.max(dx, -1), 1),

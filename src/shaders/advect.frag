@@ -29,5 +29,10 @@ void main( ) {
   vec2 uv = gl_FragCoord.xy / res.xy;
 
   vec2 pos = gl_FragCoord.xy - dt * texture2D( velocity, uv ).xy;
+  
   gl_FragColor = vec4( dissipation * f4texRECTbilerp( advected, pos ), 1.0 );
+  
+  vec2 vel = texture2D(velocity, uv).xy; 
+  vec3 newVel = texture2D( advected, uv - vel ).xyz;
+  gl_FragColor = vec4( newVel, 1.0 );
 }
