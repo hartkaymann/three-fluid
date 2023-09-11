@@ -10,8 +10,8 @@ void main( ) {
     float dxp = 1.0 / res.x; // size of a single x pixel
     float dyp = 1.0 / res.y; // size of a single y pixel
 
-    float left  = texture2D( velocity, uv + vec2( dxp, 0.0 ) ).x;
-    float right = texture2D( velocity, uv - vec2( dxp, 0.0 ) ).x;
+    float right = texture2D( velocity, uv + vec2( dxp, 0.0 ) ).x;
+    float left  = texture2D( velocity, uv - vec2( dxp, 0.0 ) ).x;
     float up    = texture2D( velocity, uv + vec2( 0.0, dyp ) ).y;
     float down  = texture2D( velocity, uv - vec2( 0.0, dyp ) ).y;
 

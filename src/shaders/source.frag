@@ -10,8 +10,8 @@ float gauss( vec2 p, float r ) {
 }
 
 void main( ) {
-    float radius = 0.1;
-    float force = 10.0;
+    float radius = 0.01;
+    float force = 1.0;
 
     // position comes in normalized and upside down
     vec2 pos = vec2( position.x, 1.0 - position.y ) * res.xy;

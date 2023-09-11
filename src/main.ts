@@ -16,7 +16,6 @@ import vertexShaderBasic from './shaders/basic.vert'
 
 import PingPongBuffer from './lib/PingPongBuffer';
 import Mouse from './lib/Mouse';
-import { userData } from 'three/examples/jsm/nodes/Nodes.js';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
@@ -25,6 +24,7 @@ const domain = new THREE.Vector2(30, 20);
 const grid = new THREE.Vector2(300, 200);
 
 let viscosity = 0.3;
+let timestep = 1.0;
 
 let renderer: THREE.WebGLRenderer;
 
@@ -50,7 +50,7 @@ let divergence: PingPongBuffer;
 
 let bufferObject: THREE.Mesh;
 let sourceMaterial: THREE.RawShaderMaterial;
-let diffuseMaterial: THREE.RawShaderMaterial;
+let jacobiMaterial: THREE.RawShaderMaterial;
 let advectionMaterial: THREE.RawShaderMaterial;
 let divergenceMaterial: THREE.RawShaderMaterial;
 let gradientMaterial: THREE.RawShaderMaterial;
@@ -137,7 +137,7 @@ function init() {
     vertexShader: vertexShaderBasic
   });
 
-  diffuseMaterial = new THREE.RawShaderMaterial({
+  jacobiMaterial = new THREE.RawShaderMaterial({
     uniforms: {
       res: { value: grid },
       x: { value: density.read.texture },
@@ -155,7 +155,7 @@ function init() {
       velocity: { value: velocity.read.texture },
       res: { value: grid },
       dt: { value: 0.0 },
-      dissipation: { value: 1.0 }
+      dissipation: { value: 0.998 }
     },
     fragmentShader: fragmentShaderAdvect,
     vertexShader: vertexShaderBasic
@@ -208,7 +208,7 @@ function init() {
   bufferCamera = new THREE.OrthographicCamera(grid.x / -2, grid.x / 2, grid.y / 2, grid.y / -2, 0.1, 100);
   bufferCamera.position.z = 1;
 
-  bufferObject = new THREE.Mesh(plane, diffuseMaterial)
+  bufferObject = new THREE.Mesh(plane, jacobiMaterial)
   bufferScene.add(bufferObject);
 
   boundaryScene = new THREE.Scene();
@@ -282,8 +282,6 @@ function step() {
   stats.update();
   controls.update();
 
-  const timestep = clock.getDelta();
-
   // 1 - Advection
   //TODO: Dissipation should not affect velocity, so set it to one here and change value to original before advecting density
   bufferObject.material = advectionMaterial;
@@ -295,35 +293,35 @@ function step() {
   velocity.swap();  
   renderer.setRenderTarget(null);
 
-  boundary();
+  boundary(velocity);
 
-  // 3 - Add external forces  
+  // 2 - Add external forces  
   addForce();
-  boundary();
+  boundary(velocity);
 
-  // 2 - Diffusion
-  bufferObject.material = diffuseMaterial;
+  // 3 - Diffusion
+  bufferObject.material = jacobiMaterial;
   let alpha = 1.0 / (viscosity * timestep);
-  diffuseMaterial.uniforms.alpha.value = alpha;
-  diffuseMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
-  for (let i = 0; i < 1; i++) {
-    diffuseMaterial.uniforms.x.value = velocity.read.texture;
-    diffuseMaterial.uniforms.b.value = velocity.read.texture;
+  jacobiMaterial.uniforms.alpha.value = alpha;
+  jacobiMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
+  for (let i = 0; i < 20; i++) {
+    jacobiMaterial.uniforms.x.value = velocity.read.texture;
+    jacobiMaterial.uniforms.b.value = velocity.read.texture;
     renderer.setRenderTarget(velocity.write);
     renderer.render(bufferScene, bufferCamera);
     velocity.swap();
     renderer.setRenderTarget(null);
 
-    boundary();
+    boundary(velocity);
   }
 
 
   // 4 - Projection
-  //project();
+  project();
 
   // 5 - Render 
   // 5.1 - Render app scene
-  //displayMaterial.uniforms.read.value = velocity.read.texture;
+  displayMaterial.uniforms.read.value = velocity.read.texture;
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
@@ -385,38 +383,39 @@ function project() {
   renderer.setRenderTarget(null);
 
   // 4.2 - Poisson Pressure
-  bufferObject.material = diffuseMaterial;
-  diffuseMaterial.uniforms.alpha.value = -1.0;
-  diffuseMaterial.uniforms.rbeta.value = 1.0 / 4.0;
-  diffuseMaterial.uniforms.b.value = divergence.read.texture;
-  for (let i = 0; i < 40; i++) {
-    diffuseMaterial.uniforms.x.value = pressure.read.texture;
+  bufferObject.material = jacobiMaterial;
+  jacobiMaterial.uniforms.alpha.value = -1.0;
+  jacobiMaterial.uniforms.rbeta.value = 1.0 / 4.0;
+  for (let i = 0; i < 50; i++) {
+    jacobiMaterial.uniforms.b.value = divergence.read.texture;
+    jacobiMaterial.uniforms.x.value = pressure.read.texture;
     renderer.setRenderTarget(pressure.write);
     renderer.render(bufferScene, bufferCamera);
     pressure.swap();
-    renderer.setRenderTarget(null);
-
-    boundary();
+    
+    boundary(pressure, 1);
   }
+  renderer.setRenderTarget(null);
 
   // 4.3 - Gradient
   bufferObject.material = gradientMaterial;
   gradientMaterial.uniforms.pressure.value = pressure.read.texture;
   gradientMaterial.uniforms.velocity.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write);
-  //renderer.render(bufferScene, bufferCamera);
-  //velocity.swap();
+  renderer.render(bufferScene, bufferCamera);
+  velocity.swap();
   renderer.setRenderTarget(null);
 
+  boundary(velocity);
 }
 
-function boundary() {
-  boundaryMaterial.uniforms.read.value = velocity.read.texture;
-  renderer.setRenderTarget(velocity.write);
+function boundary(output: PingPongBuffer, scale: number = -1.0) {
+  boundaryMaterial.uniforms.read.value = output.read.texture;
+  renderer.setRenderTarget(output.write);
   
   boundaries.forEach(line => {
     boundaryMaterial.uniforms.offset.value = line.userData.offset;
-    boundaryMaterial.uniforms.scale.value = -1;
+    boundaryMaterial.uniforms.scale.value = scale;
     boundaryScene.add(line);
     renderer.render(boundaryScene, bufferCamera);
     boundaryScene.remove(line);
