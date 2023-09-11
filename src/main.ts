@@ -16,6 +16,7 @@ import vertexShaderBasic from './shaders/basic.vert'
 
 import PingPongBuffer from './lib/PingPongBuffer';
 import Mouse from './lib/Mouse';
+import { userData } from 'three/examples/jsm/nodes/Nodes.js';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
@@ -215,28 +216,38 @@ function init() {
   points.push(new THREE.Vector2(grid.x / -2 + 1, grid.y / 2));
   points.push(new THREE.Vector2(grid.x / 2, grid.y / 2));
   points.push(new THREE.Vector2(grid.x / 2, grid.y / -2 + 1));
-  points.push(new THREE.Vector2(grid.x / -2, grid.y / -2 + 1));
+  points.push(new THREE.Vector2(grid.x / -2, grid.y / -2));
 
   // Top
-  boundaries.push(new THREE.LineSegments(
+  const lineT = new THREE.LineSegments(
     new THREE.BufferGeometry().setFromPoints([points[0], points[1]]),
-    boundaryMaterial
-  ));
+    boundaryMaterial);
+  lineT.userData.offset = new THREE.Vector2(0, -1);
+  boundaries.push(lineT);
+
   // Right
-  boundaries.push(new THREE.LineSegments(
+  const lineR = new THREE.LineSegments(
     new THREE.BufferGeometry().setFromPoints([points[1], points[2]]),
-    boundaryMaterial
-  ));
+    boundaryMaterial,
+  );
+  lineR.userData.offset = new THREE.Vector2(-1, 0);
+  boundaries.push(lineR);
+
   // Bottom
-  boundaries.push(new THREE.LineSegments(
+  const lineB = new THREE.LineSegments(
     new THREE.BufferGeometry().setFromPoints([points[2], points[3]]),
     boundaryMaterial
-  ));
+  );
+  lineB.userData.offset = new THREE.Vector2(0, 1);
+  boundaries.push(lineB);
+
   // Left
-  boundaries.push(new THREE.LineSegments(
+  const lineL = new THREE.LineSegments(
     new THREE.BufferGeometry().setFromPoints([points[3], points[0]]),
     boundaryMaterial
-  ));
+  );
+  lineL.userData.offset = new THREE.Vector2(1, 0);
+  boundaries.push(lineL);
 
   quad = new THREE.Mesh(
     new THREE.PlaneGeometry(domain.x, domain.y),
@@ -281,25 +292,30 @@ function step() {
   advectionMaterial.uniforms.velocity.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write)
   renderer.render(bufferScene, bufferCamera);
-  velocity.swap();
+  velocity.swap();  
+  renderer.setRenderTarget(null);
+
+  boundary();
 
   // 3 - Add external forces  
   addForce();
-  //boundary();
+  boundary();
 
   // 2 - Diffusion
   bufferObject.material = diffuseMaterial;
   let alpha = 1.0 / (viscosity * timestep);
   diffuseMaterial.uniforms.alpha.value = alpha;
   diffuseMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
-  for (let i = 0; i < 0; i++) {
+  for (let i = 0; i < 1; i++) {
     diffuseMaterial.uniforms.x.value = velocity.read.texture;
     diffuseMaterial.uniforms.b.value = velocity.read.texture;
     renderer.setRenderTarget(velocity.write);
     renderer.render(bufferScene, bufferCamera);
     velocity.swap();
+    renderer.setRenderTarget(null);
+
+    boundary();
   }
-  boundary();
 
 
   // 4 - Projection
@@ -355,6 +371,7 @@ function addForce() {
   renderer.setRenderTarget(velocity.write);
   renderer.render(bufferScene, bufferCamera);
   velocity.swap();
+  renderer.setRenderTarget(null);
 }
 
 function project() {
@@ -365,6 +382,7 @@ function project() {
   renderer.setRenderTarget(divergence.write);
   renderer.render(bufferScene, bufferCamera);
   divergence.swap();
+  renderer.setRenderTarget(null);
 
   // 4.2 - Poisson Pressure
   bufferObject.material = diffuseMaterial;
@@ -374,9 +392,11 @@ function project() {
   for (let i = 0; i < 40; i++) {
     diffuseMaterial.uniforms.x.value = pressure.read.texture;
     renderer.setRenderTarget(pressure.write);
-    renderer.clear();
     renderer.render(bufferScene, bufferCamera);
     pressure.swap();
+    renderer.setRenderTarget(null);
+
+    boundary();
   }
 
   // 4.3 - Gradient
@@ -384,21 +404,25 @@ function project() {
   gradientMaterial.uniforms.pressure.value = pressure.read.texture;
   gradientMaterial.uniforms.velocity.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write);
-  renderer.render(bufferScene, bufferCamera);
-  velocity.swap();
+  //renderer.render(bufferScene, bufferCamera);
+  //velocity.swap();
+  renderer.setRenderTarget(null);
+
 }
 
 function boundary() {
   boundaryMaterial.uniforms.read.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write);
-
+  
   boundaries.forEach(line => {
-    boundaryMaterial.uniforms.offset.value = new THREE.Vector2(0, 0);
-    boundaryMaterial.uniforms.scale.value = 1;
+    boundaryMaterial.uniforms.offset.value = line.userData.offset;
+    boundaryMaterial.uniforms.scale.value = -1;
     boundaryScene.add(line);
     renderer.render(boundaryScene, bufferCamera);
     boundaryScene.remove(line);
   });
+
+  renderer.setRenderTarget(null);
 }
 
 window.addEventListener('resize', () => {
