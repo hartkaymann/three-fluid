@@ -11,6 +11,7 @@ import fragmentShaderDivergence from './shaders/divergence.frag'
 import fragmentShaderGradient from './shaders/gradient.frag'
 import fragmentShaderDisplay from './shaders/displayvector.frag'
 import fragmentShaderBoundary from './shaders/boundary.frag'
+import fragmentShaderGravity from './shaders/gravity.frag'
 
 import vertexShaderBasic from './shaders/basic.vert'
 
@@ -23,9 +24,10 @@ let height = window.innerHeight;
 const domain = new THREE.Vector2(30, 20);
 const grid = new THREE.Vector2(300, 200);
 
-let viscosity = 0.3;
+let applyViscosity = false;
+let viscosity = 0.01;
 let timestep = 1.0;
-let dissipation = 0.998;
+let dissipation = 0.99;
 
 let renderer: THREE.WebGLRenderer;
 
@@ -56,6 +58,7 @@ let advectionMaterial: THREE.RawShaderMaterial;
 let divergenceMaterial: THREE.RawShaderMaterial;
 let gradientMaterial: THREE.RawShaderMaterial;
 let boundaryMaterial: THREE.RawShaderMaterial;
+let gravityMaterial: THREE.RawShaderMaterial;
 let displayMaterial: THREE.RawShaderMaterial;
 
 let quad: THREE.Mesh;
@@ -194,6 +197,16 @@ function init() {
     fragmentShader: fragmentShaderBoundary
   });
 
+  gravityMaterial = new THREE.RawShaderMaterial({
+    uniforms: {
+      read: { value: velocity.read.texture },
+      res: { value: grid },
+      dt: { value: 0.0 }
+    },
+    vertexShader: vertexShaderBasic,
+    fragmentShader: fragmentShaderGravity
+  });
+
   displayMaterial = new THREE.RawShaderMaterial({
     uniforms: {
       read: { value: velocity.read.texture },
@@ -206,8 +219,8 @@ function init() {
   });
 
   bufferScene = new THREE.Scene();
-  bufferCamera = new THREE.OrthographicCamera(grid.x / -2, grid.x / 2, grid.y / 2, grid.y / -2, 0.1, 100);
-  bufferCamera.position.z = 1;
+  bufferCamera = new THREE.OrthographicCamera(grid.x / -2 - 0.1, grid.x / 2 + 0.1, grid.y / 2, grid.y / -2, 1, 100);
+  bufferCamera.position.z = 2;
 
   bufferObject = new THREE.Mesh(plane, jacobiMaterial)
   bufferScene.add(bufferObject);
@@ -216,19 +229,29 @@ function init() {
   const points = [];
   points.push(new THREE.Vector2(grid.x / -2 + 1, grid.y / 2));
   points.push(new THREE.Vector2(grid.x / 2, grid.y / 2));
-  points.push(new THREE.Vector2(grid.x / 2, grid.y / -2 + 1));
-  points.push(new THREE.Vector2(grid.x / -2, grid.y / -2));
+  points.push(new THREE.Vector2(grid.x / 2, grid.y / -2));
+  points.push(new THREE.Vector2(grid.x / -2, grid.y / -2 + 1));
 
   // Top
   const lineT = new THREE.LineSegments(
-    new THREE.BufferGeometry().setFromPoints([points[0], points[1]]),
+    new THREE.BufferGeometry().setFromPoints(
+      [
+        new THREE.Vector2(grid.x / -2 + 1, grid.y / 2),
+        new THREE.Vector2(grid.x / 2, grid.y / 2)
+      ]
+    ),
     boundaryMaterial);
   lineT.userData.offset = new THREE.Vector2(0, -1);
   boundaries.push(lineT);
 
   // Right
   const lineR = new THREE.LineSegments(
-    new THREE.BufferGeometry().setFromPoints([points[1], points[2]]),
+    new THREE.BufferGeometry().setFromPoints(
+      [
+        new THREE.Vector2(grid.x / 2, grid.y / 2 - 1),
+        new THREE.Vector2(grid.x / 2, grid.y / -2)
+      ]
+    ),
     boundaryMaterial,
   );
   lineR.userData.offset = new THREE.Vector2(-1, 0);
@@ -236,7 +259,12 @@ function init() {
 
   // Bottom
   const lineB = new THREE.LineSegments(
-    new THREE.BufferGeometry().setFromPoints([points[2], points[3]]),
+    new THREE.BufferGeometry().setFromPoints(
+      [
+        new THREE.Vector2(grid.x / 2 - 1, grid.y / -2),
+        new THREE.Vector2(grid.x / -2, grid.y / -2 + 1)
+      ]
+    ),
     boundaryMaterial
   );
   lineB.userData.offset = new THREE.Vector2(0, 1);
@@ -244,14 +272,18 @@ function init() {
 
   // Left
   const lineL = new THREE.LineSegments(
-    new THREE.BufferGeometry().setFromPoints([points[3], points[0]]),
-    boundaryMaterial
+    new THREE.BufferGeometry().setFromPoints(
+      [
+        new THREE.Vector2(grid.x / -2, grid.y / -2 + 1),
+        new THREE.Vector2(grid.x / -2, grid.y / 2)
+      ]
+    ), boundaryMaterial
   );
   lineL.userData.offset = new THREE.Vector2(1, 0);
   boundaries.push(lineL);
 
   quad = new THREE.Mesh(
-    new THREE.PlaneGeometry(domain.x, domain.y),
+    new THREE.PlaneGeometry(domain.x, domain.y, 2, 2),
     displayMaterial
   );
   sceneApp.add(quad);
@@ -278,6 +310,8 @@ function step() {
   setTimeout(() => {
     requestAnimationFrame(step);
   }, 1000 / 60);
+
+  let dt = clock.getDelta();
 
   // Required updates
   stats.update();
@@ -308,37 +342,51 @@ function step() {
 
 
   // 2 - Add external forces  
+  // 2.1 - Gravity
+  bufferObject.material = gravityMaterial;
+  gravityMaterial.uniforms.dt.value = dt;
+  gravityMaterial.uniforms.read.value = velocity.read.texture;
+  renderer.setRenderTarget(velocity.write)
+  renderer.render(bufferScene, bufferCamera);
+  velocity.swap();
+  renderer.setRenderTarget(null);
+  boundary(velocity);
+
+  // 2.2 - Mouse input
   addForce();
 
-  // 3 - Diffusion
-  bufferObject.material = jacobiMaterial;
-  let alpha = 1.0 / (viscosity * timestep);
-  jacobiMaterial.uniforms.alpha.value = alpha;
-  jacobiMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
-  jacobiMaterial.uniforms.alpha.value = alpha;
-  jacobiMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
-  
-  // 3.1 - Diffuse velocity
-  for (let i = 0; i < 20; i++) {
-    jacobiMaterial.uniforms.x.value = velocity.read.texture;
-    jacobiMaterial.uniforms.b.value = velocity.read.texture;
-    renderer.setRenderTarget(velocity.write);
-    renderer.render(bufferScene, bufferCamera);
-    velocity.swap();
-    renderer.setRenderTarget(null);
-    
-    boundary(velocity);
+  // 3 - Viscous diffusion
+  if (applyViscosity && viscosity > 0) {
+
+    bufferObject.material = jacobiMaterial;
+    let alpha = 1.0 / (viscosity * timestep);
+    jacobiMaterial.uniforms.alpha.value = alpha;
+    jacobiMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
+    jacobiMaterial.uniforms.alpha.value = alpha;
+    jacobiMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
+
+    // 3.1 - Diffuse velocity
+    for (let i = 0; i < 20; i++) {
+      jacobiMaterial.uniforms.x.value = velocity.read.texture;
+      jacobiMaterial.uniforms.b.value = velocity.read.texture;
+      renderer.setRenderTarget(velocity.write);
+      renderer.render(bufferScene, bufferCamera);
+      velocity.swap();
+      renderer.setRenderTarget(null);
+
+      boundary(velocity);
+    }
+
+    // 3.2 - Diffuse density
+    for (let i = 0; i < 20; i++) {
+      jacobiMaterial.uniforms.x.value = density.read.texture;
+      jacobiMaterial.uniforms.b.value = density.read.texture;
+      renderer.setRenderTarget(density.write);
+      renderer.render(bufferScene, bufferCamera);
+      density.swap();
+      renderer.setRenderTarget(null);
+    }
   }
-  
-  // 3.2 - Diffuse density
-for (let i = 0; i < 20; i++) {
-  jacobiMaterial.uniforms.x.value = density.read.texture;
-  jacobiMaterial.uniforms.b.value = density.read.texture;
-  renderer.setRenderTarget(density.write);
-  renderer.render(bufferScene, bufferCamera);
-  density.swap();
-  renderer.setRenderTarget(null);
-}
 
 
   // 4 - Projection
