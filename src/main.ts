@@ -9,7 +9,7 @@ import fragmentShaderAdvect from './shaders/advect.frag'
 import fragmentShaderJacobi from './shaders/jacobi.frag'
 import fragmentShaderDivergence from './shaders/divergence.frag'
 import fragmentShaderGradient from './shaders/gradient.frag'
-import fragmentShaderDisplay from './shaders/display.frag'
+import fragmentShaderDisplay from './shaders/displayvector.frag'
 import fragmentShaderBoundary from './shaders/boundary.frag'
 
 import vertexShaderBasic from './shaders/basic.vert'
@@ -25,6 +25,7 @@ const grid = new THREE.Vector2(300, 200);
 
 let viscosity = 0.3;
 let timestep = 1.0;
+let dissipation = 0.998;
 
 let renderer: THREE.WebGLRenderer;
 
@@ -155,7 +156,7 @@ function init() {
       velocity: { value: velocity.read.texture },
       res: { value: grid },
       dt: { value: 0.0 },
-      dissipation: { value: 0.998 }
+      dissipation: { value: dissipation }
     },
     fragmentShader: fragmentShaderAdvect,
     vertexShader: vertexShaderBasic
@@ -196,7 +197,7 @@ function init() {
   displayMaterial = new THREE.RawShaderMaterial({
     uniforms: {
       read: { value: velocity.read.texture },
-      bias: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
+      bias: { value: new THREE.Vector3(0., 0., 0.) },
       scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
     },
     vertexShader: vertexShaderBasic,
@@ -283,27 +284,41 @@ function step() {
   controls.update();
 
   // 1 - Advection
-  //TODO: Dissipation should not affect velocity, so set it to one here and change value to original before advecting density
   bufferObject.material = advectionMaterial;
   advectionMaterial.uniforms.dt.value = timestep;
+
+  // 1.1 - Advect velocity
+  advectionMaterial.uniforms.dissipation.value = 1.0;
   advectionMaterial.uniforms.advected.value = velocity.read.texture;
   advectionMaterial.uniforms.velocity.value = velocity.read.texture;
   renderer.setRenderTarget(velocity.write)
   renderer.render(bufferScene, bufferCamera);
-  velocity.swap();  
+  velocity.swap();
+  renderer.setRenderTarget(null);
+  boundary(velocity);
+
+  // 1.2 Advect density
+  advectionMaterial.uniforms.dissipation.value = dissipation;
+  advectionMaterial.uniforms.advected.value = density.read.texture;
+  advectionMaterial.uniforms.velocity.value = velocity.read.texture;
+  renderer.setRenderTarget(density.write)
+  renderer.render(bufferScene, bufferCamera);
+  density.swap();
   renderer.setRenderTarget(null);
 
-  boundary(velocity);
 
   // 2 - Add external forces  
   addForce();
-  boundary(velocity);
 
   // 3 - Diffusion
   bufferObject.material = jacobiMaterial;
   let alpha = 1.0 / (viscosity * timestep);
   jacobiMaterial.uniforms.alpha.value = alpha;
   jacobiMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
+  jacobiMaterial.uniforms.alpha.value = alpha;
+  jacobiMaterial.uniforms.rbeta.value = 1.0 / (4.0 + alpha);
+  
+  // 3.1 - Diffuse velocity
   for (let i = 0; i < 20; i++) {
     jacobiMaterial.uniforms.x.value = velocity.read.texture;
     jacobiMaterial.uniforms.b.value = velocity.read.texture;
@@ -311,9 +326,19 @@ function step() {
     renderer.render(bufferScene, bufferCamera);
     velocity.swap();
     renderer.setRenderTarget(null);
-
+    
     boundary(velocity);
   }
+  
+  // 3.2 - Diffuse density
+for (let i = 0; i < 20; i++) {
+  jacobiMaterial.uniforms.x.value = density.read.texture;
+  jacobiMaterial.uniforms.b.value = density.read.texture;
+  renderer.setRenderTarget(density.write);
+  renderer.render(bufferScene, bufferCamera);
+  density.swap();
+  renderer.setRenderTarget(null);
+}
 
 
   // 4 - Projection
@@ -321,7 +346,7 @@ function step() {
 
   // 5 - Render 
   // 5.1 - Render app scene
-  displayMaterial.uniforms.read.value = velocity.read.texture;
+  displayMaterial.uniforms.read.value = density.read.texture;
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
@@ -356,20 +381,34 @@ function step() {
 step();
 
 function addForce() {
-  if (!mouse.left)
-    return;
-
   if (mouse.motions.length == 0)
     return;
 
+  if (!(mouse.left || mouse.right))
+    return;
+
   bufferObject.material = sourceMaterial;
-  sourceMaterial.uniforms.read.value = velocity.read.texture;
   sourceMaterial.uniforms.position.value = mouse.position;
-  sourceMaterial.uniforms.color.value = mouse.motions[mouse.motions.length - 1]?.drag;
-  renderer.setRenderTarget(velocity.write);
-  renderer.render(bufferScene, bufferCamera);
-  velocity.swap();
-  renderer.setRenderTarget(null);
+
+  if (mouse.left) {
+    sourceMaterial.uniforms.read.value = density.read.texture;
+    sourceMaterial.uniforms.color.value = new THREE.Color(0xffffff);
+    renderer.setRenderTarget(density.write);
+    renderer.render(bufferScene, bufferCamera);
+    density.swap();
+    renderer.setRenderTarget(null);
+  }
+
+  if (mouse.right) {
+    sourceMaterial.uniforms.read.value = velocity.read.texture;
+    sourceMaterial.uniforms.color.value = mouse.motions[mouse.motions.length - 1]?.drag;
+    renderer.setRenderTarget(velocity.write);
+    renderer.render(bufferScene, bufferCamera);
+    velocity.swap();
+    renderer.setRenderTarget(null);
+    boundary(velocity);
+  }
+
 }
 
 function project() {
@@ -392,7 +431,7 @@ function project() {
     renderer.setRenderTarget(pressure.write);
     renderer.render(bufferScene, bufferCamera);
     pressure.swap();
-    
+
     boundary(pressure, 1);
   }
   renderer.setRenderTarget(null);
@@ -412,7 +451,7 @@ function project() {
 function boundary(output: PingPongBuffer, scale: number = -1.0) {
   boundaryMaterial.uniforms.read.value = output.read.texture;
   renderer.setRenderTarget(output.write);
-  
+
   boundaries.forEach(line => {
     boundaryMaterial.uniforms.offset.value = line.userData.offset;
     boundaryMaterial.uniforms.scale.value = scale;
