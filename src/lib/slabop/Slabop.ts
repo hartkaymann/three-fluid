@@ -2,8 +2,8 @@ import * as THREE from 'three';
 
 export abstract class Slabop {
 
-    scene: THREE.Scene;
-    camera: THREE.Camera;
+    protected scene: THREE.Scene;
+    protected camera: THREE.Camera;
     uniforms: { [uniform: string]: THREE.IUniform<any> }
 
     constructor(

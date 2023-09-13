@@ -17,4 +17,5 @@ void main( ) {
 
     float divergence = halfrdx * ( ( right - left ) + ( up - down ) );
     gl_FragColor = vec4( divergence, 0.0, 0.0, 1.0 );
+    //gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
 }
