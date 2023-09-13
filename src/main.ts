@@ -17,6 +17,9 @@ import vertexShaderBasic from './shaders/basic.vert'
 
 import PingPongBuffer from './lib/PingPongBuffer';
 import Mouse from './lib/Mouse';
+import Advect from './lib/slabop/Advect';
+import { Slabop } from './lib/slabop/Slabop';
+import Splat from './lib/slabop/Splat';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
@@ -51,10 +54,11 @@ let velocity: PingPongBuffer;
 let pressure: PingPongBuffer;
 let divergence: PingPongBuffer;
 
+let advect: Advect;
+let splat: Splat;
+
 let bufferObject: THREE.Mesh;
-let sourceMaterial: THREE.RawShaderMaterial;
 let jacobiMaterial: THREE.RawShaderMaterial;
-let advectionMaterial: THREE.RawShaderMaterial;
 let divergenceMaterial: THREE.RawShaderMaterial;
 let gradientMaterial: THREE.RawShaderMaterial;
 let boundaryMaterial: THREE.RawShaderMaterial;
@@ -130,17 +134,6 @@ function init() {
 
   const plane = new THREE.PlaneGeometry(grid.x - 2, grid.y - 2);
 
-  sourceMaterial = new THREE.RawShaderMaterial({
-    uniforms: {
-      res: { value: grid },
-      position: { value: new THREE.Vector2(0, 0) },
-      color: { value: new THREE.Vector3(0, 0, 0) },
-      read: { value: density.read.texture }
-    },
-    fragmentShader: fragmentShaderSource,
-    vertexShader: vertexShaderBasic
-  });
-
   jacobiMaterial = new THREE.RawShaderMaterial({
     uniforms: {
       res: { value: grid },
@@ -153,17 +146,8 @@ function init() {
     vertexShader: vertexShaderBasic
   });
 
-  advectionMaterial = new THREE.RawShaderMaterial({
-    uniforms: {
-      advected: { value: density.read.texture },
-      velocity: { value: velocity.read.texture },
-      res: { value: grid },
-      dt: { value: 0.0 },
-      dissipation: { value: dissipation }
-    },
-    fragmentShader: fragmentShaderAdvect,
-    vertexShader: vertexShaderBasic
-  })
+  advect = new Advect(grid, vertexShaderBasic, fragmentShaderAdvect);
+  splat = new Splat(grid, vertexShaderBasic, fragmentShaderSource);
 
   divergenceMaterial = new THREE.RawShaderMaterial({
     uniforms: {
@@ -318,13 +302,9 @@ function step() {
   controls.update();
 
   // 1 - Advection
-  bufferObject.material = advectionMaterial;
-  advectionMaterial.uniforms.dt.value = timestep;
 
   // 1.1 - Advect velocity
-  advectionMaterial.uniforms.dissipation.value = 1.0;
-  advectionMaterial.uniforms.advected.value = velocity.read.texture;
-  advectionMaterial.uniforms.velocity.value = velocity.read.texture;
+  advect.compute(renderer, velocity.read.texture, velocity.read.texture, velocity, timestep);
   renderer.setRenderTarget(velocity.write)
   renderer.render(bufferScene, bufferCamera);
   velocity.swap();
@@ -332,13 +312,8 @@ function step() {
   boundary(velocity);
 
   // 1.2 Advect density
-  advectionMaterial.uniforms.dissipation.value = dissipation;
-  advectionMaterial.uniforms.advected.value = density.read.texture;
-  advectionMaterial.uniforms.velocity.value = velocity.read.texture;
-  renderer.setRenderTarget(density.write)
-  renderer.render(bufferScene, bufferCamera);
-  density.swap();
-  renderer.setRenderTarget(null);
+  advect.compute(renderer, density.read.texture, velocity.read.texture, density, timestep, dissipation);
+
 
 
   // 2 - Add external forces  
@@ -429,34 +404,20 @@ function step() {
 step();
 
 function addForce() {
-  if (mouse.motions.length == 0)
-    return;
-
   if (!(mouse.left || mouse.right))
     return;
 
-  bufferObject.material = sourceMaterial;
-  sourceMaterial.uniforms.position.value = mouse.position;
-
   if (mouse.left) {
-    sourceMaterial.uniforms.read.value = density.read.texture;
-    sourceMaterial.uniforms.color.value = new THREE.Color(0xffffff);
-    renderer.setRenderTarget(density.write);
-    renderer.render(bufferScene, bufferCamera);
-    density.swap();
-    renderer.setRenderTarget(null);
+    splat.compute(renderer, density.read.texture, density, mouse.position, new THREE.Color(0xffffff));
   }
 
   if (mouse.right) {
-    sourceMaterial.uniforms.read.value = velocity.read.texture;
-    sourceMaterial.uniforms.color.value = mouse.motions[mouse.motions.length - 1]?.drag;
-    renderer.setRenderTarget(velocity.write);
-    renderer.render(bufferScene, bufferCamera);
-    velocity.swap();
-    renderer.setRenderTarget(null);
+    let color = new THREE.Color().setFromVector3(
+      new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0)
+    );
+    splat.compute(renderer, velocity.read.texture, velocity, mouse.position, color);
     boundary(velocity);
   }
-
 }
 
 function project() {

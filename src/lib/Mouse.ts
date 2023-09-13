@@ -1,20 +1,19 @@
 import * as THREE from 'three';
 
-type Motion = {
-    left: boolean,
-    right: boolean,
-    drag: THREE.Vector2,
-    position: THREE.Vector2
-}
 
 export default class Mouse {
 
-    left = false;
-    right = false;
-    position = new THREE.Vector2;
-    motions: Motion[] = [];
+    left: boolean;
+    right: boolean;
+    position: THREE.Vector2;
+    motion: THREE.Vector2;
 
     constructor() {
+        this.left = false;
+        this.right = false;
+        this.position = new THREE.Vector2();
+        this.motion = new THREE.Vector2();
+
         document.addEventListener("mousedown", this.mouseDown.bind(this), false);
         document.addEventListener("mouseup", this.mouseUp.bind(this), false);
         document.addEventListener("mousemove", this.mouseMove.bind(this), false);
@@ -43,7 +42,7 @@ export default class Mouse {
 
         if (this.left || this.right) {
             let dx = x - this.position.x;
-            let dy = -1.0 *( y - this.position.y);
+            let dy = -1.0 * (y - this.position.y);
 
             let drag = new THREE.Vector2(
                 Math.min(Math.max(dx, -1), 1),
@@ -52,12 +51,7 @@ export default class Mouse {
 
             let position = new THREE.Vector2(x, y);
 
-            this.motions.push({
-                left: this.left,
-                right: this.right,
-                drag: drag,
-                position: position
-            });
+            this.motion = drag;
 
             this.position.set(x, y);
         }
