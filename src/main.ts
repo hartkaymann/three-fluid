@@ -30,7 +30,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(20, 20);
-const grid = new THREE.Vector2(100, 100);
+const grid = new THREE.Vector2(1000, 1000);
 
 let applyViscosity = false;
 let viscosity = 0.3;
@@ -101,7 +101,8 @@ function init() {
       scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
     },
     vertexShader: vertexBasic,
-    fragmentShader: fragmentDisplayVector
+    fragmentShader: fragmentDisplayVector,
+    side: THREE.DoubleSide
   });
 
   quad = new THREE.Mesh(
@@ -131,11 +132,17 @@ function init() {
   // Additionals
   mouse = new Mouse();
 
+
   stats = new Stats();
   document.body.appendChild(stats.dom);
 
   controls = new OrbitControls(camera, renderer.domElement);
-  controls.enabled = false;
+  controls.enabled = true;
+  controls.enablePan = false;
+  controls.enableZoom = true;
+  controls.mouseButtons =  {
+    MIDDLE: THREE.MOUSE.ROTATE
+  }
 
   clock = new Clock();
   clock.start();
