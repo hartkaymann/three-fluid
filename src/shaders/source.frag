@@ -10,11 +10,11 @@ float gauss( vec2 p, float r ) {
 }
 
 void main( ) {
-    float radius = 0.1;
+    float radius = 0.01;
     float force = 10.0;
 
     // position comes in normalized and upside down
-    vec2 pos = vec2( position.x, 1.0 - position.y ) * res.xy;
+    vec2 pos = vec2( position.x, position.y ) * res.xy;
     vec3 col = color.xyz * vec3(res.xyy) * force;
 
     vec2 uv = gl_FragCoord.xy / res.xy;

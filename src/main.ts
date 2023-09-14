@@ -30,7 +30,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(20, 20);
-const grid = new THREE.Vector2(1000, 1000);
+const grid = new THREE.Vector2(400, 400);
 
 let applyViscosity = false;
 let viscosity = 0.3;
@@ -42,6 +42,7 @@ let pressureIterations = 50;
 let renderer: THREE.WebGLRenderer;
 
 let mouse: Mouse;
+let raycaster: THREE.Raycaster;
 
 let slabDebugs: SlabDebug[] = [];
 
@@ -109,6 +110,7 @@ function init() {
     new THREE.PlaneGeometry(domain.x, domain.y, 2, 2),
     materialDisplayVector
   );
+  quad.name = "main quad";
   scene.add(quad);
 
   // Renderer
@@ -131,7 +133,7 @@ function init() {
 
   // Additionals
   mouse = new Mouse();
-
+  raycaster = new THREE.Raycaster();
 
   stats = new Stats();
   document.body.appendChild(stats.dom);
@@ -140,7 +142,7 @@ function init() {
   controls.enabled = true;
   controls.enablePan = false;
   controls.enableZoom = true;
-  controls.mouseButtons =  {
+  controls.mouseButtons = {
     MIDDLE: THREE.MOUSE.ROTATE
   }
 
@@ -202,15 +204,31 @@ function addForce() {
   if (!(mouse.left || mouse.right))
     return;
 
+  let pointer = new THREE.Vector2(
+    mouse.position.x * 2 - 1,
+    -mouse.position.y * 2 + 1
+  );
+
+  raycaster.setFromCamera(pointer, camera);
+  const intersects = raycaster.intersectObjects(scene.children);
+
+  if (intersects.length == 0)
+    return;
+
+  let position = new THREE.Vector2(
+    (intersects[0].point.x + domain.x / 2) / domain.x,
+    (intersects[0].point.y + domain.y / 2) / domain.y
+  );
+
   if (mouse.left) {
-    splat.compute(renderer, density, density, mouse.position, new THREE.Color(0xffffff));
+    splat.compute(renderer, density, density, position, new THREE.Color(0xffffff));
   }
 
   if (mouse.right) {
     let color = new THREE.Color().setFromVector3(
       new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0)
     );
-    splat.compute(renderer, velocity, velocity, mouse.position, color);
+    splat.compute(renderer, velocity, velocity, position, color);
     boundary.compute(renderer, velocity, velocity);
   }
 }

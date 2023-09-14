@@ -8,6 +8,11 @@ uniform vec3 scale;
 varying vec2 texcoord;
 
 void main( ) {
-    gl_FragColor = vec4( bias + scale * texture2D( read, texcoord ).xyz, 1.0 );
-    //gl_FragColor = vec4( 1.0, 0.0, 1.0, 1.0 );
+    float threshold = 0.1;
+
+    vec3 color = bias + scale * texture2D( read, texcoord ).xyz;
+
+    float alpha = (length( color ) < threshold) ? 0.0 : max(color.x, max(color.y, color.z));
+    gl_FragColor = vec4( color, 1.0 );
+    //gl_FragColor = vec4( texcoord.xyxy );
 }
