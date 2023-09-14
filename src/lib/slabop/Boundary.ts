@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 
-import PingPongBuffer from '../PingPongBuffer';
+import Slab from '../Slab';
 
 export default class Boundary {
 
@@ -71,11 +71,11 @@ export default class Boundary {
 
     compute(
         renderer: THREE.WebGLRenderer,
-        read: THREE.Texture,
-        output: PingPongBuffer,
+        read: Slab,
+        output: Slab,
         scale?: number
     ): void {
-        this.uniforms.read.value = read;
+        this.uniforms.read.value = read.read.texture;
         this.uniforms.scale.value = scale ? scale : -1.0;
         renderer.setRenderTarget(output.write);
 

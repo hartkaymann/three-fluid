@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export default class PingPongBuffer {
+export default class Slab {
 
     private FBOs: THREE.WebGLRenderTarget[];
 

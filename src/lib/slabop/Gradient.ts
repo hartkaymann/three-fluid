@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
-import PingPongBuffer from '../PingPongBuffer';
+import Slab from '../Slab';
 
 export default class Gradient extends Slabop {
 
@@ -19,12 +19,12 @@ export default class Gradient extends Slabop {
 
     compute(
         renderer: THREE.WebGLRenderer,
-        velocity: THREE.Texture,
-        pressure: THREE.Texture,
-        output: PingPongBuffer,
+        velocity: Slab,
+        pressure: Slab,
+        output: Slab,
     ): void {
-        this.uniforms.velocity.value = velocity;
-        this.uniforms.pressure.value = pressure;
+        this.uniforms.velocity.value = velocity.read.texture;
+        this.uniforms.pressure.value = pressure.read.texture;
         
         renderer.setRenderTarget(output.write);
         renderer.render(this.scene, this.camera);

@@ -1,12 +1,15 @@
 import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
-import PingPongBuffer from '../PingPongBuffer';
+import Slab from '../Slab';
+import Boundary from './Boundary';
 
 export default class Jacobi extends Slabop {
 
-    constructor(grid: THREE.Vector2, vs: string, fs: string) {
+    alpha: number ;
+    beta: number;
 
+    constructor(grid: THREE.Vector2, vs: string, fs: string) {
         let uniforms = {
             res: { value: grid },
             x: { value: new THREE.Texture() },
@@ -16,39 +19,42 @@ export default class Jacobi extends Slabop {
         }
 
         super(grid, vs, fs, uniforms);
+        
+        this.alpha = -1.0;
+        this.beta = 4;
     }
 
     compute(
         renderer: THREE.WebGLRenderer,
-        x: THREE.Texture,
-        b: THREE.Texture,
-        output: PingPongBuffer,
+        x: Slab,
+        b: Slab,
+        output: Slab,
         iterations: number,
-        alpha: number,
-        rbeta?: number
+        boundary?: Boundary,
+        scale?: number
     ): void {
-        this.uniforms.alpha.value = alpha;
-        this.uniforms.rbeta.value = rbeta ? rbeta : 1.0 / 4.0;
+        this.uniforms.alpha.value = this.alpha;
+        this.uniforms.rbeta.value = 1.0 / this.beta;
 
         for (let i = 0; i < iterations; i++) {
             this.step(renderer, x, b, output);
-            // apply boundary
+            boundary?.compute(renderer, output, output, scale);
         }
+        renderer.setRenderTarget(null);
     }
 
     step(
         renderer: THREE.WebGLRenderer,
-        x: THREE.Texture,
-        b: THREE.Texture,
-        output: PingPongBuffer
+        x: Slab,
+        b: Slab,
+        output: Slab
     ) {
-        this.uniforms.x.value = x;
-        this.uniforms.b.value = b;
+        this.uniforms.x.value = x.read.texture;
+        this.uniforms.b.value = b.read.texture;
     
         renderer.setRenderTarget(output.write);
         renderer.render(this.scene, this.camera);
         output.swap();
-        renderer.setRenderTarget(null);
 
     }
 

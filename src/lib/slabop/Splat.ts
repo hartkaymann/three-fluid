@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
-import PingPongBuffer from '../PingPongBuffer';
+import Slab from '../Slab';
 
 export default class Splat extends Slabop {
 
@@ -19,12 +19,12 @@ export default class Splat extends Slabop {
 
     compute(
         renderer: THREE.WebGLRenderer,
-        read: THREE.Texture,
-        output: PingPongBuffer,
+        read: Slab,
+        output: Slab,
         position: THREE.Vector2,
         color: THREE.Color
     ): void {
-        this.uniforms.read.value = read;
+        this.uniforms.read.value = read.read.texture;
         this.uniforms.position.value = position;
         this.uniforms.color.value = color;
 

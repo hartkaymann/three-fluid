@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
-import PingPongBuffer from '../PingPongBuffer';
+import Slab from '../Slab';
 
 export default class Advect extends Slabop {
 
@@ -20,14 +20,14 @@ export default class Advect extends Slabop {
 
     compute(
         renderer: THREE.WebGLRenderer,
-        advected: THREE.Texture,
-        velocity: THREE.Texture,
-        output: PingPongBuffer,
+        advected: Slab,
+        velocity: Slab,
+        output: Slab,
         dt: number,
         dissipation?: number
     ): void {
-        this.uniforms.velocity.value = velocity;
-        this.uniforms.advected.value = advected;
+        this.uniforms.velocity.value = velocity.read.texture;
+        this.uniforms.advected.value = advected.read.texture;
         this.uniforms.dt.value = dt;
         this.uniforms.dissipation.value = dissipation ? dissipation : 1.0;
         

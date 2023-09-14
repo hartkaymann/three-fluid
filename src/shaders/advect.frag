@@ -33,5 +33,5 @@ void main( ) {
   
   //vec2 vel = dt * texture2D(velocity, uv).xy; 
   //vec3 newVel = texture2D( advected, uv - vel ).xyz;
-  //gl_FragColor = vec4( newVel, 1.0 );
+  //gl_FragColor = vec4(texcoord.xyxy);
 }
