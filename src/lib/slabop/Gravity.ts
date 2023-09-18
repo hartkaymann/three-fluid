@@ -9,7 +9,8 @@ export default class Gravity extends Slabop {
 
         let uniforms = {
             res: { value: grid },
-            read: { value: new THREE.Texture() },
+            velocity: { value: new THREE.Texture() },
+            density: { value: new THREE.Texture() },
             dt: { value: 0.0 }
         }
 
@@ -18,11 +19,13 @@ export default class Gravity extends Slabop {
 
     compute(
         renderer: THREE.WebGLRenderer,
-        read: Slab,
+        velocity: Slab,
+        density: Slab,
         output: Slab,
         dt: number
     ): void {
-        this.uniforms.read.value = read.read.texture;
+        this.uniforms.velocity.value = velocity.read.texture;
+        this.uniforms.density.value = density.read.texture;
         this.uniforms.dt.value = dt;
     
         renderer.setRenderTarget(output.write);

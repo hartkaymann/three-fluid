@@ -35,7 +35,7 @@ const grid = new THREE.Vector2(400, 400);
 let applyViscosity = false;
 let viscosity = 0.3;
 let timestep = 1.0;
-let dissipation = 0.99;
+let dissipation = 1.0;
 let applyBoundaries = true;
 let pressureIterations = 50;
 
@@ -98,7 +98,7 @@ function init() {
   materialDisplayVector = new THREE.RawShaderMaterial({
     uniforms: {
       read: { value: velocity.read.texture },
-      bias: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
+      bias: { value: new THREE.Vector3(-0.0, -0.0, -0.0) },
       scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
     },
     vertexShader: vertexBasic,
@@ -156,6 +156,8 @@ function step() {
     requestAnimationFrame(step);
   }, 1000 / 60);
 
+  let dt = clock.getDelta();
+
   // Required updates
   stats.update();
   controls.update();
@@ -167,7 +169,8 @@ function step() {
   advect.compute(renderer, density, velocity, density, timestep, dissipation);
 
   // 2 - Add external forces  
-  addForce();
+  //gravity.compute(renderer, velocity, density, velocity, dt);
+  addSource();
 
   // 3 - Viscous diffusion
   if (applyViscosity && viscosity > 0) {
@@ -200,7 +203,7 @@ function step() {
 }
 step();
 
-function addForce() {
+function addSource() {
   if (!(mouse.left || mouse.right))
     return;
 
@@ -241,7 +244,7 @@ function project() {
   // Poisson Pressure
   jacobi.alpha = -1.0;
   jacobi.beta = 4.0;
-  jacobi.compute(renderer, pressure, velocityDivergence, pressure, 50, boundary, 1.0);
+  jacobi.compute(renderer, pressure, velocityDivergence, pressure, pressureIterations, boundary, 1.0);
 
   // Subtracting Gradient
   gradient.compute(renderer, velocity, pressure, velocity);
