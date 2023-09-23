@@ -7,7 +7,7 @@ uniform float dissipation;
 uniform sampler2D advected;
 uniform sampler2D velocity;
 
-// Biliear Interpolation
+// Biliear interpolation
 vec3 f4texRECTbilerp( sampler2D tex, vec2 p ) {
   // Scale up position to get right texel coordinates ( cant use floor otherwise)
   vec2 position = p * res.xy;
@@ -26,6 +26,9 @@ vec3 f4texRECTbilerp( sampler2D tex, vec2 p ) {
 
   return mix( mix( tex11, tex21, a.x ), mix( tex12, tex22, a.x ), a.y );
 }
+
+// Bicubic interpolation ???
+
 
 void main( ) {
   vec2 uv = gl_FragCoord.xy / res.xy;

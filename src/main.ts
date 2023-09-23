@@ -5,7 +5,7 @@ import { Clock } from 'three/src/core/Clock.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import vertexBasic from './shaders/basic.vert'
-import fragmentSource from './shaders/source.frag'
+import fragmentForce from './shaders/force.frag'
 import fragmentAdvect from './shaders/advect.frag'
 import fragmentJacobi from './shaders/jacobi.frag'
 import fragmentDivergence from './shaders/divergence.frag'
@@ -14,17 +14,22 @@ import fragmentDisplayVector from './shaders/displayvector.frag'
 import fragmentDisplayScalar from './shaders/displayscalar.frag'
 import fragmentBoundary from './shaders/boundary.frag'
 import fragmentGravity from './shaders/gravity.frag'
+import fragmentVorticity from './shaders/vorticity.frag'
+import fragmentVorticityConfinement from './shaders/vorticityconfine.frag'
+
 
 import Slab from './lib/Slab';
 import Mouse from './lib/Mouse';
 import Advect from './lib/slabop/Advect';
-import Splat from './lib/slabop/Splat';
+import Force from './lib/slabop/Force';
 import Divergence from './lib/slabop/Divergence';
 import Gradient from './lib/slabop/Gradient';
 import Boundary from './lib/slabop/Boundary';
 import Gravity from './lib/slabop/Gravity';
 import Jacobi from './lib/slabop/Jacobi';
 import SlabDebug from './lib/SlabDebug';
+import Vorticity from './lib/slabop/Vorticity';
+import VorticityConfinement from './lib/slabop/VorticityConfinement';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
@@ -34,10 +39,11 @@ const grid = new THREE.Vector2(400, 400);
 
 let applyViscosity = false;
 let viscosity = 0.3;
-let timestep = 1.0;
-let dissipation = 1.0;
+let applyVorticity = true;
+let curl = 0.3;
+let dissipation = 0.998;
 let applyBoundaries = true;
-let pressureIterations = 50;
+let pressureIterations = 80;
 
 let renderer: THREE.WebGLRenderer;
 
@@ -57,14 +63,17 @@ let density: Slab;
 let velocity: Slab;
 let pressure: Slab;
 let velocityDivergence: Slab;
+let velocityVorticity: Slab;
 
 let advect: Advect;
-let splat: Splat;
+let force: Force;
 let divergence: Divergence;
 let gradient: Gradient;
 let boundary: Boundary;
 let gravity: Gravity;
 let jacobi: Jacobi;
+let vorticity: Vorticity;
+let vorticityConfinement: VorticityConfinement;
 
 let materialDisplayVector: THREE.RawShaderMaterial;
 
@@ -80,19 +89,22 @@ function init() {
   camera.position.z = 15;
 
   // Slabs
-  density = new Slab(grid.x, grid.y);
+  density = new Slab(grid.x, grid.y, THREE.RedFormat);
   velocity = new Slab(grid.x, grid.y);
-  pressure = new Slab(grid.x, grid.y);
-  velocityDivergence = new Slab(grid.x, grid.y);
+  pressure = new Slab(grid.x, grid.y, THREE.RedFormat);
+  velocityDivergence = new Slab(grid.x, grid.y, THREE.RedFormat);
+  velocityVorticity = new Slab(grid.x, grid.y, THREE.RedFormat);
 
   // Slabobs
   advect = new Advect(grid, vertexBasic, fragmentAdvect);
-  splat = new Splat(grid, vertexBasic, fragmentSource);
+  force = new Force(grid, vertexBasic, fragmentForce);
   divergence = new Divergence(grid, vertexBasic, fragmentDivergence);
   gradient = new Gradient(grid, vertexBasic, fragmentGradient);
   boundary = new Boundary(grid, vertexBasic, fragmentBoundary);
   jacobi = new Jacobi(grid, vertexBasic, fragmentJacobi);
   gravity = new Gravity(grid, vertexBasic, fragmentGravity);
+  vorticity = new Vorticity(grid, vertexBasic, fragmentVorticity);
+  vorticityConfinement = new VorticityConfinement(grid, vertexBasic, fragmentVorticityConfinement);
 
   // Display mesh
   materialDisplayVector = new THREE.RawShaderMaterial({
@@ -102,7 +114,7 @@ function init() {
       scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
     },
     vertexShader: vertexBasic,
-    fragmentShader: fragmentDisplayVector,
+    fragmentShader: fragmentDisplayScalar,
     side: THREE.DoubleSide
   });
 
@@ -126,7 +138,7 @@ function init() {
   slabDebugs.push(new SlabDebug("Velocity", velocity, grid, vertexBasic, fragmentDisplayVector, 0.5));
   slabDebugs.push(new SlabDebug("Pressure", pressure, grid, vertexBasic, fragmentDisplayScalar, 0.5));
   slabDebugs.push(new SlabDebug("Divergence", velocityDivergence, grid, vertexBasic, fragmentDisplayScalar, 0.5));
-
+  slabDebugs.push(new SlabDebug("Vorticity", velocityVorticity, grid, vertexBasic, fragmentDisplayScalar, 0.5));
   slabDebugs.forEach(element => {
     element.create(container);
   });
@@ -162,20 +174,28 @@ function step() {
   stats.update();
   controls.update();
 
-  // 1 - Advection
-  advect.compute(renderer, velocity, velocity, velocity, timestep);
+  // Advection
+  advect.compute(renderer, velocity, velocity, velocity, dt);
   boundary.compute(renderer, velocity, velocity);
 
-  advect.compute(renderer, density, velocity, density, timestep, dissipation);
+  advect.compute(renderer, density, velocity, density, dt, dissipation);
 
-  // 2 - Add external forces  
+  // Body forces  
   //gravity.compute(renderer, velocity, density, velocity, dt);
-  addSource();
+  addSource(dt);
 
-  // 3 - Viscous diffusion
+  // Vorticity confinement
+  if( applyVorticity && curl > 0) {
+    vorticity.compute(renderer, velocity, velocityVorticity);
+    vorticityConfinement.compute(renderer, velocity, velocityVorticity, velocity, dt, curl);
+
+    boundary.compute(renderer, velocity, velocity);
+  }
+
+  // Viscous diffusion
   if (applyViscosity && viscosity > 0) {
 
-    let alpha = 1.0 / (viscosity * timestep);
+    let alpha = 1.0 / (viscosity * dt);
     let beta = 4.0 + alpha;
 
     jacobi.alpha = alpha;
@@ -189,7 +209,7 @@ function step() {
   // Projection
   project();
 
-  // 5 - Render 
+  // Render 
   materialDisplayVector.uniforms.read.value = density.read.texture;
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
@@ -203,7 +223,7 @@ function step() {
 }
 step();
 
-function addSource() {
+function addSource(dt: number) {
   if (!(mouse.left || mouse.right))
     return;
 
@@ -224,14 +244,14 @@ function addSource() {
   );
 
   if (mouse.left) {
-    splat.compute(renderer, density, density, position, new THREE.Color(0xffffff));
+    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.001, 1.0);
   }
 
   if (mouse.right) {
-    let color = new THREE.Color().setFromVector3(
-      new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0)
+    let direction = new THREE.Color().setFromVector3(
+      new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0).normalize()
     );
-    splat.compute(renderer, velocity, velocity, position, color);
+    force.compute(renderer, velocity, velocity, dt, position, direction, 0.001, 1.0);
     boundary.compute(renderer, velocity, velocity);
   }
 }
@@ -246,7 +266,7 @@ function project() {
   jacobi.beta = 4.0;
   jacobi.compute(renderer, pressure, velocityDivergence, pressure, pressureIterations, boundary, 1.0);
 
-  // Subtracting Gradient
+  // Subtract gradient
   gradient.compute(renderer, velocity, pressure, velocity);
   boundary.compute(renderer, velocity, velocity);
 }

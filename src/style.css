@@ -23,7 +23,7 @@ body {
   justify-content: flex-start;
   align-items: flex-end;
   align-content: flex-start;
-  overflow: hidden;
+  overflow: scroll;
 }
 
 .debug-item {

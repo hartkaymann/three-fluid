@@ -7,7 +7,7 @@ export default class Slab {
     read: THREE.WebGLRenderTarget;
     write: THREE.WebGLRenderTarget;
 
-    constructor(width: number, height: number) {
+    constructor(width: number, height: number, format?: number) {
 
         this.FBOs = [];
 
@@ -17,7 +17,7 @@ export default class Slab {
                 height,
                 {
                     type: THREE.FloatType,
-                    format: THREE.RGBAFormat,
+                    format: format ? format : THREE.RGBAFormat,
                     minFilter: THREE.LinearFilter,
                     magFilter: THREE.NearestFilter,
                 },
