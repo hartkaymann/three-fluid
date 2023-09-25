@@ -25,10 +25,9 @@ void main( ) {
     vec2 force = halfrdx * vec2( abs( up ) - abs( down ), abs( right ) - abs( left ) );
 
     float epsilon = 2.4414e-4;
-    epsilon = 5.;
     float magSqr = max( epsilon, dot( force, force ) );
 
-    force *= inversesqrt( magSqr ) * curl * mid;
+    force *= inversesqrt( magSqr ) * curl * mid; // use half live fast invsqrt?
     force.y *= -1.0;
 
     vec2 base = texture2D( velocity, uv ).xy;
