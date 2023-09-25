@@ -9,12 +9,11 @@ uniform float dt;
 void main( ) {
     vec2 uv = gl_FragCoord.xy / res.xy;
 
-    vec3 g = vec3(0.0, 9.81, 0.0) * dt;
+    vec3 g = vec3(0.0, -0.981, 0.0) * dt;
 
     vec3 base = texture2D( velocity, uv ).xyz;
     vec3 density = texture2D(density, uv).xyz;
-    float factor = density.x > 0.0 ? 1.0 : 0.0;
 
-    gl_FragColor = vec4( base - factor * g, 1.0 );
+    gl_FragColor = vec4( base + (density.x * g), 1.0 );
     // gl_FragColor = vec4(base, 1.0);
 }

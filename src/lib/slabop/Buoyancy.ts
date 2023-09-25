@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { Slabop } from './Slabop';
 import Slab from '../Slab';
 
-export default class Gravity extends Slabop {
+export default class Buoyancy extends Slabop {
 
     constructor(grid: THREE.Vector2, vs: string, fs: string) {
 
@@ -11,6 +11,9 @@ export default class Gravity extends Slabop {
             res: { value: grid },
             velocity: { value: new THREE.Texture() },
             density: { value: new THREE.Texture() },
+            rise: { value: 1.0 },
+            fall: { value: 1.0 },
+            gravity: { value: 0.981 },
             dt: { value: 0.0 }
         }
 
@@ -27,7 +30,7 @@ export default class Gravity extends Slabop {
         this.uniforms.velocity.value = velocity.read.texture;
         this.uniforms.density.value = density.read.texture;
         this.uniforms.dt.value = dt;
-    
+
         renderer.setRenderTarget(output.write);
         renderer.render(this.scene, this.camera);
         output.swap();

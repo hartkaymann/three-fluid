@@ -29,7 +29,6 @@ vec3 f4texRECTbilerp( sampler2D tex, vec2 p ) {
 
 // Bicubic interpolation ???
 
-
 void main( ) {
   vec2 uv = gl_FragCoord.xy / res.xy;
 

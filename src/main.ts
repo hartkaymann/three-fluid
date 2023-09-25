@@ -13,7 +13,7 @@ import fragmentGradient from './shaders/gradient.frag'
 import fragmentDisplayVector from './shaders/displayvector.frag'
 import fragmentDisplayScalar from './shaders/displayscalar.frag'
 import fragmentBoundary from './shaders/boundary.frag'
-import fragmentGravity from './shaders/gravity.frag'
+import fragmentBuoyancy from './shaders/buoyancy.frag'
 import fragmentVorticity from './shaders/vorticity.frag'
 import fragmentVorticityConfinement from './shaders/vorticityconfine.frag'
 
@@ -25,7 +25,7 @@ import Force from './lib/slabop/Force';
 import Divergence from './lib/slabop/Divergence';
 import Gradient from './lib/slabop/Gradient';
 import Boundary from './lib/slabop/Boundary';
-import Gravity from './lib/slabop/Gravity';
+import Buoyancy from './lib/slabop/Buoyancy';
 import Jacobi from './lib/slabop/Jacobi';
 import SlabDebug from './lib/SlabDebug';
 import Vorticity from './lib/slabop/Vorticity';
@@ -38,12 +38,14 @@ const domain = new THREE.Vector2(20, 20);
 const grid = new THREE.Vector2(400, 400);
 
 let applyViscosity = false;
-let viscosity = 0.3;
-let applyVorticity = true;
-let curl = 0.3;
-let dissipation = 0.998;
+let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
+let applyVorticity = false; 
+let curl = 0.3; // Curl
+let dissipation = 1.; // Dissipation, lower value means faster dissipation
+let rise = 1.0; // Tendency to rise
+let fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
 let applyBoundaries = true;
-let pressureIterations = 80;
+let pressureIterations = 80; // Jacobi iterations for poisson pressure, should be between 50-80 
 
 let renderer: THREE.WebGLRenderer;
 
@@ -70,7 +72,7 @@ let force: Force;
 let divergence: Divergence;
 let gradient: Gradient;
 let boundary: Boundary;
-let gravity: Gravity;
+let buoyancy: Buoyancy;
 let jacobi: Jacobi;
 let vorticity: Vorticity;
 let vorticityConfinement: VorticityConfinement;
@@ -102,7 +104,7 @@ function init() {
   gradient = new Gradient(grid, vertexBasic, fragmentGradient);
   boundary = new Boundary(grid, vertexBasic, fragmentBoundary);
   jacobi = new Jacobi(grid, vertexBasic, fragmentJacobi);
-  gravity = new Gravity(grid, vertexBasic, fragmentGravity);
+  buoyancy = new Buoyancy(grid, vertexBasic, fragmentBuoyancy);
   vorticity = new Vorticity(grid, vertexBasic, fragmentVorticity);
   vorticityConfinement = new VorticityConfinement(grid, vertexBasic, fragmentVorticityConfinement);
 
@@ -181,7 +183,7 @@ function step() {
   advect.compute(renderer, density, velocity, density, dt, dissipation);
 
   // Body forces  
-  //gravity.compute(renderer, velocity, density, velocity, dt);
+  //buoyancy.compute(renderer, velocity, density, velocity, dt);
   addSource(dt);
 
   // Vorticity confinement

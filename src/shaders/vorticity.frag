@@ -16,6 +16,6 @@ void main( ) {
     float up    = texture2D( velocity, uv + dyp ).x;
     float down  = texture2D( velocity, uv - dyp ).x;
 
-    float curl = halfrdx * ( ( right - left ) - (  down - up ) );
+    float curl = halfrdx * ( ( right - left ) - ( up - down ) );
     gl_FragColor = vec4( curl, 0.0, 0.0, 1.0 );
 }
