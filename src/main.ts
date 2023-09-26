@@ -178,7 +178,7 @@ function step() {
 
   // Advection
   advect.compute(renderer, velocity, velocity, velocity, dt);
-  boundary.compute(renderer, velocity, velocity);
+  //boundary.compute(renderer, velocity, velocity);
 
   advect.compute(renderer, density, velocity, density, dt, dissipation);
 
@@ -209,7 +209,7 @@ function step() {
   }
 
   // Projection
-  project();
+  // project();
 
   // Render 
   materialDisplayVector.uniforms.read.value = density.read.texture;
@@ -240,13 +240,14 @@ function addSource(dt: number) {
   if (intersects.length == 0)
     return;
 
-  let position = new THREE.Vector2(
+  let position = new THREE.Vector3(
     (intersects[0].point.x + domain.x / 2) / domain.x,
-    (intersects[0].point.y + domain.y / 2) / domain.y
+    (intersects[0].point.y + domain.y / 2) / domain.y,
+    0.0
   );
 
   if (mouse.left) {
-    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.001, 1.0);
+    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.001, 10.0);
   }
 
   if (mouse.right) {

@@ -11,7 +11,7 @@ export default class Force extends Slabop {
             res: { value: grid },
             read: { value: new THREE.Texture() },
             dt: { value: 0.0 },
-            position: { value: new THREE.Vector2() },
+            position: { value: new THREE.Vector3() },
             color: { value: new THREE.Color() },
             radius: { value: 0.0 },
             amount: { value: 0.0 }
@@ -25,7 +25,7 @@ export default class Force extends Slabop {
         read: Slab,
         output: Slab,
         dt: number,
-        position: THREE.Vector2,
+        position: THREE.Vector3,
         color: THREE.Color,
         radius: number,
         amount: number

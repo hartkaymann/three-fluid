@@ -6,7 +6,7 @@ import * as THREE from 'three';
 // the 2D dimensions of a 3D texture are therefore [width * depth, height]
 
 /*
-    Using a staggered MAC grid
+    Using a staggered (MAC maybe later) grid
     velocity grid width = grid width + 1 
     velocity grid height = grid height + 1 
     velocity grid depth = grid depth + 1
@@ -33,12 +33,14 @@ export abstract class Slabop {
     ) {
         this.scene = new THREE.Scene();
 
-        this.camera = new THREE.OrthographicCamera((grid.x * grid.z) / -2, (grid.x * grid.z) / 2, grid.y / 2, grid.y / -2, 1, 100);
+        // this.camera = new THREE.OrthographicCamera((grid.x * grid.z) / -2, (grid.x * grid.z) / 2, grid.y / 2, grid.y / -2, 1, 100);
+        this.camera = new THREE.OrthographicCamera(0, grid.x * grid.z, grid.y, 0, 1, 100);
         this.camera.position.z = 2;
 
         this.uniforms = uniforms;
 
         const geometry = new THREE.PlaneGeometry(grid.x * grid.z - 2, grid.y + -2, grid.z, 1.0);
+        geometry.translate(grid.x * grid.z / 2, grid.y / 2, 0.0);
         const material = new THREE.RawShaderMaterial({
             //glslVersion: THREE.GLSL3,
             uniforms: this.uniforms,

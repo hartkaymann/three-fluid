@@ -10,11 +10,12 @@ uniform sampler2D velocity;
 // TODO: Move to common.frag
 // Texture lookup in staggered grid
 vec4 texture3D( sampler2D texture, vec3 coordinates ) {
-  vec2 texcoord = vec2( res.x * coordinates.z + coordinates.x, coordinates.y );
-  texcoord.x /= res.x * res.z;
-  texcoord.y /= res.y;
+  //vec2 texcoord = vec2( res.x * coordinates.z + coordinates.x, coordinates.y );
+  // normalize
+  coordinates.x /= res.x * res.z;
+  coordinates.y /= res.y;
 
-  return texture2D( texture, texcoord.xy );
+  return texture2D( texture, coordinates.xy );
 }
 
 // Biliear interpolation
@@ -38,13 +39,17 @@ vec3 f4texRECTbilerp( sampler2D tex, vec2 p ) {
 }
 
 void main( ) {
-  vec3 texcoord = gl_FragCoord.xyz / res.xyz;
+  vec2 texcoord = gl_FragCoord.xy / res.xy;
+  vec3 pos = vec3(
+      mod(gl_FragCoord.x, res.x),
+      gl_FragCoord.y,
+      (gl_FragCoord.x - mod(gl_FragCoord.x, res.x)) / res.x    
+  );
 
-  vec2 pos = texcoord.xy - dt * texture3D( velocity, gl_FragCoord.xyz ).xy;
-  gl_FragColor = vec4( dissipation * f4texRECTbilerp( advected, pos ).xyz, 1.0 );
+  vec3 new_pos = pos.xyz - dt * texture3D( velocity, pos ).xyz;
+  //gl_FragColor = vec4( dissipation * f4texRECTbilerp( advected, new_pos ).xyz, 1.0 );
+  gl_FragColor = vec4(dissipation * texture3D(advected, new_pos)); 
 
   //gl_FragColor = vec4(texcoord.xyz, 1.0);
-  //vec2 vel = dt * texture2D(velocity, uv).xy; 
-  //vec3 newVel = texture2D( advected, uv - vel ).xyz;
-  // gl_FragColor = vec4( pos.xyxy );
+  //gl_FragColor = vec4(  pos.x / res.x, 0.0, 0.0, 1.0 );
 }

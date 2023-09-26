@@ -33,7 +33,7 @@ export default class Boundary {
         var createLine = function (
             start: THREE.Vector2,
             end: THREE.Vector2,
-            offset: THREE.Vector2
+            offset: THREE.Vector3
         ): THREE.Line {
             let geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
             const line = new THREE.Line(geometry, material);
@@ -46,25 +46,25 @@ export default class Boundary {
             createLine(
                 new THREE.Vector2(grid.x / -2 + 1, grid.y / -2 + 1),
                 new THREE.Vector2(grid.x / -2, grid.y / 2),
-                new THREE.Vector2(1, 0)
+                new THREE.Vector3(1, 0, 0)
             ),
             // Right
             createLine(
                 new THREE.Vector2(grid.x / 2, grid.y / 2 - 1),
                 new THREE.Vector2(grid.x / 2, grid.y / -2),
-                new THREE.Vector2(-1, 0)
+                new THREE.Vector3(-1, 0, 0)
             ),
             // Top
             createLine(
                 new THREE.Vector2(grid.x / -2 + 1, grid.y / 2),
                 new THREE.Vector2(grid.x / 2, grid.y / 2),
-                new THREE.Vector2(0, -1)
+                new THREE.Vector3(0, -1, 0)
             ),
             // Bottom
             createLine(
                 new THREE.Vector2(grid.x / 2 - 1, grid.y / -2),
                 new THREE.Vector2(grid.x / -2, grid.y / -2 + 1),
-                new THREE.Vector2(0, 1)
+                new THREE.Vector3(0, 1, 0)
             ),
         ]
     }
@@ -77,6 +77,7 @@ export default class Boundary {
     ): void {
         this.uniforms.read.value = read.read.texture;
         this.uniforms.scale.value = scale ? scale : -1.0;
+        this.uniforms.scale.value = 0.0; // TESTING 
         renderer.setRenderTarget(output.write);
 
         this.boundaries.forEach(line => {
