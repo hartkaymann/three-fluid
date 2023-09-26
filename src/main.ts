@@ -35,7 +35,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(20, 20);
-const grid = new THREE.Vector2(400, 400);
+const grid = new THREE.Vector3(100, 100, 1);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -91,11 +91,11 @@ function init() {
   camera.position.z = 15;
 
   // Slabs
-  density = new Slab(grid.x, grid.y, THREE.RedFormat);
-  velocity = new Slab(grid.x, grid.y);
-  pressure = new Slab(grid.x, grid.y, THREE.RedFormat);
-  velocityDivergence = new Slab(grid.x, grid.y, THREE.RedFormat);
-  velocityVorticity = new Slab(grid.x, grid.y, THREE.RedFormat);
+  density = new Slab(grid.x, grid.y, grid.z, THREE.RedFormat);
+  velocity = new Slab(grid.x, grid.y, grid.z);
+  pressure = new Slab(grid.x, grid.y, grid.z, THREE.RedFormat);
+  velocityDivergence = new Slab(grid.x, grid.y, grid.z, THREE.RedFormat);
+  velocityVorticity = new Slab(grid.x, grid.y, grid.z, THREE.RedFormat);
 
   // Slabobs
   advect = new Advect(grid, vertexBasic, fragmentAdvect);

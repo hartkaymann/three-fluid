@@ -10,7 +10,7 @@ export default class Boundary {
     private uniforms: { [uniform: string]: THREE.IUniform<any> }
     private boundaries: THREE.Line[];
 
-    constructor(grid: THREE.Vector2, vs: string, fs: string) {
+    constructor(grid: THREE.Vector3, vs: string, fs: string) {
 
         this.scene = new THREE.Scene();
 

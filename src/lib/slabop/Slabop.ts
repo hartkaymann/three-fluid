@@ -1,5 +1,22 @@
 import * as THREE from 'three';
 
+
+// Emulating a 3D textures with tiled 2D textures
+// the Z slices of a 3D texture are laid out along the X-Axis
+// the 2D dimensions of a 3D texture are therefore [width * depth, height]
+
+/*
+    Using a staggered MAC grid
+    velocity grid width = grid width + 1 
+    velocity grid height = grid height + 1 
+    velocity grid depth = grid depth + 1
+    
+    the scalar for cell [i, j, k] is positionally located at [i + 0.5, j + 0.5, k + 0.5]
+    x velocity for cell [i, j, k] is positionally located at [i, j + 0.5, k + 0.5]
+    y velocity for cell [i, j, k] is positionally located at [i + 0.5, j, k + 0.5]
+    z velocity for cell [i, j, k] is positionally located at [i + 0.5, j + 0.5, k]
+    */
+
 export abstract class Slabop {
 
     protected scene: THREE.Scene;
@@ -7,7 +24,7 @@ export abstract class Slabop {
     uniforms: { [uniform: string]: THREE.IUniform<any> }
 
     constructor(
-        grid: THREE.Vector2,
+        grid: THREE.Vector3,
         vs: string,
         fs: string,
         uniforms: {
@@ -16,13 +33,14 @@ export abstract class Slabop {
     ) {
         this.scene = new THREE.Scene();
 
-        this.camera = new THREE.OrthographicCamera(grid.x / -2, grid.x / 2, grid.y / 2, grid.y / -2, 1, 100);
+        this.camera = new THREE.OrthographicCamera((grid.x * grid.z) / -2, (grid.x * grid.z) / 2, grid.y / 2, grid.y / -2, 1, 100);
         this.camera.position.z = 2;
 
         this.uniforms = uniforms;
 
-        const geometry = new THREE.PlaneGeometry(grid.x - 2, grid.y - 2);
+        const geometry = new THREE.PlaneGeometry(grid.x * grid.z - 2, grid.y + -2, grid.z, 1.0);
         const material = new THREE.RawShaderMaterial({
+            //glslVersion: THREE.GLSL3,
             uniforms: this.uniforms,
             vertexShader: vs,
             fragmentShader: fs
@@ -31,5 +49,4 @@ export abstract class Slabop {
 
         this.scene.add(quad);
     }
-
 }

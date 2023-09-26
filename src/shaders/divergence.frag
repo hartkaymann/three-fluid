@@ -1,20 +1,29 @@
 precision highp float;
 
-uniform vec2 res; // grid resolution
+uniform vec3 res; // grid resolution
 
 uniform float halfrdx;
 
 uniform sampler2D velocity;
 
-void main( ) {
-    vec2 uv = gl_FragCoord.xy / res.xy;
-    vec2 dxp = vec2( 1.0 / res.x, 0.0 );
-    vec2 dyp = vec2( 0.0, 1.0 / res.y );
+// TODO: Move to common.frag
+// Texture lookup in staggered grid
+vec4 texture3D( sampler2D texture, vec3 coordinates ) {
+    vec2 texcoord = vec2( res.x * coordinates.z + coordinates.x, coordinates.y );
+    texcoord.x /= res.x * res.z;
+    texcoord.y /= res.y;
 
-    float right = texture2D( velocity, uv + dxp  ).x;
-    float left  = texture2D( velocity, uv - dxp  ).x;
-    float up    = texture2D( velocity, uv + dyp  ).y;
-    float down  = texture2D( velocity, uv - dyp  ).y;
+    return texture2D( texture, texcoord.xy );
+}
+
+void main( ) {
+    vec3 offsetX = vec3( 1.0, 0.0, 0.0 );
+    vec3 offsetY = vec3( 0.0, 1.0, 0.0 );
+
+    float right = texture3D( velocity, gl_FragCoord.xyz + offsetX ).x;
+    float left = texture3D( velocity, gl_FragCoord.xyz - offsetX ).x;
+    float up = texture3D( velocity, gl_FragCoord.xyz + offsetY ).y;
+    float down = texture3D( velocity, gl_FragCoord.xyz - offsetY ).y;
 
     float divergence = halfrdx * ( ( right - left ) + ( up - down ) );
     gl_FragColor = vec4( divergence, 0.0, 0.0, 1.0 );

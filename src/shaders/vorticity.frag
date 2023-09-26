@@ -1,6 +1,6 @@
 precision highp float;
 
-uniform vec2 res; // grid resolution
+uniform vec3 res; // grid resolution
 
 uniform float halfrdx;
 

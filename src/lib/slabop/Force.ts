@@ -5,7 +5,7 @@ import Slab from '../Slab';
 
 export default class Force extends Slabop {
 
-    constructor(grid: THREE.Vector2, vs: string, fs: string) {
+    constructor(grid: THREE.Vector3, vs: string, fs: string) {
 
         let uniforms = {
             res: { value: grid },

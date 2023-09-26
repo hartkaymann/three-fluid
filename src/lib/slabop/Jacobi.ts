@@ -9,7 +9,7 @@ export default class Jacobi extends Slabop {
     alpha: number ;
     beta: number;
 
-    constructor(grid: THREE.Vector2, vs: string, fs: string) {
+    constructor(grid: THREE.Vector3, vs: string, fs: string) {
         let uniforms = {
             res: { value: grid },
             x: { value: new THREE.Texture() },

@@ -15,7 +15,7 @@ export default class SlabDebug {
     material: THREE.RawShaderMaterial;
 
 
-    constructor(title: string, slab: Slab, grid: THREE.Vector2, vs: string, fs: string, bias: number = 0.0) {
+    constructor(title: string, slab: Slab, grid: THREE.Vector3, vs: string, fs: string, bias: number = 0.0) {
         this.title = title;
         this.slab = slab;
 

@@ -2,8 +2,8 @@ precision highp float;
 
 uniform sampler2D read;
 
-uniform vec2 res; // grid resolution
-uniform vec2 offset;
+uniform vec3 res; // grid resolution
+uniform vec3 offset;
 uniform float scale;
 
 void main( ) {
