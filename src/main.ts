@@ -35,7 +35,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(20, 20);
-const grid = new THREE.Vector3(100, 100, 1);
+const grid = new THREE.Vector3(50, 50, 2);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -116,7 +116,7 @@ function init() {
       scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
     },
     vertexShader: vertexBasic,
-    fragmentShader: fragmentDisplayScalar,
+    fragmentShader: fragmentDisplayVector,
     side: THREE.DoubleSide
   });
 
@@ -209,10 +209,10 @@ function step() {
   }
 
   // Projection
-  // project();
+  //project();
 
   // Render 
-  materialDisplayVector.uniforms.read.value = density.read.texture;
+  materialDisplayVector.uniforms.read.value = velocity.read.texture;
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);

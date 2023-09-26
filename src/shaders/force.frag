@@ -8,18 +8,6 @@ uniform vec3 color;
 uniform float amount;
 uniform float radius;
 
-// TODO: Move to common.frag
-// Texture lookup in staggered grid
-vec4 texture3D( sampler2D texture, vec3 coordinates ) {
-  //vec2 texcoord = vec2( res.x * coordinates.z + coordinates.x, coordinates.y );
-  // normalize
-  coordinates.x /= res.x * res.z;
-  coordinates.y /= res.y;
-
-  return texture2D( texture, coordinates.xy );
-}
-
-
 float gauss( vec3 p, float r ) {
     return exp( -dot( p, p ) / r );
 }
@@ -38,11 +26,11 @@ void main( ) {
 
     vec3 base = texture2D( read, texcoord ).xyz;
 
-    vec3 coord = position.xyz - vec3(texcoord, 0.0);
+    vec3 coord = position.xyz - pos / res;
     vec3 splat = dt * color * amount * gauss( coord, radius );
     
-    //vec3 splat = vec3(1.0) * dist(coord, 0.05);
+    //vec3 splat = vec3(1.0) * dist(coord, 0.01);
     
     gl_FragColor = vec4( base + splat, 1.0 );
-    // gl_FragColor = vec4(texcoord.xyz, 1.0);
+    //gl_FragColor = vec4(vec3(length(coord.xyz)), 1.0);
 }
