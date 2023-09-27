@@ -2,36 +2,27 @@ import * as THREE from 'three'
 
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
-import vertexBasic from './shaders/basic.vert'
-import fragmentAdvect from './shaders/displayvolume.frag'
+import vertexBasic from './shaders/basic300.vert'
+import fragmentVolume from './shaders/displayvolume.frag'
 
 import Slab from './lib/Slab';
-import Mouse from './lib/Mouse';
-import Advect from './lib/slabop/Advect';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const domain = new THREE.Vector2(20, 20);
-const grid = new THREE.Vector3(100, 100, 100);
+const domain = new THREE.Vector3(1, 1, 1);
+const grid = new THREE.Vector3(10, 10, 10);
 
 let renderer: THREE.WebGLRenderer;
 
-let mouse: Mouse;
-let raycaster: THREE.Raycaster;
+let material: THREE.RawShaderMaterial;
 
 let scene: THREE.Scene;
 let camera: THREE.PerspectiveCamera;
 
 let controls: OrbitControls;
 
-let density: Slab;
-
-let advect: Advect;
-
-let material: THREE.ShaderMaterial;
-
-let quad: THREE.Mesh;
+let slab: Slab;
 
 function init() {
   let canvas = <HTMLCanvasElement>document.getElementById('c');
@@ -39,32 +30,60 @@ function init() {
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.z = 15;
+  camera.position.z = 5;
 
   // Slabs
-  density = new Slab(grid.x, grid.y, THREE.RedFormat);
+  slab = new Slab(grid.x, grid.y, THREE.RedFormat);
 
-  // Slabobs
-  advect = new Advect(grid, vertexBasic, fragmentAdvect);
 
-  quad = new THREE.Mesh(
-    new THREE.PlaneGeometry(domain.x, domain.y, 2, 2),
+  // create a buffer with some data
+  const size = 16;
+
+  const data3D = [];
+  for (let z = 0; z < size; z++) {
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const r = Math.random() * 255;
+        const g = Math.random() * 255;
+        const b = Math.random() * 255;
+        data3D.push(r, g, b, 1.0);
+      }
+    }
+  }
+  let texture3D = new THREE.Data3DTexture(
+    Uint8Array.from(data3D),
+    size, size, size
   );
+  texture3D.format = THREE.RGBAFormat;
+  texture3D.minFilter = THREE.LinearFilter;
+  texture3D.magFilter = THREE.LinearFilter;
+  texture3D.mapping = THREE.UVMapping;
+  texture3D.type = THREE.UnsignedByteType;
+  texture3D.needsUpdate = true;
 
-  quad.name = "main quad";
-  scene.add(quad);
+  let box = new THREE.BoxGeometry(domain.x, domain.y, domain.z, 1, 1, 1);
+  material = new THREE.RawShaderMaterial({
+    glslVersion: THREE.GLSL3,
+    uniforms: {
+      map: { value: texture3D },
+      uZCoord: { value: 1 },
+    },
+    vertexShader: vertexBasic,
+    fragmentShader: fragmentVolume,
+    side: THREE.BackSide,
+    transparent: true
+  });
+
+  let mesh = new THREE.Mesh(box, material);
+
+  scene.add(mesh);
 
   // Renderer
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
   renderer.setClearColor(0x0e0e0e)
   renderer.setPixelRatio(window.devicePixelRatio);
   renderer.setSize(width, height);
-  renderer.setScissorTest(true);
   renderer.autoClear = false;
-
-  // Additionals
-  mouse = new Mouse();
-  raycaster = new THREE.Raycaster();
 
   controls = new OrbitControls(camera, renderer.domElement);
   controls.enabled = true;
@@ -85,16 +104,14 @@ function step() {
   // Required updates
   controls.update();
 
-  // Advection
-  advect.compute(renderer, density, density, density, 0.0, 0.0);
-
+  for(let i = 0; i < 16; i++) {
+    material.uniforms.uZCoord.value = i;
+    renderer.render(scene, camera);
+  }
 
   // Render 
-  material.uniforms.read.value = density.read.texture;
   renderer.setRenderTarget(null);
-  renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
-  renderer.render(scene, camera);
 }
 step();
 

@@ -7,48 +7,73 @@ uniform float dissipation;
 uniform sampler2D advected;
 uniform sampler2D velocity;
 
-// TODO: Move to common.frag
-// Texture lookup in staggered grid
-vec4 texture3D( sampler2D texture, vec3 coordinates ) {
-  vec2 ij = vec2( res.x * coordinates.z + coordinates.x, coordinates.y );
-  // normalize
-  ij.x /= res.x * res.z;
-  ij.y /= res.y;
+varying vec2 vUv;
 
-  return texture2D( texture, ij.xy );
+// TODO: Move to common.frag
+// Texture lookup in tiled grid
+vec4 texture3D( sampler2D texture, vec3 coordinates ) {
+  float zFloor = floor(coordinates.z);
+  float zRoof = zFloor + 1.0;
+  float fraction = fract(coordinates.z);
+
+  vec2 coordFloor = vec2( 
+    ((res.x * zFloor) + coordinates.x) / (res.x * res.z),
+    coordinates.y / res.y );
+  
+  vec2 coordRoof = vec2( 
+    ((res.x * zRoof) + coordinates.x) / (res.x * res.z),
+    coordinates.y / res.y );
+  
+  // normalize
+  return mix(
+    texture2D( texture, coordFloor), 
+    texture2D(texture, coordRoof), 
+    fraction 
+  );
 }
 
 // Biliear interpolation
-vec3 f4texRECTbilerp( sampler2D tex, vec2 p ) {
-  // Scale up position to get right texel coordinates ( cant use floor otherwise)
-  vec2 position = p * res.xy;
+vec3 trilerp( sampler2D tex, vec3 p ) {
+  vec3 vi = floor( p - 0.5 ) + 0.5;
+  vec3 vj = vi + vec3( 1.0 );
+  vec3 a = fract(p);
 
-  vec4 ij; // i0, j0, i1, j1
-  ij.xy = floor( position - 0.5 ) + 0.5;
-  ij.zw = ij.xy + 1.0;
+  vec3 tex000 = texture3D( tex, vec3( vi.xyz ) ).xyz; // l b f
+  vec3 tex100 = texture3D( tex, vec3( vj.x, vi.yz ) ).xyz;  // r b f
+  vec3 tex010 = texture3D( tex, vec3( vi.x, vj.y, vi.z ) ).xyz; // l t f
+  vec3 tex110 = texture3D( tex, vec3( vj.xy, vi.z ) ).xyz;  // r t f
 
-  vec4 uv = ij / res.xyxy;
-  vec3 tex11 = texture2D( tex, uv.xy ).xyz;
-  vec3 tex21 = texture2D( tex, uv.zy ).xyz;
-  vec3 tex12 = texture2D( tex, uv.xw ).xyz;
-  vec3 tex22 = texture2D( tex, uv.zw ).xyz;
-
-  vec2 a = position - ij.xy;
-
-  return mix( mix( tex11, tex21, a.x ), mix( tex12, tex22, a.x ), a.y );
+  vec3 tex001 = texture3D( tex, vec3( vi.xy, vj.z ) ).xyz;  // l b b
+  vec3 tex101 = texture3D( tex, vec3( vj.x, vi.y, vj.z ) ).xyz; // r b b
+  vec3 tex011 = texture3D( tex, vec3( vi.x, vj.yz ) ).xyz;  // l t b
+  vec3 tex111 = texture3D( tex, vec3( vj.xyz ) ).xyz; // r t b
+  
+  
+  return mix(
+  mix( 
+    mix( tex000, tex100, a.x ), 
+    mix( tex010, tex110, a.x ),
+    a.y 
+    ),
+  mix( 
+    mix( tex001, tex101, a.x ), 
+    mix( tex011, tex111, a.x ),
+    a.y 
+    ),
+  a.z
+  );
 }
 
 void main( ) {
-  vec2 texcoord = gl_FragCoord.xy / res.xy;
-  vec3 pos = vec3(
-      mod(gl_FragCoord.x, res.x),
-      gl_FragCoord.y,
-      (gl_FragCoord.x - mod(gl_FragCoord.x, res.x)) / res.x    
+  vec3 pos = vec3( 
+    mod( gl_FragCoord.x, res.x ), 
+    gl_FragCoord.y, 
+    floor( gl_FragCoord.x / res.x ) 
   );
 
   vec3 new_pos = pos.xyz - dt * texture3D( velocity, pos ).xyz;
-  //gl_FragColor = vec4( dissipation * f4texRECTbilerp( advected, new_pos ).xyz, 1.0 );
-  gl_FragColor = vec4(dissipation * texture3D(advected, new_pos)); 
+  gl_FragColor = vec4( dissipation * trilerp( advected, pos ).xyz, 1.0 );
 
-  //gl_FragColor = vec4(pos / res, 1.0);
+  //gl_FragColor = vec4(dissipation * texture3D(advected, new_pos)); 
+  // gl_FragColor = vec4( pos.xxx, 1.0);
 }

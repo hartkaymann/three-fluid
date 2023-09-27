@@ -34,8 +34,8 @@ import VorticityConfinement from './lib/slabop/VorticityConfinement';
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const domain = new THREE.Vector2(20, 20);
-const grid = new THREE.Vector3(50, 50, 2);
+const domain = new THREE.Vector2(40, 20);
+const grid = new THREE.Vector3(50, 50, 3);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -88,7 +88,7 @@ function init() {
   scene = new THREE.Scene();
 
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-  camera.position.z = 15;
+  camera.position.z = 20;
 
   // Slabs
   density = new Slab(grid.x, grid.y, grid.z, THREE.RedFormat);
@@ -124,7 +124,6 @@ function init() {
     new THREE.PlaneGeometry(domain.x, domain.y, 2, 2),
     materialDisplayVector
   );
-  quad.name = "main quad";
   scene.add(quad);
 
   // Renderer
@@ -212,7 +211,7 @@ function step() {
   //project();
 
   // Render 
-  materialDisplayVector.uniforms.read.value = velocity.read.texture;
+  materialDisplayVector.uniforms.read.value = density.read.texture;
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
@@ -247,14 +246,14 @@ function addSource(dt: number) {
   );
 
   if (mouse.left) {
-    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.001, 10.0);
+    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.01, 10.0);
   }
 
   if (mouse.right) {
     let direction = new THREE.Color().setFromVector3(
       new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0).normalize()
     );
-    force.compute(renderer, velocity, velocity, dt, position, direction, 0.001, 1.0);
+    force.compute(renderer, velocity, velocity, dt, position, direction, 0.01, 1.0);
     boundary.compute(renderer, velocity, velocity);
   }
 }

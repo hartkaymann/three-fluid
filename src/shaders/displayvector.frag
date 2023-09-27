@@ -5,12 +5,12 @@ uniform sampler2D read;
 uniform vec3 bias;
 uniform vec3 scale;
 
-varying vec2 texcoord;
+varying vec2 vUv;
 
 void main( ) {
     float threshold = 0.1;
 
-    vec3 color = bias + scale * texture2D( read, texcoord ).xyz;
+    vec3 color = bias + scale * texture2D( read, vUv ).xyz;
 
     float alpha = (length( color ) < threshold) ? 0.0 : max(color.x, max(color.y, color.z));
     gl_FragColor = vec4( color, 1.0 );
