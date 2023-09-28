@@ -35,7 +35,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(40, 20);
-const grid = new THREE.Vector3(50, 50, 3);
+const grid = new THREE.Vector3(50, 50, 2);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -183,7 +183,7 @@ function step() {
 
   // Body forces  
   //buoyancy.compute(renderer, velocity, density, velocity, dt);
-  addSource(dt);
+  addForce(dt);
 
   // Vorticity confinement
   if( applyVorticity && curl > 0) {
@@ -224,7 +224,7 @@ function step() {
 }
 step();
 
-function addSource(dt: number) {
+function addForce(dt: number) {
   if (!(mouse.left || mouse.right))
     return;
 
@@ -242,7 +242,7 @@ function addSource(dt: number) {
   let position = new THREE.Vector3(
     (intersects[0].point.x + domain.x / 2) / domain.x,
     (intersects[0].point.y + domain.y / 2) / domain.y,
-    0.0
+    0.5
   );
 
   if (mouse.left) {

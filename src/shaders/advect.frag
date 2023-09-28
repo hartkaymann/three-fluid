@@ -32,11 +32,13 @@ vec4 texture3D( sampler2D texture, vec3 coordinates ) {
   );
 }
 
-// Biliear interpolation
+// Trilinear interpolation
 vec3 trilerp( sampler2D tex, vec3 p ) {
   vec3 vi = floor( p - 0.5 ) + 0.5;
-  vec3 vj = vi + vec3( 1.0 );
+  vec3 vj = vi + 1.0 ;
   vec3 a = fract(p);
+
+  vi = vj = p;
 
   vec3 tex000 = texture3D( tex, vec3( vi.xyz ) ).xyz; // l b f
   vec3 tex100 = texture3D( tex, vec3( vj.x, vi.yz ) ).xyz;  // r b f
@@ -47,7 +49,6 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
   vec3 tex101 = texture3D( tex, vec3( vj.x, vi.y, vj.z ) ).xyz; // r b b
   vec3 tex011 = texture3D( tex, vec3( vi.x, vj.yz ) ).xyz;  // l t b
   vec3 tex111 = texture3D( tex, vec3( vj.xyz ) ).xyz; // r t b
-  
   
   return mix(
   mix( 
@@ -72,8 +73,9 @@ void main( ) {
   );
 
   vec3 new_pos = pos.xyz - dt * texture3D( velocity, pos ).xyz;
-  gl_FragColor = vec4( dissipation * trilerp( advected, pos ).xyz, 1.0 );
-
+  gl_FragColor = vec4( dissipation * trilerp( advected, new_pos ).xyz, 1.0 );
   //gl_FragColor = vec4(dissipation * texture3D(advected, new_pos)); 
-  // gl_FragColor = vec4( pos.xxx, 1.0);
+
+  // vec3 pfloor = floor( pos - 0.5 ) + 0.5;
+  // gl_FragColor = vec4(pfloor / res, 1.0);
 }
