@@ -8,11 +8,21 @@ uniform float alpha;
 uniform float rbeta;
 
 // TODO: Move to common.frag
+vec3 get3DFragCoord () {
+  return vec3(
+  mod(gl_FragCoord.x, res.x),
+  gl_FragCoord.y,
+  floor(gl_FragCoord.x / res.x) + 0.5);
+}
+
 // Texture lookup in tiled grid
 vec4 texture3D( sampler2D texture, vec3 coordinates ) {
-  float zFloor = floor(coordinates.z);
+  coordinates = clamp(coordinates, vec3(0.5), vec3(res - 0.5));
+
+  float zFloor = floor(coordinates.z - 0.5);
   float zCeil = zFloor + 1.0;
-  float fraction = fract(coordinates.z);
+
+  float fraction = fract(coordinates.z - 0.5);
 
   vec2 coordFloor = vec2( 
     ((res.x * zFloor) + coordinates.x) / (res.x * res.z),
@@ -31,11 +41,7 @@ vec4 texture3D( sampler2D texture, vec3 coordinates ) {
 }
 
 void main( ) {
-  vec3 pos = vec3( 
-    mod( gl_FragCoord.x, res.x ), 
-    gl_FragCoord.y, 
-    floor( gl_FragCoord.x / res.x ) 
-  );
+  vec3 pos = get3DFragCoord();
   
   mat3 offset = mat3(1.0);
 

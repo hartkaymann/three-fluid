@@ -10,11 +10,21 @@ uniform sampler2D velocity;
 varying vec2 vUv;
 
 // TODO: Move to common.frag
+vec3 get3DFragCoord () {
+  return vec3(
+  mod(gl_FragCoord.x, res.x),
+  gl_FragCoord.y,
+  floor(gl_FragCoord.x / res.x) + 0.5);
+}
+
 // Texture lookup in tiled grid
 vec4 texture3D( sampler2D texture, vec3 coordinates ) {
-  float zFloor = floor(coordinates.z);
+  coordinates = clamp(coordinates, vec3(0.5), vec3(res - 0.5));
+
+  float zFloor = floor(coordinates.z - 0.5);
   float zCeil = zFloor + 1.0;
-  float fraction = fract(coordinates.z);
+
+  float fraction = fract(coordinates.z - 0.5);
 
   vec2 coordFloor = vec2( 
     ((res.x * zFloor) + coordinates.x) / (res.x * res.z),
@@ -36,9 +46,8 @@ vec4 texture3D( sampler2D texture, vec3 coordinates ) {
 vec3 trilerp( sampler2D tex, vec3 p ) {
   vec3 vi = floor( p - 0.5 ) + 0.5;
   vec3 vj = vi + 1.0 ;
-  vec3 a = fract(p);
 
-  vi = vj = p;
+  vec3 a = fract(p - 0.5);
 
   vec3 tex000 = texture3D( tex, vec3( vi.xyz ) ).xyz; // l b f
   vec3 tex100 = texture3D( tex, vec3( vj.x, vi.yz ) ).xyz;  // r b f
@@ -52,7 +61,7 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
   
   return mix(
   mix( 
-    mix( tex000, tex100, a.x ), 
+    mix( tex000, tex100, a.x ),
     mix( tex010, tex110, a.x ),
     a.y 
     ),
@@ -61,21 +70,19 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
     mix( tex011, tex111, a.x ),
     a.y 
     ),
-  a.z
+    a.z
   );
 }
 
 void main( ) {
-  vec3 pos = vec3( 
-    mod( gl_FragCoord.x, res.x ), 
-    gl_FragCoord.y, 
-    floor( gl_FragCoord.x / res.x ) 
-  );
+  vec3 pos = get3DFragCoord();
 
   vec3 new_pos = pos.xyz - texture3D( velocity, pos ).xyz;
   gl_FragColor = vec4( dissipation * trilerp( advected, new_pos ).xyz, 1.0 );
-  //gl_FragColor = vec4(dissipation * texture3D(advected, new_pos)); 
 
+  //gl_FragColor = vec4(texture3D(advected, pos).xyz, 1.0); 
+  
+  // gl_FragColor = vec4(pos / res, 1.0);
   // vec3 pfloor = floor( pos - 0.5 ) + 0.5;
   // gl_FragColor = vec4(pfloor / res, 1.0);
 }

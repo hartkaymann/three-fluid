@@ -35,7 +35,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(40, 20);
-const grid = new THREE.Vector3(100, 100, 10);
+const grid = new THREE.Vector3(100, 100, 5);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -112,11 +112,11 @@ function init() {
   materialDisplay = new THREE.RawShaderMaterial({
     uniforms: {
       read: { value: velocity.read.texture },
-      bias: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
+      bias: { value: new THREE.Vector3(0., 0., 0.) },
       scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
     },
     vertexShader: vertexBasic,
-    fragmentShader: fragmentDisplayScalar,
+    fragmentShader: fragmentDisplayVector,
     side: THREE.DoubleSide
   });
 
@@ -211,7 +211,7 @@ function step() {
   project();
 
   // Render 
-  materialDisplay.uniforms.read.value = density.read.texture;
+  materialDisplay.uniforms.read.value = velocity.read.texture;
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
@@ -242,18 +242,18 @@ function addForce(dt: number) {
   let position = new THREE.Vector3(
     (intersects[0].point.x + domain.x / 2) / domain.x,
     (intersects[0].point.y + domain.y / 2) / domain.y,
-    0.0
+    0.5
   );
 
   if (mouse.left) {
-    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.001, 10.0);
+    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.01, 5.0);
   }
 
   if (mouse.right) {
     let direction = new THREE.Color().setFromVector3(
       new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0).normalize()
     );
-    force.compute(renderer, velocity, velocity, dt, position, direction, 0.001, 10.0);
+    force.compute(renderer, velocity, velocity, dt, position, direction, 0.01, 5.0);
     boundary.compute(renderer, velocity, velocity);
   }
 }
