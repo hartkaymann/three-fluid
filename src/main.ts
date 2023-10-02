@@ -35,7 +35,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(40, 20);
-const grid = new THREE.Vector3(100, 100, 5);
+const grid = new THREE.Vector3(100, 100, 6);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid

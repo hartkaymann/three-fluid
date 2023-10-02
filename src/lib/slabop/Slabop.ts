@@ -22,22 +22,25 @@ export abstract class Slabop {
         this.scene = new THREE.Scene();
 
         this.camera = new THREE.OrthographicCamera((grid.x * grid.z) / -2, (grid.x * grid.z) / 2, grid.y / 2, grid.y / -2, 1, 100);
-        //this.camera = new THREE.OrthographicCamera(0, grid.x * grid.z, grid.y, 0, 1, 100);
         this.camera.position.z = 2;
 
         this.uniforms = uniforms;
 
         // TODO: reduce render area to not render the first and last tile, since those would be boundaries
-        const geometry = new THREE.PlaneGeometry(grid.x * grid.z - 2, grid.y -2, grid.z, 1.0);
-        //geometry.translate(grid.x * grid.z / 2, grid.y / 2, 0.0);
-        const material = new THREE.RawShaderMaterial({
-            //glslVersion: THREE.GLSL3,
-            uniforms: this.uniforms,
-            vertexShader: vs,
-            fragmentShader: fs,
-        });
-        const quad = new THREE.Mesh(geometry, material);
+        // const geometry = new THREE.PlaneGeometry(grid.x * grid.z - 2, grid.y -2, grid.z, 1.0);
 
-        this.scene.add(quad);
+        for (let i = 1; i < grid.z - 1; i++) {
+            const geometry = new THREE.PlaneGeometry(grid.x - 2, grid.y - 2);
+            geometry.translate((grid.x * grid.z / -2 + grid.x / 2) + i * grid.x, 0.0, 0.0);
+            
+            const material = new THREE.RawShaderMaterial({
+                uniforms: this.uniforms,
+                vertexShader: vs,
+                fragmentShader: fs,
+            });
+            const quad = new THREE.Mesh(geometry, material);
+            
+            this.scene.add(quad);
+        }
     }
 }

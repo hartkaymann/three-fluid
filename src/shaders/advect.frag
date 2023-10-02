@@ -83,6 +83,5 @@ void main( ) {
   //gl_FragColor = vec4(texture3D(advected, pos).xyz, 1.0); 
   
   // gl_FragColor = vec4(pos / res, 1.0);
-  // vec3 pfloor = floor( pos - 0.5 ) + 0.5;
-  // gl_FragColor = vec4(pfloor / res, 1.0);
+  //gl_FragColor = vec4(1.0);
 }
