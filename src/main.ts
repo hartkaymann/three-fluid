@@ -35,7 +35,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(40, 20);
-const grid = new THREE.Vector3(50, 50, 2);
+const grid = new THREE.Vector3(100, 100, 10);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -45,7 +45,7 @@ let dissipation = 1.; // Dissipation, lower value means faster dissipation
 let rise = 1.0; // Tendency to rise
 let fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
 let applyBoundaries = true;
-let pressureIterations = 80; // Jacobi iterations for poisson pressure, should be between 50-80 
+let pressureIterations = 50; // Jacobi iterations for poisson pressure, should be between 50-80 
 
 let renderer: THREE.WebGLRenderer;
 
@@ -77,7 +77,7 @@ let jacobi: Jacobi;
 let vorticity: Vorticity;
 let vorticityConfinement: VorticityConfinement;
 
-let materialDisplayVector: THREE.RawShaderMaterial;
+let materialDisplay: THREE.RawShaderMaterial;
 
 let quad: THREE.Mesh;
 
@@ -109,20 +109,20 @@ function init() {
   vorticityConfinement = new VorticityConfinement(grid, vertexBasic, fragmentVorticityConfinement);
 
   // Display mesh
-  materialDisplayVector = new THREE.RawShaderMaterial({
+  materialDisplay = new THREE.RawShaderMaterial({
     uniforms: {
       read: { value: velocity.read.texture },
-      bias: { value: new THREE.Vector3(-0.0, -0.0, -0.0) },
+      bias: { value: new THREE.Vector3(0.0, 0.0, 0.0) },
       scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
     },
     vertexShader: vertexBasic,
-    fragmentShader: fragmentDisplayVector,
+    fragmentShader: fragmentDisplayScalar,
     side: THREE.DoubleSide
   });
 
   quad = new THREE.Mesh(
     new THREE.PlaneGeometry(domain.x, domain.y, 2, 2),
-    materialDisplayVector
+    materialDisplay
   );
   scene.add(quad);
 
@@ -197,7 +197,7 @@ function step() {
   if (applyViscosity && viscosity > 0) {
 
     let alpha = 1.0 / (viscosity * dt);
-    let beta = 4.0 + alpha;
+    let beta = 6.0 + alpha;
 
     jacobi.alpha = alpha;
     jacobi.beta = beta;
@@ -208,10 +208,10 @@ function step() {
   }
 
   // Projection
-  //project();
+  project();
 
   // Render 
-  materialDisplayVector.uniforms.read.value = density.read.texture;
+  materialDisplay.uniforms.read.value = density.read.texture;
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
@@ -242,18 +242,18 @@ function addForce(dt: number) {
   let position = new THREE.Vector3(
     (intersects[0].point.x + domain.x / 2) / domain.x,
     (intersects[0].point.y + domain.y / 2) / domain.y,
-    0.5
+    0.0
   );
 
   if (mouse.left) {
-    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.01, 10.0);
+    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.001, 10.0);
   }
 
   if (mouse.right) {
     let direction = new THREE.Color().setFromVector3(
       new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0).normalize()
     );
-    force.compute(renderer, velocity, velocity, dt, position, direction, 0.01, 1.0);
+    force.compute(renderer, velocity, velocity, dt, position, direction, 0.001, 10.0);
     boundary.compute(renderer, velocity, velocity);
   }
 }
@@ -265,7 +265,7 @@ function project() {
 
   // Poisson Pressure
   jacobi.alpha = -1.0;
-  jacobi.beta = 4.0;
+  jacobi.beta = 6.0;
   jacobi.compute(renderer, pressure, velocityDivergence, pressure, pressureIterations, boundary, 1.0);
 
   // Subtract gradient

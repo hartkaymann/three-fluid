@@ -7,31 +7,45 @@ uniform float halfrdx;
 uniform sampler2D velocity;
 
 // TODO: Move to common.frag
-// Texture lookup in staggered grid
+// Texture lookup in tiled grid
 vec4 texture3D( sampler2D texture, vec3 coordinates ) {
-    vec2 texcoord = vec2( res.x * coordinates.z + coordinates.x, coordinates.y );
-    texcoord.x /= res.x * res.z;
-    texcoord.y /= res.y;
+  float zFloor = floor(coordinates.z);
+  float zCeil = zFloor + 1.0;
+  float fraction = fract(coordinates.z);
 
-    return texture2D( texture, texcoord.xy );
+  vec2 coordFloor = vec2( 
+    ((res.x * zFloor) + coordinates.x) / (res.x * res.z),
+    coordinates.y / res.y );
+  
+  vec2 coordCeil = vec2( 
+    ((res.x * zCeil) + coordinates.x) / (res.x * res.z),
+    coordinates.y / res.y );
+  
+  // normalize
+  return mix(
+    texture2D( texture, coordFloor), 
+    texture2D(texture, coordCeil), 
+    fraction 
+  );
 }
 
 void main( ) {
-    vec3 pos = vec3(
-      mod(gl_FragCoord.x, res.x),
-      gl_FragCoord.y,
-      (gl_FragCoord.x - mod(gl_FragCoord.x, res.x)) / res.x    
-    );
+  vec3 pos = vec3( 
+    mod( gl_FragCoord.x, res.x ), 
+    gl_FragCoord.y, 
+    floor( gl_FragCoord.x / res.x ) 
+  );
   
-    vec3 offsetX = vec3( 1.0, 0.0, 0.0 );
-    vec3 offsetY = vec3( 0.0, 1.0, 0.0 );
-
-    float right = texture3D( velocity, pos + offsetX ).x;
-    float left = texture3D( velocity, pos - offsetX ).x;
-    float up = texture3D( velocity, pos + offsetY ).y;
-    float down = texture3D( velocity, pos - offsetY ).y;
-
-    float divergence = halfrdx * ( ( right - left ) + ( up - down ) );
-    gl_FragColor = vec4( divergence, 0.0, 0.0, 1.0 );
-    //gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+  mat3 offset = mat3(1.0);
+  
+  float right = texture3D( velocity, pos + offset[0] ).x;
+  float left  = texture3D( velocity, pos - offset[0] ).x;
+  float up    = texture3D( velocity, pos + offset[1] ).y;
+  float down  = texture3D( velocity, pos - offset[1] ).y;
+  float back  = texture3D( velocity, pos + offset[2] ).z;
+  float front = texture3D( velocity, pos - offset[2] ).z;
+  
+  float divergence = halfrdx * ( ( right - left ) + ( up - down ) + ( back - front ) );
+  gl_FragColor = vec4( divergence, 0.0, 0.0, 1.0 );
+  //gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
 }

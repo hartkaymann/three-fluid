@@ -21,7 +21,7 @@ export default class Jacobi extends Slabop {
         super(grid, vs, fs, uniforms);
         
         this.alpha = -1.0;
-        this.beta = 4;
+        this.beta = 6.0;
     }
 
     compute(

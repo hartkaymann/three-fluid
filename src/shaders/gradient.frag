@@ -7,32 +7,47 @@ uniform float halfrdx;
 uniform sampler2D pressure;
 uniform sampler2D velocity;
 
+// TODO: Move to common.frag
+// Texture lookup in tiled grid
 vec4 texture3D( sampler2D texture, vec3 coordinates ) {
-    vec2 texcoord = vec2( res.x * coordinates.z + coordinates.x, coordinates.y );
-    texcoord.x /= res.x * res.z;
-    texcoord.y /= res.y;
+  float zFloor = floor(coordinates.z);
+  float zCeil = zFloor + 1.0;
+  float fraction = fract(coordinates.z);
 
-    return texture2D( texture, texcoord.xy );
+  vec2 coordFloor = vec2( 
+    ((res.x * zFloor) + coordinates.x) / (res.x * res.z),
+    coordinates.y / res.y );
+  
+  vec2 coordCeil = vec2( 
+    ((res.x * zCeil) + coordinates.x) / (res.x * res.z),
+    coordinates.y / res.y );
+  
+  // normalize
+  return mix(
+    texture2D( texture, coordFloor), 
+    texture2D(texture, coordCeil), 
+    fraction 
+  );
 }
 
 void main( ) {
-    vec2 uv = gl_FragCoord.xy / res.xy;
-    vec3 pos = vec3(
-      mod(gl_FragCoord.x, res.x),
-      gl_FragCoord.y,
-      (gl_FragCoord.x - mod(gl_FragCoord.x, res.x)) / res.x    
-    );
+  vec3 pos = vec3( 
+    mod( gl_FragCoord.x, res.x ), 
+    gl_FragCoord.y, 
+    floor( gl_FragCoord.x / res.x ) 
+  );
     
-    vec3 offsetX = vec3(1.0, 0.0, 0.0);
-    vec3 offsetY = vec3(0.0, 1.0, 0.0);    
+  mat3 offset = mat3(1.0);
 
-    float right = texture3D(pressure, pos + offsetX).x;
-    float left  = texture3D(pressure, pos - offsetX ).x;
-    float up    = texture3D(pressure, pos + offsetY ).x;
-    float down  = texture3D(pressure, pos - offsetY ).x;
+  float right = texture3D(pressure, pos + offset[0] ).x;
+  float left  = texture3D(pressure, pos - offset[0] ).x;
+  float up    = texture3D(pressure, pos + offset[1] ).x;
+  float down  = texture3D(pressure, pos - offset[1] ).x;
+  float back  = texture3D(pressure, pos + offset[2] ).x;
+  float front = texture3D(pressure, pos - offset[2] ).x;
 
-    vec2 center = texture3D(velocity, gl_FragCoord.xyz).xy;
-    vec2 gradient = halfrdx * vec2(right - left,  up - down);
+  vec3 center = texture3D(velocity, pos).xyz;
+  vec3 gradient = halfrdx * vec3(right - left,  up - down, back - front);
 
-    gl_FragColor = vec4(center - gradient, 0.0, 1.0);
+  gl_FragColor = vec4(center - gradient, 1.0);
 }

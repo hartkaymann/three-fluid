@@ -39,6 +39,7 @@ export abstract class Slabop {
 
         this.uniforms = uniforms;
 
+        // TODO: reduce render area to not render the first and last tile, since those would be boundaries
         const geometry = new THREE.PlaneGeometry(grid.x * grid.z - 2, grid.y + -2, grid.z, 1.0);
         geometry.translate(grid.x * grid.z / 2, grid.y / 2, 0.0);
         const material = new THREE.RawShaderMaterial({

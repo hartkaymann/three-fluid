@@ -13,21 +13,21 @@ varying vec2 vUv;
 // Texture lookup in tiled grid
 vec4 texture3D( sampler2D texture, vec3 coordinates ) {
   float zFloor = floor(coordinates.z);
-  float zRoof = zFloor + 1.0;
+  float zCeil = zFloor + 1.0;
   float fraction = fract(coordinates.z);
 
   vec2 coordFloor = vec2( 
     ((res.x * zFloor) + coordinates.x) / (res.x * res.z),
     coordinates.y / res.y );
   
-  vec2 coordRoof = vec2( 
-    ((res.x * zRoof) + coordinates.x) / (res.x * res.z),
+  vec2 coordCeil = vec2( 
+    ((res.x * zCeil) + coordinates.x) / (res.x * res.z),
     coordinates.y / res.y );
   
   // normalize
   return mix(
     texture2D( texture, coordFloor), 
-    texture2D(texture, coordRoof), 
+    texture2D(texture, coordCeil), 
     fraction 
   );
 }
@@ -72,7 +72,7 @@ void main( ) {
     floor( gl_FragCoord.x / res.x ) 
   );
 
-  vec3 new_pos = pos.xyz - dt * texture3D( velocity, pos ).xyz;
+  vec3 new_pos = pos.xyz - texture3D( velocity, pos ).xyz;
   gl_FragColor = vec4( dissipation * trilerp( advected, new_pos ).xyz, 1.0 );
   //gl_FragColor = vec4(dissipation * texture3D(advected, new_pos)); 
 
