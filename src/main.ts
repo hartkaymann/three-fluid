@@ -5,6 +5,7 @@ import { Clock } from 'three/src/core/Clock.js'
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 import vertexBasic from './shaders/basic.vert'
+import vertexOffset from './shaders/offset.vert'
 import fragmentForce from './shaders/force.frag'
 import fragmentAdvect from './shaders/advect.frag'
 import fragmentJacobi from './shaders/jacobi.frag'
@@ -35,7 +36,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector2(40, 20);
-const grid = new THREE.Vector3(100, 100, 6);
+const grid = new THREE.Vector3(100, 100, 5);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -102,7 +103,7 @@ function init() {
   force = new Force(grid, vertexBasic, fragmentForce);
   divergence = new Divergence(grid, vertexBasic, fragmentDivergence);
   gradient = new Gradient(grid, vertexBasic, fragmentGradient);
-  boundary = new Boundary(grid, vertexBasic, fragmentBoundary);
+  boundary = new Boundary(grid, vertexOffset, fragmentBoundary);
   jacobi = new Jacobi(grid, vertexBasic, fragmentJacobi);
   buoyancy = new Buoyancy(grid, vertexBasic, fragmentBuoyancy);
   vorticity = new Vorticity(grid, vertexBasic, fragmentVorticity);
@@ -112,7 +113,7 @@ function init() {
   materialDisplay = new THREE.RawShaderMaterial({
     uniforms: {
       read: { value: velocity.read.texture },
-      bias: { value: new THREE.Vector3(0., 0., 0.) },
+      bias: { value: new THREE.Vector3(0.5, 0.5, 0.5) },
       scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) }
     },
     vertexShader: vertexBasic,
@@ -177,7 +178,7 @@ function step() {
 
   // Advection
   advect.compute(renderer, velocity, velocity, velocity, dt);
-  //boundary.compute(renderer, velocity, velocity);
+  boundary.compute(renderer, velocity, velocity);
 
   advect.compute(renderer, density, velocity, density, dt, dissipation);
 
@@ -246,14 +247,14 @@ function addForce(dt: number) {
   );
 
   if (mouse.left) {
-    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.01, 5.0);
+    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.005, 5.0);
   }
 
   if (mouse.right) {
     let direction = new THREE.Color().setFromVector3(
       new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0).normalize()
     );
-    force.compute(renderer, velocity, velocity, dt, position, direction, 0.01, 5.0);
+    force.compute(renderer, velocity, velocity, dt, position, direction, 0.005, 5.0);
     boundary.compute(renderer, velocity, velocity);
   }
 }

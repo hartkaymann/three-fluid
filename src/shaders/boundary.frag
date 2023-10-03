@@ -3,8 +3,9 @@ precision highp float;
 uniform sampler2D read;
 
 uniform vec3 res; // grid resolution
-uniform vec3 offset;
 uniform float scale;
+
+varying vec2 vOffset;
 
 // TODO: Move to common.frag
 // Texture lookup in staggered grid
@@ -17,8 +18,8 @@ vec4 texture3D(sampler2D texture, vec3 coordinates) {
 }
 
 void main() {
-    vec3 texcoord = gl_FragCoord.xyz + offset;
-    gl_FragColor = vec4(scale * texture3D(read, texcoord).xyz, 1.0);
-    //gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-    //gl_FragColor = vec4(uv.xyxy);
+    vec2 texcoord = (gl_FragCoord.xy + vOffset) / vec2(res.x * res.z, res.y);
+    gl_FragColor = vec4(scale * texture2D(read, texcoord).xyz, 1.0);
+    // gl_FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+    //gl_FragColor = vec4(vOffset.xy / res.xy, 0.0, 1.0);
 }

@@ -12,7 +12,7 @@ export abstract class Slabop {
     uniforms: { [uniform: string]: THREE.IUniform<any> }
 
     constructor(
-        grid: THREE.Vector3,
+        resolution: THREE.Vector3,
         vs: string,
         fs: string,
         uniforms: {
@@ -21,7 +21,7 @@ export abstract class Slabop {
     ) {
         this.scene = new THREE.Scene();
 
-        this.camera = new THREE.OrthographicCamera((grid.x * grid.z) / -2, (grid.x * grid.z) / 2, grid.y / 2, grid.y / -2, 1, 100);
+        this.camera = new THREE.OrthographicCamera((resolution.x * resolution.z) / -2, (resolution.x * resolution.z) / 2, resolution.y / 2, resolution.y / -2, 1, 100);
         this.camera.position.z = 2;
 
         this.uniforms = uniforms;
@@ -29,9 +29,9 @@ export abstract class Slabop {
         // TODO: reduce render area to not render the first and last tile, since those would be boundaries
         // const geometry = new THREE.PlaneGeometry(grid.x * grid.z - 2, grid.y -2, grid.z, 1.0);
 
-        for (let i = 1; i < grid.z - 1; i++) {
-            const geometry = new THREE.PlaneGeometry(grid.x - 2, grid.y - 2);
-            geometry.translate((grid.x * grid.z / -2 + grid.x / 2) + i * grid.x, 0.0, 0.0);
+        for (let i = 1; i < resolution.z - 1; i++) {
+            const geometry = new THREE.PlaneGeometry(resolution.x - 2, resolution.y - 2);
+            geometry.translate((resolution.x * resolution.z / -2 + resolution.x / 2) + i * resolution.x, 0.0, 0.0);
             
             const material = new THREE.RawShaderMaterial({
                 uniforms: this.uniforms,
