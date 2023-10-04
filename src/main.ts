@@ -11,13 +11,15 @@ import fragmentAdvect from './shaders/advect.frag'
 import fragmentJacobi from './shaders/jacobi.frag'
 import fragmentDivergence from './shaders/divergence.frag'
 import fragmentGradient from './shaders/gradient.frag'
-import fragmentDisplayVector from './shaders/displayvector.frag'
-import fragmentDisplayScalar from './shaders/displayscalar.frag'
 import fragmentBoundary from './shaders/boundary.frag'
 import fragmentBuoyancy from './shaders/buoyancy.frag'
 import fragmentVorticity from './shaders/vorticity.frag'
 import fragmentVorticityConfinement from './shaders/vorticityconfine.frag'
 
+import vertexTiled from './shaders/displaytiled.vert'
+import fragmentTiled from './shaders/displaytiled.frag'
+import fragmentDisplayVector from './shaders/displayvector.frag'
+import fragmentDisplayScalar from './shaders/displayscalar.frag'
 
 import Slab from './lib/Slab';
 import Mouse from './lib/Mouse';
@@ -35,12 +37,12 @@ import VorticityConfinement from './lib/slabop/VorticityConfinement';
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const domain = new THREE.Vector2(40, 20);
-const grid = new THREE.Vector3(100, 100, 5);
+const domain = new THREE.Vector3(20, 20, 20);
+const grid = new THREE.Vector3(40, 40, 40);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
-let applyVorticity = false; 
+let applyVorticity = false;
 let curl = 0.3; // Curl
 let dissipation = 1.; // Dissipation, lower value means faster dissipation
 let rise = 1.0; // Tendency to rise
@@ -79,8 +81,9 @@ let vorticity: Vorticity;
 let vorticityConfinement: VorticityConfinement;
 
 let materialDisplay: THREE.RawShaderMaterial;
+let materialTiled: THREE.RawShaderMaterial;
 
-let quad: THREE.Mesh;
+let domainBox: THREE.LineSegments;
 
 function init() {
   let canvas = <HTMLCanvasElement>document.getElementById('c');
@@ -121,11 +124,34 @@ function init() {
     side: THREE.DoubleSide
   });
 
-  quad = new THREE.Mesh(
-    new THREE.PlaneGeometry(domain.x, domain.y, 2, 2),
-    materialDisplay
+  // Setup tiled rendering
+  materialTiled = new THREE.RawShaderMaterial({
+    uniforms: {
+      read: { value: velocity.read.texture },
+      res: { value: grid },
+      size: { value: domain }
+    },
+    vertexShader: vertexTiled,
+    fragmentShader: fragmentTiled,
+    side: THREE.DoubleSide,
+    transparent: true
+  });
+
+  for (let i = 1; i < grid.z - 1; i++) {
+    const geometry = new THREE.PlaneGeometry(domain.x, domain.y);
+    geometry.translate(0.0, 0.0, domain.z / 2 - i * (domain.z / grid.z));
+
+    const quad = new THREE.Mesh(geometry, materialTiled);
+
+    scene.add(quad);
+  }
+
+  const geometryDomainBox = new THREE.BoxGeometry(domain.x, domain.y, domain.z);
+  domainBox = new THREE.LineSegments(
+    new THREE.EdgesGeometry(geometryDomainBox),
+    new THREE.LineBasicMaterial({ color: 0xffffff })
   );
-  scene.add(quad);
+  scene.add(domainBox);
 
   // Renderer
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -187,7 +213,7 @@ function step() {
   addForce(dt);
 
   // Vorticity confinement
-  if( applyVorticity && curl > 0) {
+  if (applyVorticity && curl > 0) {
     vorticity.compute(renderer, velocity, velocityVorticity);
     vorticityConfinement.compute(renderer, velocity, velocityVorticity, velocity, dt, curl);
 
@@ -213,6 +239,8 @@ function step() {
 
   // Render 
   materialDisplay.uniforms.read.value = velocity.read.texture;
+  materialTiled.uniforms.read.value = density.read.texture;
+
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
@@ -245,6 +273,8 @@ function addForce(dt: number) {
     (intersects[0].point.y + domain.y / 2) / domain.y,
     0.5
   );
+
+  console.log(position);
 
   if (mouse.left) {
     force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.005, 5.0);
