@@ -33,12 +33,14 @@ import Jacobi from './lib/slabop/Jacobi';
 import SlabDebug from './lib/SlabDebug';
 import Vorticity from './lib/slabop/Vorticity';
 import VorticityConfinement from './lib/slabop/VorticityConfinement';
+import Pointer3D from './lib/Pointer3D';
+import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector3(20, 20, 20);
-const grid = new THREE.Vector3(40, 40, 40);
+const grid = new THREE.Vector3(100, 100, 100);
 
 let applyViscosity = false;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -53,7 +55,7 @@ let pressureIterations = 50; // Jacobi iterations for poisson pressure, should b
 let renderer: THREE.WebGLRenderer;
 
 let mouse: Mouse;
-let raycaster: THREE.Raycaster;
+let pointer: Pointer3D;
 
 let slabDebugs: SlabDebug[] = [];
 
@@ -84,6 +86,8 @@ let materialDisplay: THREE.RawShaderMaterial;
 let materialTiled: THREE.RawShaderMaterial;
 
 let domainBox: THREE.LineSegments;
+let pointerSphere: THREE.Mesh;
+let pointerLine: THREE.Line;
 
 function init() {
   let canvas = <HTMLCanvasElement>document.getElementById('c');
@@ -146,12 +150,28 @@ function init() {
     scene.add(quad);
   }
 
+  // Add visual guides
   const geometryDomainBox = new THREE.BoxGeometry(domain.x, domain.y, domain.z);
   domainBox = new THREE.LineSegments(
     new THREE.EdgesGeometry(geometryDomainBox),
     new THREE.LineBasicMaterial({ color: 0xffffff })
   );
   scene.add(domainBox);
+
+  pointerSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.5, 16, 8),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  );
+  scene.add(pointerSphere);
+
+  pointerLine = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(0, 0, 0),
+      new THREE.Vector3(0, 0, 0)
+    ]),
+    new THREE.LineBasicMaterial({ color: 0xffffff })
+  );
+  scene.add(pointerLine);
 
   // Renderer
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -173,7 +193,7 @@ function init() {
 
   // Additionals
   mouse = new Mouse();
-  raycaster = new THREE.Raycaster();
+  pointer = new Pointer3D(camera, mouse, domain);
 
   stats = new Stats();
   document.body.appendChild(stats.dom);
@@ -238,7 +258,6 @@ function step() {
   project();
 
   // Render 
-  materialDisplay.uniforms.read.value = velocity.read.texture;
   materialTiled.uniforms.read.value = density.read.texture;
 
   renderer.setRenderTarget(null);
@@ -257,33 +276,32 @@ function addForce(dt: number) {
   if (!(mouse.left || mouse.right))
     return;
 
-  let pointer = new THREE.Vector2(
-    mouse.position.x * 2 - 1,
-    -mouse.position.y * 2 + 1
+  pointer.update();
+
+  let position = pointer.position;
+  pointerSphere.position.set(position.x, position.y, position.z);
+  pointerLine.geometry.attributes.position.array[0] = pointer.first.x;
+  pointerLine.geometry.attributes.position.array[1] = pointer.first.y;
+  pointerLine.geometry.attributes.position.array[2] = pointer.first.z;
+  pointerLine.geometry.attributes.position.array[3] = pointer.last.x;
+  pointerLine.geometry.attributes.position.array[4] = pointer.last.y;
+  pointerLine.geometry.attributes.position.array[5] = pointer.last.z;
+  pointerLine.geometry.attributes.position.needsUpdate = true;
+
+  position.set(
+    (position.x + domain.x / 2) / domain.x,
+    (position.y + domain.y / 2) / domain.y,
+    1 - (position.z + domain.z / 2) / domain.z
   );
-
-  raycaster.setFromCamera(pointer, camera);
-  const intersects = raycaster.intersectObjects(scene.children);
-
-  if (intersects.length == 0)
-    return;
-
-  let position = new THREE.Vector3(
-    (intersects[0].point.x + domain.x / 2) / domain.x,
-    (intersects[0].point.y + domain.y / 2) / domain.y,
-    0.5
-  );
-
-  console.log(position);
 
   if (mouse.left) {
-    force.compute(renderer, density, density, dt, position, new THREE.Color(0xffffff), 0.005, 5.0);
+    force.compute(renderer, density, density, dt, position, new THREE.Vector3(1, 1, 1), 0.005, 5.0);
   }
 
   if (mouse.right) {
-    let direction = new THREE.Color().setFromVector3(
-      new THREE.Vector3(mouse.motion.x, mouse.motion.y, 0.0).normalize()
-    );
+    let direction = pointer.direction;
+    direction.z *= -1;
+
     force.compute(renderer, velocity, velocity, dt, position, direction, 0.005, 5.0);
     boundary.compute(renderer, velocity, velocity);
   }
