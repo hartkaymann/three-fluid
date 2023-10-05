@@ -22,6 +22,8 @@ export default class Pointer3D extends THREE.Raycaster {
 
         this.position = new THREE.Vector3();
         this.direction = new THREE.Vector3();
+        this.first = new THREE.Vector3();
+        this.last = new THREE.Vector3();
 
         this.geometry = new THREE.Mesh(
             new THREE.BoxGeometry(domain.x, domain.y, domain.z),
