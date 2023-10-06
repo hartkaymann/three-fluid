@@ -51,6 +51,8 @@ export default class Jacobi extends Slabop {
     ) {
         this.uniforms.x.value = x.read.texture;
         this.uniforms.b.value = b.read.texture;
+        this.alpha;
+        this.beta;
     
         renderer.setRenderTarget(output.write);
         renderer.render(this.scene, this.camera);

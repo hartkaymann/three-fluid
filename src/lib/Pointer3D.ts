@@ -60,7 +60,5 @@ export default class Pointer3D extends THREE.Raycaster {
             midpoint.z - this.position.z
         )
         this.position = midpoint;
-
-        console.log(this.direction);
     }
 }

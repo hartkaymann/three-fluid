@@ -46,6 +46,7 @@ void main( ) {
   mat3 offset = mat3(1.0);
 
   vec3 center = texture3D( b, pos).xyz;
+  
   vec3 right  = texture3D( x,pos + offset[0] ).xyz;
   vec3 left   = texture3D( x,pos - offset[0] ).xyz;
   vec3 up     = texture3D( x,pos + offset[1] ).xyz;

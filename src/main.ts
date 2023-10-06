@@ -34,19 +34,18 @@ import SlabDebug from './lib/SlabDebug';
 import Vorticity from './lib/slabop/Vorticity';
 import VorticityConfinement from './lib/slabop/VorticityConfinement';
 import Pointer3D from './lib/Pointer3D';
-import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector3(20, 20, 20);
-const grid = new THREE.Vector3(100, 100, 100);
+const grid = new THREE.Vector3(50, 50, 50);
 
-let applyViscosity = false;
+let applyViscosity = true;
 let viscosity = 0.3; // Viscosity, higher value means more viscous fluid
-let applyVorticity = false;
+let applyVorticity = true;
 let curl = 0.3; // Curl
-let dissipation = 1.; // Dissipation, lower value means faster dissipation
+let dissipation = 0.998; // Dissipation, lower value means faster dissipation
 let rise = 1.0; // Tendency to rise
 let fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
 let applyBoundaries = true;
@@ -87,7 +86,6 @@ let materialTiled: THREE.RawShaderMaterial;
 
 let domainBox: THREE.LineSegments;
 let pointerSphere: THREE.Mesh;
-let pointerLine: THREE.Line;
 
 function init() {
   let canvas = <HTMLCanvasElement>document.getElementById('c');
@@ -160,18 +158,9 @@ function init() {
 
   pointerSphere = new THREE.Mesh(
     new THREE.SphereGeometry(0.5, 16, 8),
-    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    new THREE.MeshBasicMaterial({ color: 0x00ffff })
   );
   scene.add(pointerSphere);
-
-  pointerLine = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(0, 0, 0),
-      new THREE.Vector3(0, 0, 0)
-    ]),
-    new THREE.LineBasicMaterial({ color: 0xffffff })
-  );
-  scene.add(pointerLine);
 
   // Renderer
   renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -243,15 +232,14 @@ function step() {
   // Viscous diffusion
   if (applyViscosity && viscosity > 0) {
 
-    let alpha = 1.0 / (viscosity * dt);
+    let alpha = 1.0 / (viscosity * 1.0); // timestep = 1.0
     let beta = 6.0 + alpha;
 
     jacobi.alpha = alpha;
     jacobi.beta = beta;
 
-    jacobi.compute(renderer, velocity, velocity, velocity, 20, boundary);
-
-    jacobi.compute(renderer, density, density, density, 20);
+    jacobi.compute(renderer, velocity, velocity, velocity, 1, boundary);
+    jacobi.compute(renderer, density, density, density, 1);
   }
 
   // Projection
@@ -273,20 +261,16 @@ function step() {
 step();
 
 function addForce(dt: number) {
-  if (!(mouse.left || mouse.right))
+  if (!(mouse.left || mouse.right)) {
+    pointerSphere.visible = false;
     return;
+  }
 
   pointer.update();
 
   let position = pointer.position;
+  pointerSphere.visible = true;
   pointerSphere.position.set(position.x, position.y, position.z);
-  pointerLine.geometry.attributes.position.array[0] = pointer.first.x;
-  pointerLine.geometry.attributes.position.array[1] = pointer.first.y;
-  pointerLine.geometry.attributes.position.array[2] = pointer.first.z;
-  pointerLine.geometry.attributes.position.array[3] = pointer.last.x;
-  pointerLine.geometry.attributes.position.array[4] = pointer.last.y;
-  pointerLine.geometry.attributes.position.array[5] = pointer.last.z;
-  pointerLine.geometry.attributes.position.needsUpdate = true;
 
   position.set(
     (position.x + domain.x / 2) / domain.x,
@@ -295,14 +279,14 @@ function addForce(dt: number) {
   );
 
   if (mouse.left) {
-    force.compute(renderer, density, density, dt, position, new THREE.Vector3(1, 1, 1), 0.005, 5.0);
+    force.compute(renderer, density, density, dt, position, new THREE.Vector3(1, 1, 1), 0.005, 10.0);
   }
 
   if (mouse.right) {
     let direction = pointer.direction;
     direction.z *= -1;
 
-    force.compute(renderer, velocity, velocity, dt, position, direction, 0.005, 5.0);
+    force.compute(renderer, velocity, velocity, dt, position, direction, 0.005, 10.0);
     boundary.compute(renderer, velocity, velocity);
   }
 }
