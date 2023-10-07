@@ -7,14 +7,14 @@ export default class Slab {
     read: THREE.WebGLRenderTarget;
     write: THREE.WebGLRenderTarget;
 
-    constructor(width: number, height: number, depth: number, format?: THREE.AnyPixelFormat) {
+    constructor(resolution: THREE.Vector3, format?: THREE.AnyPixelFormat) {
 
         this.FBOs = [];
 
         for (let i = 0; i < 2; i++) {
             this.FBOs[i] = new THREE.WebGLRenderTarget(
-                width * depth,
-                height,
+                resolution.x * resolution.z,
+                resolution.y,
                 {
                     type: THREE.FloatType,
                     format: format ? format : THREE.RGBAFormat,

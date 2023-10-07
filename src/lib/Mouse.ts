@@ -3,14 +3,12 @@ import * as THREE from 'three';
 
 export default class Mouse {
 
-    left: boolean;
-    right: boolean;
+    keys: [boolean, boolean];
     position: THREE.Vector2;
     motion: THREE.Vector2;
 
     constructor() {
-        this.left = false;
-        this.right = false;
+        this.keys = [false, false];
         this.position = new THREE.Vector2();
         this.motion = new THREE.Vector2();
 
@@ -24,14 +22,14 @@ export default class Mouse {
         let x = event.clientX / window.innerWidth;
         let y = event.clientY / window.innerHeight;
         this.position.set(x, y);
-        this.left = event.button === 0 ? true : this.left;
-        this.right = event.button === 2 ? true : this.right;
+        this.keys[0] = event.button === 0 ? true : this.keys[0];
+        this.keys[1] = event.button === 2 ? true : this.keys[1];
     }
 
     mouseUp(event: MouseEvent) {
         event.preventDefault();
-        this.left = event.button === 0 ? false : this.left;
-        this.right = event.button === 2 ? false : this.right;
+        this.keys[0] = event.button === 0 ? false : this.keys[0];
+        this.keys[1] = event.button === 2 ? false : this.keys[1];
     }
 
     mouseMove(event: MouseEvent) {
@@ -40,7 +38,7 @@ export default class Mouse {
         let x = event.clientX / window.innerWidth;
         let y = event.clientY / window.innerHeight;
 
-        if (this.left || this.right) {
+        if (this.keys[0] || this.keys[1]) {
             let dx = x - this.position.x;
             let dy = -1.0 * (y - this.position.y);
 
@@ -48,8 +46,6 @@ export default class Mouse {
                 Math.min(Math.max(dx, -1), 1),
                 Math.min(Math.max(dy, -1), 1)
             );
-
-            let position = new THREE.Vector2(x, y);
 
             this.motion = drag;
 
