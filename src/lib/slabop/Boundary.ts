@@ -108,6 +108,7 @@ export default class Boundary {
     ): void {
         this.uniforms.read.value = read.read.texture;
         this.uniforms.scale.value = scale ? scale : -1.0;
+
         renderer.setRenderTarget(output.write);
 
         renderer.render(this.scene, this.camera);
