@@ -37,6 +37,7 @@ let slabDebugs: SlabDebug[] = [];
 let controls: OrbitControls;
 let stats: Stats;
 let clock: Clock;
+let gui: GUI;
 
 function init() {
   let canvas = <HTMLCanvasElement>document.getElementById('c');
@@ -85,6 +86,17 @@ function init() {
 
   clock = new Clock();
   clock.start();
+
+  gui = new GUI();
+  const simulationFolder = gui.addFolder("Simulation");
+  simulationFolder.add(solver, "applyBoundaries");
+  simulationFolder.add(solver, "dissipation", 0.9, 1, 0.001);
+  simulationFolder.add(solver, "applyViscosity");
+  simulationFolder.add(solver, "viscosity", 0, 1, 0.01);
+  simulationFolder.add(solver, "applyVorticity");
+  simulationFolder.add(solver, "curl", 0, 5, 0.01);
+  simulationFolder.add(solver, "pressureIterations", 0, 5, 0.01);
+  simulationFolder.open();
 }
 init();
 

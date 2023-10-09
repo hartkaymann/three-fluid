@@ -27,9 +27,9 @@ export default class Solver {
 
     private renderer: THREE.WebGLRenderer;
 
-    applyViscosity = true;
+    applyViscosity: boolean = false;
     viscosity = 0.3; // Viscosity, higher value means more viscous fluid
-    applyVorticity = true;
+    applyVorticity = false;
     curl = 0.3; // Curl
     dissipation = 0.998; // Dissipation, lower value means faster dissipation
     rise = 1.0; // Tendency to rise
