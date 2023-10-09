@@ -58,7 +58,13 @@ void main( ) {
     vec3 base = texture3D( read, pos ).xyz;
 
     vec3 coord = position.xyz - pos / res;
-    vec3 splat = dt * normalize(color) * amount * gauss( coord, radius );
+
+    vec3 colorNormalized = color;
+    if(length(color) > 0.) { 
+      colorNormalized = normalize(color);
+    }
+
+    vec3 splat = dt * colorNormalized * amount * gauss( coord, radius );
     
     //vec3 splat = vec3(1.0) * dist(coord, 0.01);
     

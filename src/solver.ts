@@ -112,12 +112,12 @@ export default class Solver {
 
     }
 
-    addForce(dt: number, keys: [boolean, boolean],mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
-        if(!(keys[0] || keys[1]))
+    addForce(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
+        if (!(keys[0] || keys[1]))
             return;
 
         if (keys[0]) {
-            this.force.compute( this.renderer,  this.density,  this.density, dt,  mousePos, new THREE.Vector3(1, 1, 1), 0.005, 10.0);
+            this.force.compute(this.renderer, this.density, this.density, dt, mousePos, new THREE.Vector3(1, 1, 1), 0.005, 10.0);
         }
 
         if (keys[1]) {

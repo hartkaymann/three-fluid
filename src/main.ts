@@ -155,23 +155,28 @@ function step() {
   controls.update();
   pointer.update();
 
-  let position = pointer.position;
   pointerSphere.visible = mouse.keys[0] || mouse.keys[1];
-  pointerSphere.position.set(position.x, position.y, position.z);
+  pointerSphere.position.set(pointer.position.x, pointer.position.y, pointer.position.z);
+
+  let position = new THREE.Vector3(
+    (pointer.position.x + domain.x / 2) / domain.x,
+    (pointer.position.y + domain.y / 2) / domain.y,
+    1 - (pointer.position.z + domain.z / 2) / domain.z
+  );
   
   let direction = pointer.direction;
   direction.z *= -1;
-
+  
   solver.step(dt, mouse.keys, position, direction);
-
+  
   // Render 
   materialTiled.uniforms.read.value = solver.density.read.texture;
-
+  
   renderer.setRenderTarget(null);
   renderer.setViewport(0, 0, width, height);
   renderer.setScissor(0, 0, width - 350, height);
   renderer.render(scene, camera);
-
+  
   slabDebugs.forEach(element => {
     element.render(renderer);
   });
