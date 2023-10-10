@@ -10,7 +10,8 @@ export default class Divergence extends Slabop {
         let uniforms = {
             res: { value: grid },
             halfrdx: { value: 0.5 / 1.0 },
-            velocity: { value: new THREE.Texture() }
+            velocity: { value: new THREE.Texture() },
+            marker: {value: new THREE.Texture()}
         }
 
         super(grid, vs, fs, uniforms);
@@ -19,9 +20,11 @@ export default class Divergence extends Slabop {
     compute(
         renderer: THREE.WebGLRenderer,
         velocity: Slab,
+        marker: Slab,
         output: Slab,
     ): void {
         this.uniforms.velocity.value = velocity.read.texture;
+        this.uniforms.marker.value = marker.read.texture;
         
         renderer.setRenderTarget(output.write);
         renderer.render(this.scene, this.camera);

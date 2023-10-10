@@ -90,12 +90,14 @@ function init() {
   gui = new GUI();
   const simulationFolder = gui.addFolder("Simulation");
   //simulationFolder.add(solver, "applyBoundaries");
-  simulationFolder.add(solver, "dissipation", 0.9, 1, 0.001);
-  simulationFolder.add(solver, "applyViscosity");
-  simulationFolder.add(solver, "viscosity", 0, 1, 0.01);
-  simulationFolder.add(solver, "applyVorticity");
-  simulationFolder.add(solver, "curl", 0, 5, 0.01);
-  simulationFolder.add(solver, "pressureIterations", 0, 200, 1);
+  simulationFolder.add(solver, "dissipation", 0.9, 1, 0.001).name("Dissipation");
+  simulationFolder.add(solver, "applyViscosity").name("Apply Viscosity");
+  simulationFolder.add(solver, "viscosity", 0, 1, 0.01).name("Viscosity");
+  simulationFolder.add(solver, "applyVorticity").name("Apply Vorticity");
+  simulationFolder.add(solver, "curl", 0, 5, 0.01).name("Curl");
+  simulationFolder.add(solver, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");
+  simulationFolder.add(solver, "applyGravity").name("Apply Gravity");
+  simulationFolder.add(solver.gravity, "y", -10, 10, 0.01).name("Gravity Force");
   simulationFolder.open();
 }
 init();

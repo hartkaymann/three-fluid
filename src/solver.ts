@@ -27,15 +27,17 @@ export default class Solver {
 
     private renderer: THREE.WebGLRenderer;
 
+    applyBoundaries = true; // Needs more than just deactivating
+    dissipation = 0.998; // Dissipation, lower value means faster dissipation
     applyViscosity: boolean = false;
     viscosity = 0.3; // Viscosity, higher value means more viscous fluid
     applyVorticity = false;
     curl = 0.3; // Curl
-    dissipation = 0.998; // Dissipation, lower value means faster dissipation
+    pressureIterations = 50; // Jacobi iterations for poisson pressure, should be between 50-80 
+    applyGravity = false;
+    gravity = new THREE.Vector3(0, -9.81, 0);
     rise = 1.0; // Tendency to rise
     fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
-    applyBoundaries = true;
-    pressureIterations = 50; // Jacobi iterations for poisson pressure, should be between 50-80 
 
     public density: Slab;
     public velocity: Slab;
@@ -79,11 +81,13 @@ export default class Solver {
         // Advection
         this.advect.compute(this.renderer, this.velocity, this.velocity, this.velocity, dt);
         this.boundary.compute(this.renderer, this.velocity, this.velocity);
-
+        
         this.advect.compute(this.renderer, this.density, this.velocity, this.density, dt, this.dissipation);
-
+        
         // Body forces  
-        //buoyancy.compute(renderer, velocity, density, velocity, dt);
+        if(this.applyGravity) {
+            this.buoyancy.compute(this.renderer, this.velocity, this.density, this.velocity, this.gravity, dt);
+        }
         this.addForce(dt, keys, mousePos, mouseDir);
 
         // Vorticity confinement
@@ -103,8 +107,8 @@ export default class Solver {
             this.jacobi.alpha = alpha;
             this.jacobi.beta = beta;
 
-            this.jacobi.compute(this.renderer, this.velocity, this.velocity, this.velocity, 1, this.boundary);
-            this.jacobi.compute(this.renderer, this.density, this.density, this.density, 1);
+            this.jacobi.compute(this.renderer, this.velocity, this.velocity, this.density, this.velocity, 1, this.boundary);
+            this.jacobi.compute(this.renderer, this.density, this.density, this.density, this.density, 1);
         }
 
         // Projection
@@ -130,12 +134,12 @@ export default class Solver {
 
     project() {
         // Divergence
-        this.divergence.compute(this.renderer, this.velocity, this.velocityDivergence);
+        this.divergence.compute(this.renderer, this.velocity, this.density, this.velocityDivergence);
 
         // Poisson Pressure
         this.jacobi.alpha = -1.0;
         this.jacobi.beta = 6.0;
-        this.jacobi.compute(this.renderer, this.pressure, this.velocityDivergence, this.pressure, this.pressureIterations, this.boundary, 1.0);
+        this.jacobi.compute(this.renderer, this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary, 1.0);
 
         // Subtract gradient
         this.gradient.compute(this.renderer, this.velocity, this.pressure, this.velocity);

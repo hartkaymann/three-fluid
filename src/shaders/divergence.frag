@@ -5,6 +5,7 @@ uniform vec3 res; // grid resolution
 uniform float halfrdx;
 
 uniform sampler2D velocity;
+uniform sampler2D marker;
 
 // TODO: Move to common.frag
 vec3 get3DFragCoord () {
@@ -41,7 +42,10 @@ vec4 texture3D( sampler2D texture, vec3 coordinates ) {
 
 void main( ) {
   vec3 pos = get3DFragCoord();
-  
+
+  if(texture3D(marker, pos).x == 0.0)
+    discard;
+
   mat3 offset = mat3(1.0);
   
   float right = texture3D( velocity, pos + offset[0] ).x;

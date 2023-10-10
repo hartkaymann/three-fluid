@@ -4,6 +4,8 @@ uniform vec3 res; // grid resolution
 uniform sampler2D x;
 uniform sampler2D b;
 
+uniform sampler2D marker;
+
 uniform float alpha;
 uniform float rbeta;
 
@@ -43,6 +45,9 @@ vec4 texture3D( sampler2D texture, vec3 coordinates ) {
 void main( ) {
   vec3 pos = get3DFragCoord();
   
+  if(texture3D(marker, pos).x == 0.0)
+    discard;
+
   mat3 offset = mat3(1.0);
 
   vec3 center = texture3D( b, pos).xyz;

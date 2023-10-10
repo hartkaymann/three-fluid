@@ -14,6 +14,7 @@ export default class Jacobi extends Slabop {
             res: { value: grid },
             x: { value: new THREE.Texture() },
             b: { value: new THREE.Texture() },
+            marker: { value: new THREE.Texture()},
             alpha: { value: 0.0 },
             rbeta: { value: 0.0 }
         }
@@ -28,6 +29,7 @@ export default class Jacobi extends Slabop {
         renderer: THREE.WebGLRenderer,
         x: Slab,
         b: Slab,
+        marker: Slab,
         output: Slab,
         iterations: number,
         boundary?: Boundary,
@@ -35,6 +37,7 @@ export default class Jacobi extends Slabop {
     ): void {
         this.uniforms.alpha.value = this.alpha;
         this.uniforms.rbeta.value = 1.0 / this.beta;
+        this.uniforms.marker.value = marker.read.texture;
 
         for (let i = 0; i < iterations; i++) {
             this.step(renderer, x, b, output);
@@ -51,8 +54,6 @@ export default class Jacobi extends Slabop {
     ) {
         this.uniforms.x.value = x.read.texture;
         this.uniforms.b.value = b.read.texture;
-        this.alpha;
-        this.beta;
     
         renderer.setRenderTarget(output.write);
         renderer.render(this.scene, this.camera);
