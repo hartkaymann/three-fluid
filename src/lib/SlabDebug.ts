@@ -71,6 +71,7 @@ export default class SlabDebug {
 
         renderer.setViewport(left, bottom, width, height);
         renderer.setScissor(left, bottom, width, height);
+        renderer.clearColor();
 
         this.material.uniforms.read.value = this.slab.read.texture;
 

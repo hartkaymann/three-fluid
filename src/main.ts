@@ -21,8 +21,8 @@ import Renderer from './renderer';
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const domain = new THREE.Vector3(20, 20, 20);
-const grid = new THREE.Vector3(50, 50, 50);
+const domain = new THREE.Vector3(40, 20, 20);
+const resolution = new THREE.Vector3(80, 40, 40); 
 
 let solver: Solver;
 let renderer: Renderer;
@@ -46,7 +46,7 @@ function init() {
 
   // Setup WebGL Renderer
   wgl = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-  wgl.setClearColor(0x0e0e0e)
+  wgl.setClearColor(0x252525)
   wgl.setPixelRatio(window.devicePixelRatio);
   wgl.setSize(width, height);
   wgl.setScissorTest(true);
@@ -56,15 +56,15 @@ function init() {
   camera.position.z = 20;
 
   // Initialize solver and renderer
-  solver = new Solver(wgl, grid);
-  renderer = new Renderer(wgl, camera, new THREE.Vector2(window.innerWidth, window.innerHeight), domain, grid);
+  solver = new Solver(wgl, domain, resolution);
+  renderer = new Renderer(wgl, camera, new THREE.Vector2(window.innerWidth, window.innerHeight), domain, resolution);
 
   // Texture debug panel
-  slabDebugs.push(new SlabDebug("Density", solver.density, grid, vertexBasic, fragmentDisplayVector));
-  slabDebugs.push(new SlabDebug("Velocity", solver.velocity, grid, vertexBasic, fragmentDisplayVector, 0.5));
-  slabDebugs.push(new SlabDebug("Pressure", solver.pressure, grid, vertexBasic, fragmentDisplayScalar, 0.5));
-  slabDebugs.push(new SlabDebug("Divergence", solver.velocityDivergence, grid, vertexBasic, fragmentDisplayScalar, 0.5));
-  slabDebugs.push(new SlabDebug("Vorticity", solver.velocityVorticity, grid, vertexBasic, fragmentDisplayScalar, 0.5));
+  slabDebugs.push(new SlabDebug("Density", solver.density, resolution, vertexBasic, fragmentDisplayVector));
+  slabDebugs.push(new SlabDebug("Velocity", solver.velocity, resolution, vertexBasic, fragmentDisplayVector, 0.5));
+  slabDebugs.push(new SlabDebug("Pressure", solver.pressure, resolution, vertexBasic, fragmentDisplayScalar, 0.5));
+  slabDebugs.push(new SlabDebug("Divergence", solver.velocityDivergence, resolution, vertexBasic, fragmentDisplayScalar, 0.5));
+  slabDebugs.push(new SlabDebug("Vorticity", solver.velocityVorticity, resolution, vertexBasic, fragmentDisplayScalar, 0.5));
   slabDebugs.forEach(element => {
     element.create(container);
   });
@@ -88,16 +88,19 @@ function init() {
   clock.start();
 
   gui = new GUI();
+  gui.domElement.id = 'gui';
   const simulationFolder = gui.addFolder("Simulation");
   //simulationFolder.add(solver, "applyBoundaries");
   simulationFolder.add(solver, "dissipation", 0.9, 1, 0.001).name("Dissipation");
   simulationFolder.add(solver, "applyViscosity").name("Apply Viscosity");
   simulationFolder.add(solver, "viscosity", 0, 1, 0.01).name("Viscosity");
   simulationFolder.add(solver, "applyVorticity").name("Apply Vorticity");
-  simulationFolder.add(solver, "curl", 0, 5, 0.01).name("Curl");
+  simulationFolder.add(solver, "curl", 0, 10, 0.01).name("Curl");
   simulationFolder.add(solver, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");
   simulationFolder.add(solver, "applyGravity").name("Apply Gravity");
   simulationFolder.add(solver.gravity, "y", -10, 10, 0.01).name("Gravity Force");
+  simulationFolder.add(solver, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
+  simulationFolder.add(solver, "forceMultiplier", 0, 100, 0.1).name("Interaction Force");
   simulationFolder.open();
 }
 init();
@@ -117,9 +120,9 @@ function step() {
   renderer.updateGuides(pointer.position, mouse.keys[0] || mouse.keys[1]);
 
   let position = new THREE.Vector3(
-    (pointer.position.x + domain.x / 2) / domain.x,
-    (pointer.position.y + domain.y / 2) / domain.y,
-    1 - (pointer.position.z + domain.z / 2) / domain.z
+    (pointer.position.x + domain.x / 2) ,
+    (pointer.position.y + domain.y / 2) ,
+    domain.z - (pointer.position.z + domain.z / 2) 
   );
 
   let direction = pointer.direction;
@@ -139,5 +142,5 @@ window.addEventListener('resize', () => {
   width = window.innerWidth;
   height = window.innerHeight;
   renderer.resize(width, height);
-  wgl.setSize(width, height);
+  wgl.setSize(width, height, false);
 });

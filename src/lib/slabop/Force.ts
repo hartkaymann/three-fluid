@@ -5,9 +5,10 @@ import Slab from '../Slab';
 
 export default class Force extends Slabop {
 
-    constructor(grid: THREE.Vector3, vs: string, fs: string) {
+    constructor(size: THREE.Vector3, grid: THREE.Vector3, vs: string, fs: string) {
 
         let uniforms = {
+            size: {value: size},
             res: { value: grid },
             read: { value: new THREE.Texture() },
             dt: { value: 0.0 },

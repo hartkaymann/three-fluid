@@ -1,6 +1,7 @@
 precision highp float;
 precision highp sampler2D;
 
+uniform vec3 size;
 uniform vec3 res; // grid resolution
 uniform sampler2D read;
 uniform float dt;
@@ -57,7 +58,8 @@ void main( ) {
 
     vec3 base = texture3D( read, pos ).xyz;
 
-    vec3 coord = position.xyz - pos / res;
+    vec3 worldPos = (pos / res) * size;
+    vec3 coord = position.xyz - worldPos;
 
     vec3 colorNormalized = color;
     if(length(color) > 0.) { 
@@ -70,5 +72,5 @@ void main( ) {
     
     gl_FragColor = vec4( base + splat, 1.0 );
     //gl_FragColor = vec4(vec3(length(coord.xyz)), 1.0);
-    //gl_FragColor = vec4(coord.zzz, 1.0);
+    //gl_FragColor = vec4(position, 1.0);
 }

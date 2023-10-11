@@ -1,9 +1,9 @@
 
 attribute vec3 position;
 attribute vec2 uv;
+attribute float depth;
 
 uniform vec3 size;
-uniform vec3 res;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
@@ -14,13 +14,10 @@ varying float vZ;
 
 void main() {
     vUv = uv;
+    vZ = depth;
+
     vColor = position;
 
-    float tileNo = floor(position.z / res.z);
-    vZ = (size.z / -2.0) + position.z / size.z;
-    vZ = (size.z - position.z + (size.z / -2.0)) / size.z; // what the fuck
-
-    vec3 domainRes = size / res; 
     vec3 tiledPos = vec3(
         position.x,
         position.y,

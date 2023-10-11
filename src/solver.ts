@@ -38,6 +38,8 @@ export default class Solver {
     gravity = new THREE.Vector3(0, -9.81, 0);
     rise = 1.0; // Tendency to rise
     fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
+    forceRadius = 3;
+    forceMultiplier = 5;
 
     public density: Slab;
     public velocity: Slab;
@@ -55,7 +57,7 @@ export default class Solver {
     private vorticity: Vorticity;
     private vorticityConfinement: VorticityConfinement;
 
-    constructor(renderer: THREE.WebGLRenderer, resolution: THREE.Vector3) {
+    constructor(renderer: THREE.WebGLRenderer, domain: THREE.Vector3, resolution: THREE.Vector3) {
         this.renderer = renderer;
 
         // Slabs
@@ -67,7 +69,7 @@ export default class Solver {
 
         // Slabobs
         this.advect = new Advect(resolution, vertexBasic, fragmentAdvect);
-        this.force = new Force(resolution, vertexBasic, fragmentForce);
+        this.force = new Force(domain, resolution, vertexBasic, fragmentForce);
         this.divergence = new Divergence(resolution, vertexBasic, fragmentDivergence);
         this.gradient = new Gradient(resolution, vertexBasic, fragmentGradient);
         this.boundary = new Boundary(resolution, vertexOffset, fragmentBoundary);
@@ -121,13 +123,13 @@ export default class Solver {
             return;
 
         if (keys[0]) {
-            this.force.compute(this.renderer, this.density, this.density, dt, mousePos, new THREE.Vector3(1, 1, 1), 0.005, 10.0);
+            this.force.compute(this.renderer, this.density, this.density, dt, mousePos, new THREE.Vector3(1, 1, 1), this.forceRadius, this.forceMultiplier);
         }
 
         if (keys[1]) {
             let direction = mouseDir;
 
-            this.force.compute(this.renderer, this.velocity, this.velocity, dt, mousePos, direction, 0.005, 10.0);
+            this.force.compute(this.renderer, this.velocity, this.velocity, dt, mousePos, direction, this.forceRadius, this.forceMultiplier);
             this.boundary.compute(this.renderer, this.velocity, this.velocity);
         }
     }

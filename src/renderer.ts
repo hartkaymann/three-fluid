@@ -38,9 +38,15 @@ export default class Renderer {
             transparent: true
         });
 
-        for (let i = 1; i < resolution.z - 1; i++) {
+        for (let z = 1; z < resolution.z - 1; z++) {
             const geometry = new THREE.PlaneGeometry(domain.x, domain.y);
-            geometry.translate(0.0, 0.0, domain.z / 2 - i * (domain.z / resolution.z));
+            geometry.translate(0.0, 0.0, domain.z / 2 - z * (domain.z / resolution.z));
+
+            let attribCoord = [];
+            for (let i = 0; i < geometry.getAttribute("position").count; i++) {
+                attribCoord.push(z);
+            }
+            geometry.setAttribute("depth", new THREE.Float32BufferAttribute(attribCoord, 1));
 
             const quad = new THREE.Mesh(geometry, this.material);
 
@@ -57,7 +63,7 @@ export default class Renderer {
 
         this.pointerSphere = new THREE.Mesh(
             new THREE.SphereGeometry(0.5, 16, 8),
-            new THREE.MeshBasicMaterial({ color: 0x00ffff })
+            new THREE.MeshBasicMaterial({ color: 0x1473e6 })
         );
         this.scene.add(this.pointerSphere);
     }

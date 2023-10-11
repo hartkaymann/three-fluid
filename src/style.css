@@ -2,7 +2,7 @@ html,
 body {
   margin: 0;
   height: 100%;
-  background-color: #505050;
+  background-color: #252525;
 }
 
 #c {
@@ -24,18 +24,20 @@ body {
   align-items: flex-end;
   align-content: flex-start;
   overflow: scroll;
+  border-left: 1px solid #e1e1e1;
 }
 
 .debug-item {
   display: inline-block;
   margin: 1em;
   padding: 1em;
-  box-shadow: 1px 2px 4px 0px rgba(0, 0, 0, 0.25);
+  /* box-shadow: 1px 2px 4px 0px rgba(0, 0, 0, 0.25); */
 }
 
 .debug-item>div:nth-child(1) {
   width: 300px;
   height: 200px;
+  border: 1px solid #e1e1e1;
 }
 
 .debug-item>div:nth-child(2) {
@@ -44,4 +46,9 @@ body {
   font-size: large;
   width: 200px;
   margin-top: 0.5em;
+}
+
+#gui {
+  position: absolute;
+  right: 350px;
 }
