@@ -10,12 +10,13 @@ import Buoyancy from './lib/slabop/Buoyancy';
 import Jacobi from './lib/slabop/Jacobi';
 import Vorticity from './lib/slabop/Vorticity';
 import VorticityConfinement from './lib/slabop/VorticityConfinement';
-import Incompressability from './lib/slabop/Incompressability';
+import Incompressability from './lib/slabop/Incompressibility';
 import ScalarAddition from './lib/slabop/ScalarAdd';
 
 
 import vertexBasic from './shaders/basic.vert'
 import vertexOffset from './shaders/offset.vert'
+import fragmentCommon from './shaders/common.frag'
 import fragmentForce from './shaders/force.frag'
 import fragmentAdvect from './shaders/advect.frag'
 import fragmentJacobi from './shaders/jacobi.frag'
@@ -25,7 +26,7 @@ import fragmentBoundary from './shaders/boundary.frag'
 import fragmentBuoyancy from './shaders/buoyancy.frag'
 import fragmentVorticity from './shaders/vorticity.frag'
 import fragmentVorticityConfinement from './shaders/vorticityconfine.frag'
-import fragmentIncompressability from './shaders/incompressability.frag'
+import fragmentIncompressability from './shaders/incompressibility.frag'
 import fragmentScalarAdd from './shaders/scalaradd.frag'
 
 export default class Solver {
@@ -65,7 +66,7 @@ export default class Solver {
     private vorticity: Vorticity;
     private vorticityConfinement: VorticityConfinement;
     private incompressability: Incompressability;
-    private scalarAdd : ScalarAddition;
+    private scalarAdd: ScalarAddition;
 
     constructor(renderer: THREE.WebGLRenderer, domain: THREE.Vector3, resolution: THREE.Vector3) {
         this.renderer = renderer;
@@ -79,34 +80,34 @@ export default class Solver {
         this.densityPressure = new Slab(resolution);
 
         // Slabobs
-        this.advect = new Advect(renderer, resolution, vertexBasic, fragmentAdvect);
-        this.force = new Force(renderer, domain, resolution, vertexBasic, fragmentForce);
-        this.divergence = new Divergence(renderer, resolution, vertexBasic, fragmentDivergence);
-        this.gradient = new Gradient(renderer, resolution, vertexBasic, fragmentGradient);
+        this.advect = new Advect(renderer, resolution, vertexBasic, [fragmentCommon, fragmentAdvect]);
+        this.force = new Force(renderer, domain, resolution, vertexBasic, [fragmentCommon, fragmentForce]);
+        this.divergence = new Divergence(renderer, resolution, vertexBasic, [fragmentCommon, fragmentDivergence]);
+        this.gradient = new Gradient(renderer, resolution, vertexBasic, [fragmentCommon, fragmentGradient]);
         this.boundary = new Boundary(renderer, resolution, vertexOffset, fragmentBoundary);
-        this.jacobi = new Jacobi(renderer, resolution, vertexBasic, fragmentJacobi);
-        this.buoyancy = new Buoyancy(renderer, resolution, vertexBasic, fragmentBuoyancy);
-        this.vorticity = new Vorticity(renderer, resolution, vertexBasic, fragmentVorticity);
-        this.vorticityConfinement = new VorticityConfinement(renderer, resolution, vertexBasic, fragmentVorticityConfinement);
-        this.incompressability = new Incompressability(renderer, resolution, vertexBasic, fragmentIncompressability);
+        this.jacobi = new Jacobi(renderer, resolution, vertexBasic, [fragmentCommon, fragmentJacobi]);
+        this.buoyancy = new Buoyancy(renderer, resolution, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
+        this.vorticity = new Vorticity(renderer, resolution, vertexBasic, [fragmentCommon, fragmentVorticity]);
+        this.vorticityConfinement = new VorticityConfinement(renderer, resolution, vertexBasic, [fragmentCommon, fragmentVorticityConfinement]);
+        this.incompressability = new Incompressability(renderer, resolution, vertexBasic, [fragmentCommon, fragmentIncompressability]);
         this.scalarAdd = new ScalarAddition(renderer, resolution, vertexBasic, fragmentScalarAdd);
     }
 
     step(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
-        
+
         // Advection
         this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation);
         this.advect.compute(this.velocity, this.velocity, this.velocity, dt);
         this.boundary.compute(this.velocity, this.velocity);
-        
+
         //this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
         //this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
-        
+
         // Body forces  
-        if(this.applyGravity) {
+        if (this.applyGravity) {
             this.buoyancy.compute(this.velocity, this.density, this.velocity, this.gravity, dt);
         }
-        
+
         this.addForce(dt, keys, mousePos, mouseDir);
 
         // Vorticity confinement

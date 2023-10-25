@@ -6,6 +6,7 @@ export default class Slab {
 
     read: THREE.WebGLRenderTarget;
     write: THREE.WebGLRenderTarget;
+    resolution: THREE.Vector3;
 
     constructor(resolution: THREE.Vector3, format?: THREE.AnyPixelFormat) {
 
@@ -26,6 +27,7 @@ export default class Slab {
 
         this.read = this.FBOs[0];
         this.write = this.FBOs[1];
+        this.resolution = resolution;
     }
 
     swap() {

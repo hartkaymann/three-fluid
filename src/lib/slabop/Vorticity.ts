@@ -5,12 +5,17 @@ import Slab from '../Slab';
 
 export default class Vorticity extends Slabop {
 
-    constructor(renderer: THREE.WebGLRenderer, resolution: THREE.Vector3, vs: string, fs: string) {
+    constructor(
+        renderer: THREE.WebGLRenderer,
+        resolution: THREE.Vector3,
+        vs: string | string[],
+        fs: string | string[]
+    ) {
 
         let uniforms = {
-            res: { value: resolution },
-            halfrdx: { value: 0.5 / 1.0 },
-            velocity: { value: new THREE.Texture() },
+            u_resolution: { value: resolution },
+            u_halfrdx: { value: 0.5 / 1.0 },
+            u_velocityTexture: { value: new THREE.Texture() },
         }
 
         super(renderer, resolution, vs, fs, uniforms);
@@ -20,8 +25,8 @@ export default class Vorticity extends Slabop {
         velocity: Slab,
         output: Slab,
     ): void {
-        this.uniforms.velocity.value = velocity.read.texture;
-        
+        this.uniforms.u_velocityTexture.value = velocity.read.texture;
+
         this.renderer.setRenderTarget(output.write);
         this.renderer.render(this.scene, this.camera);
         output.swap();

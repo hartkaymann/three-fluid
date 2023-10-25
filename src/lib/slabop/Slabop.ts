@@ -16,8 +16,8 @@ export abstract class Slabop {
     constructor(
         renderer: THREE.WebGLRenderer,
         resolution: THREE.Vector3,
-        vs: string,
-        fs: string,
+        vertexShaders: string | string[],
+        fragmentShaders: string | string[],
         uniforms: {
             [uniform: string]: THREE.IUniform<any>
         }
@@ -30,8 +30,8 @@ export abstract class Slabop {
 
         this.uniforms = uniforms;
 
-        // TODO: reduce render area to not render the first and last tile, since those would be boundaries
-        // const geometry = new THREE.PlaneGeometry(grid.x * grid.z - 2, grid.y -2, grid.z, 1.0);
+        let vs = Array.isArray(vertexShaders) ? vertexShaders.join('\n') : vertexShaders;
+        let fs = Array.isArray(fragmentShaders) ? fragmentShaders.join('\n') : fragmentShaders;
 
         for (let i = 1; i < resolution.z - 1; i++) {
             const geometry = new THREE.PlaneGeometry(resolution.x - 2, resolution.y - 2);

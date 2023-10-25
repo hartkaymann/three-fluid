@@ -5,16 +5,21 @@ import Slab from '../Slab';
 
 export default class Buoyancy extends Slabop {
 
-    constructor(renderer: THREE.WebGLRenderer, resolution: THREE.Vector3, vs: string, fs: string) {
+    constructor(
+        renderer: THREE.WebGLRenderer,
+        resolution: THREE.Vector3,
+        vs: string | string[],
+        fs: string | string[]
+    ) {
 
         let uniforms = {
-            res: { value: resolution },
-            velocity: { value: new THREE.Texture() },
-            density: { value: new THREE.Texture() },
-            rise: { value: 1.0 },
-            fall: { value: 1.0 },
-            gravity: { value: new THREE.Vector3()},
-            dt: { value: 0.0 }
+            u_resolution: { value: resolution },
+            u_velocityTexture: { value: new THREE.Texture() },
+            u_densityTexture: { value: new THREE.Texture() },
+            u_rise: { value: 1.0 },
+            u_fall: { value: 1.0 },
+            u_gravity: { value: new THREE.Vector3() },
+            u_deltaTime: { value: 0.0 }
         }
 
         super(renderer, resolution, vs, fs, uniforms);
@@ -27,10 +32,10 @@ export default class Buoyancy extends Slabop {
         gravity: THREE.Vector3,
         dt: number
     ): void {
-        this.uniforms.velocity.value = velocity.read.texture;
-        this.uniforms.density.value = density.read.texture;
-        this.uniforms.gravity.value = gravity;
-        this.uniforms.dt.value = dt;
+        this.uniforms.u_velocityTexture.value = velocity.read.texture;
+        this.uniforms.u_densityTexture.value = density.read.texture;
+        this.uniforms.u_gravity.value = gravity;
+        this.uniforms.u_deltaTime.value = dt;
 
         this.renderer.setRenderTarget(output.write);
         this.renderer.render(this.scene, this.camera);
