@@ -5,10 +5,10 @@ import Slab from '../Slab';
 
 export default class Buoyancy extends Slabop {
 
-    constructor(grid: THREE.Vector3, vs: string, fs: string) {
+    constructor(renderer: THREE.WebGLRenderer, resolution: THREE.Vector3, vs: string, fs: string) {
 
         let uniforms = {
-            res: { value: grid },
+            res: { value: resolution },
             velocity: { value: new THREE.Texture() },
             density: { value: new THREE.Texture() },
             rise: { value: 1.0 },
@@ -17,11 +17,10 @@ export default class Buoyancy extends Slabop {
             dt: { value: 0.0 }
         }
 
-        super(grid, vs, fs, uniforms);
+        super(renderer, resolution, vs, fs, uniforms);
     }
 
     compute(
-        renderer: THREE.WebGLRenderer,
         velocity: Slab,
         density: Slab,
         output: Slab,
@@ -33,9 +32,9 @@ export default class Buoyancy extends Slabop {
         this.uniforms.gravity.value = gravity;
         this.uniforms.dt.value = dt;
 
-        renderer.setRenderTarget(output.write);
-        renderer.render(this.scene, this.camera);
+        this.renderer.setRenderTarget(output.write);
+        this.renderer.render(this.scene, this.camera);
         output.swap();
-        renderer.setRenderTarget(null);
+        this.renderer.setRenderTarget(null);
     }
 }

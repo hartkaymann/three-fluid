@@ -5,21 +5,20 @@ import Slab from '../Slab';
 
 export default class Advect extends Slabop {
 
-    constructor(grid: THREE.Vector3, vs: string, fs: string) {
+    constructor(renderer: THREE.WebGLRenderer, resolution: THREE.Vector3, vs: string, fs: string) {
 
         let uniforms = {
-            res: { value: grid },
+            res: { value: resolution },
             advected: { value: new THREE.Texture() },
             velocity: { value: new THREE.Texture() },
             dt: { value: 0.0 },
             dissipation: { value: 0.998 }
         }
 
-        super(grid, vs, fs, uniforms);
+        super(renderer, resolution, vs, fs, uniforms);
     }
 
     compute(
-        renderer: THREE.WebGLRenderer,
         advected: Slab,
         velocity: Slab,
         output: Slab,
@@ -31,10 +30,10 @@ export default class Advect extends Slabop {
         this.uniforms.dt.value = dt;
         this.uniforms.dissipation.value = dissipation ? dissipation : 1.0;
         
-        renderer.setRenderTarget(output.write);
-        renderer.render(this.scene, this.camera);
+        this.renderer.setRenderTarget(output.write);
+        this.renderer.render(this.scene, this.camera);
         output.swap();
-        renderer.setRenderTarget(null);
+        this.renderer.setRenderTarget(null);
     }
 
 }

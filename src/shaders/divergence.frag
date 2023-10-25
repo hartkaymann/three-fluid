@@ -44,7 +44,7 @@ void main( ) {
   vec3 pos = get3DFragCoord();
 
   if(texture3D(marker, pos).x == 0.0)
-    discard;
+  discard; // we got ourselves an air cell
 
   mat3 offset = mat3(1.0);
   

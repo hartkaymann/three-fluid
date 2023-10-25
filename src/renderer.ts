@@ -28,7 +28,9 @@ export default class Renderer {
         // Setup tiled rendering
         this.material = new THREE.RawShaderMaterial({
             uniforms: {
-                read: { value: new THREE.Texture() },
+                density: { value: new THREE.Texture() },
+                velocity: {value: new THREE.Texture()},
+                pressure: {value: new THREE.Texture()},
                 res: { value: resolution },
                 size: { value: domain }
             },
@@ -68,9 +70,11 @@ export default class Renderer {
         this.scene.add(this.pointerSphere);
     }
 
-    render(slab: Slab) {
+    render(density: Slab, velocity: Slab, pressure: Slab) {
         // Render 
-        this.material.uniforms.read.value = slab.read.texture;
+        this.material.uniforms.density.value = density.read.texture;
+        this.material.uniforms.velocity.value = velocity.read.texture;
+        this.material.uniforms.pressure.value = pressure.read.texture;
 
         this.renderer.setRenderTarget(null);
         this.renderer.setViewport(0, 0, this.window.width, this.window.height);

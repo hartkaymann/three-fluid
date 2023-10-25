@@ -6,12 +6,15 @@ import * as THREE from 'three';
 // the 2D dimensions of a 3D texture are therefore [width * depth, height]
 
 export abstract class Slabop {
-
+    
+    protected renderer: THREE.WebGLRenderer;
     protected scene: THREE.Scene;
     protected camera: THREE.Camera;
+
     uniforms: { [uniform: string]: THREE.IUniform<any> }
 
     constructor(
+        renderer: THREE.WebGLRenderer,
         resolution: THREE.Vector3,
         vs: string,
         fs: string,
@@ -19,8 +22,9 @@ export abstract class Slabop {
             [uniform: string]: THREE.IUniform<any>
         }
     ) {
+        this.renderer = renderer; 
+        
         this.scene = new THREE.Scene();
-
         this.camera = new THREE.OrthographicCamera((resolution.x * resolution.z) / -2, (resolution.x * resolution.z) / 2, resolution.y / 2, resolution.y / -2, 1, 100);
         this.camera.position.z = 2;
 

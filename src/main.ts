@@ -22,7 +22,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector3(40, 20, 20);
-const resolution = new THREE.Vector3(80, 40, 40); 
+const resolution = new THREE.Vector3(128, 64, 64); 
 
 let solver: Solver;
 let renderer: Renderer;
@@ -101,6 +101,8 @@ function init() {
   simulationFolder.add(solver.gravity, "y", -10, 10, 0.01).name("Gravity Force");
   simulationFolder.add(solver, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
   simulationFolder.add(solver, "forceMultiplier", 0, 100, 0.1).name("Interaction Force");
+  simulationFolder.add(solver, "targetDensity", 0, 100, 0.1).name("Target Density");
+  simulationFolder.add(solver, "pressureMultiplier", 0, 100, 0.1).name("Pressure Multiplier");
   simulationFolder.open();
 }
 init();
@@ -129,7 +131,7 @@ function step() {
   direction.z *= -1;
 
   solver.step(dt, mouse.keys, position, direction);
-  renderer.render(solver.density);
+  renderer.render(solver.density, solver.velocity, solver.densityPressure);
 
   slabDebugs.forEach(element => {
     element.render(wgl);

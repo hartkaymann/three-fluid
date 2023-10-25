@@ -66,11 +66,10 @@ void main( ) {
       colorNormalized = normalize(color);
     }
 
-    vec3 splat = dt * colorNormalized * amount * gauss( coord, radius );
+    //vec3 splat = dt * colorNormalized * amount * gauss( coord, radius );
+    vec3 splat = amount * colorNormalized * dist(coord, 3.);
     
-    //vec3 splat = vec3(1.0) * dist(coord, 0.01);
-    
-    gl_FragColor = vec4( base + splat, 1.0 );
+    gl_FragColor = vec4( min(vec3(amount), base + splat), 1.0 );
     //gl_FragColor = vec4(vec3(length(coord.xyz)), 1.0);
     //gl_FragColor = vec4(position, 1.0);
 }

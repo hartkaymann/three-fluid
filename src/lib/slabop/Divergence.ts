@@ -5,20 +5,19 @@ import Slab from '../Slab';
 
 export default class Divergence extends Slabop {
 
-    constructor(grid: THREE.Vector3, vs: string, fs: string) {
+    constructor(renderer: THREE.WebGLRenderer, resolution: THREE.Vector3, vs: string, fs: string) {
 
         let uniforms = {
-            res: { value: grid },
+            res: { value: resolution },
             halfrdx: { value: 0.5 / 1.0 },
             velocity: { value: new THREE.Texture() },
             marker: {value: new THREE.Texture()}
         }
 
-        super(grid, vs, fs, uniforms);
+        super(renderer, resolution, vs, fs, uniforms);
     }
 
     compute(
-        renderer: THREE.WebGLRenderer,
         velocity: Slab,
         marker: Slab,
         output: Slab,
@@ -26,10 +25,10 @@ export default class Divergence extends Slabop {
         this.uniforms.velocity.value = velocity.read.texture;
         this.uniforms.marker.value = marker.read.texture;
         
-        renderer.setRenderTarget(output.write);
-        renderer.render(this.scene, this.camera);
+        this.renderer.setRenderTarget(output.write);
+        this.renderer.render(this.scene, this.camera);
         output.swap();
-        renderer.setRenderTarget(null);
+        this.renderer.setRenderTarget(null);
     }
 
 }

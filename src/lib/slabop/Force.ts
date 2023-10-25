@@ -5,11 +5,11 @@ import Slab from '../Slab';
 
 export default class Force extends Slabop {
 
-    constructor(size: THREE.Vector3, grid: THREE.Vector3, vs: string, fs: string) {
+    constructor(renderer: THREE.WebGLRenderer, size: THREE.Vector3, resolution: THREE.Vector3, vs: string, fs: string) {
 
         let uniforms = {
             size: {value: size},
-            res: { value: grid },
+            res: { value: resolution },
             read: { value: new THREE.Texture() },
             dt: { value: 0.0 },
             position: { value: new THREE.Vector3() },
@@ -18,11 +18,10 @@ export default class Force extends Slabop {
             amount: { value: 0.0 }
         }
 
-        super(grid, vs, fs, uniforms);
+        super(renderer, resolution, vs, fs, uniforms);
     }
 
     compute(
-        renderer: THREE.WebGLRenderer,
         read: Slab,
         output: Slab,
         dt: number,
@@ -38,9 +37,9 @@ export default class Force extends Slabop {
         this.uniforms.radius.value = radius;
         this.uniforms.amount.value = amount;
 
-        renderer.setRenderTarget(output.write);
-        renderer.render(this.scene, this.camera);
+        this.renderer.setRenderTarget(output.write);
+        this.renderer.render(this.scene, this.camera);
         output.swap();
-        renderer.setRenderTarget(null);
+        this.renderer.setRenderTarget(null);
     }
 }

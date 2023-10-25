@@ -4,15 +4,17 @@ import Slab from '../Slab';
 
 export default class Boundary {
 
+    private renderer: THREE.WebGLRenderer;
     private scene: THREE.Scene;
     private camera: THREE.Camera;
 
     private uniforms: { [uniform: string]: THREE.IUniform<any> }
 
-    constructor(resolution: THREE.Vector3, vs: string, fs: string) {
+    constructor(renderer: THREE.WebGLRenderer, resolution: THREE.Vector3, vs: string, fs: string) {
+
+        this.renderer = renderer;
 
         this.scene = new THREE.Scene();
-
         this.camera = new THREE.OrthographicCamera((resolution.x * resolution.z) / -2, (resolution.x * resolution.z) / 2, resolution.y / 2, resolution.y / -2, 1, 100);
         this.camera.position.z = 2;
 
@@ -101,7 +103,6 @@ export default class Boundary {
     }
 
     compute(
-        renderer: THREE.WebGLRenderer,
         read: Slab,
         output: Slab,
         scale?: number
@@ -109,10 +110,8 @@ export default class Boundary {
         this.uniforms.read.value = read.read.texture;
         this.uniforms.scale.value = scale ? scale : -1.0;
 
-        renderer.setRenderTarget(output.write);
-
-        renderer.render(this.scene, this.camera);
-
-        renderer.setRenderTarget(null);
+        this.renderer.setRenderTarget(output.write);
+        this.renderer.render(this.scene, this.camera);
+        this.renderer.setRenderTarget(null);
     }
 }

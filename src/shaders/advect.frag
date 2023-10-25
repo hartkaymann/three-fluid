@@ -74,6 +74,7 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
   );
 }
 
+// Advection with BFECC to reduce unwanted dissipation
 void main( ) {
   vec3 pos = get3DFragCoord();
 
