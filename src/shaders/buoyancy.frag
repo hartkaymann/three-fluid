@@ -3,17 +3,18 @@ precision highp float;
 uniform sampler2D u_velocityTexture;
 uniform sampler2D u_densityTexture;
 
+uniform vec3 u_resolution;
 uniform vec3 u_gravity;
 
 uniform float u_deltaTime;
 
 void main( ) {
-  vec3 pos = get3DFragCoord();
+  vec3 pos = get3DFragCoord( u_resolution );
 
-    float mass = texture3D(u_densityTexture, pos).x; 
+    float mass = texture3D(u_densityTexture, pos / u_resolution, u_resolution).x; 
     vec3 g = u_deltaTime * mass * u_gravity ;
   
-    vec3 base = texture3D( u_velocityTexture, pos ).xyz;
+    vec3 base = texture3D( u_velocityTexture, pos / u_resolution, u_resolution ).xyz;
 
     gl_FragColor = vec4( base + g, 1.0 );
     // gl_FragColor = vec4(base, 1.0);

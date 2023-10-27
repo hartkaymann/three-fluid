@@ -19,10 +19,9 @@ export default class Boundary {
         this.camera.position.z = 2;
 
         this.uniforms = {
-            res: { value: resolution },
-            read: { value: new THREE.Texture() },
-            offset: { value: new THREE.Vector3() },
-            scale: { value: 0.0 }
+            u_resolution: { value: resolution },
+            u_readTexture: { value: new THREE.Texture() },
+            u_scale: { value: 0.0 }
         }
 
         const material = new THREE.RawShaderMaterial({
@@ -107,8 +106,8 @@ export default class Boundary {
         output: Slab,
         scale?: number
     ): void {
-        this.uniforms.read.value = read.read.texture;
-        this.uniforms.scale.value = scale ? scale : -1.0;
+        this.uniforms.u_readTexture.value = read.read.texture;
+        this.uniforms.u_scale.value = scale ? scale : -1.0;
 
         this.renderer.setRenderTarget(output.write);
         this.renderer.render(this.scene, this.camera);

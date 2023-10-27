@@ -1,9 +1,9 @@
 precision highp float;
 
-uniform vec3 u_resolution; // grid resolution
-
 uniform sampler2D u_augendTexture;
 uniform sampler2D u_addendTexture;
+
+uniform vec3 u_resolution;
 
 uniform float u_scale;
 

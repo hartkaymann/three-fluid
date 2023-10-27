@@ -1,11 +1,14 @@
 precision highp float;
 precision highp sampler2D;
 
-uniform vec3 u_size;
 uniform sampler2D u_readTexture;
-uniform float u_deltaTime;
+
+uniform vec3 u_size;
+uniform vec3 u_resolution;
 uniform vec3 u_position;
 uniform vec3 u_color;
+
+uniform float u_deltaTime;
 uniform float u_amount;
 uniform float u_radius;
 
@@ -20,9 +23,9 @@ float dist( vec3 p, float r ) {
 }
 
 void main( ) {
-  vec3 pos = get3DFragCoord( );
+  vec3 pos = get3DFragCoord( u_resolution );
 
-  vec3 base = texture3D( u_readTexture, pos ).xyz;
+  vec3 base = texture3D( u_readTexture, pos / u_resolution, u_resolution ).xyz;
 
   vec3 worldPos = ( pos / u_resolution ) * u_size;
   vec3 coord = u_position.xyz - worldPos;
@@ -32,8 +35,8 @@ void main( ) {
     colorNormalized = normalize( u_color );
   }
 
-    //vec3 splat = dt * colorNormalized * amount * gauss( coord, radius );
-  vec3 splat = u_amount * colorNormalized * dist( coord, u_radius );
+  //vec3 splat = u_deltaTime * colorNormalized * u_amount * gauss( coord, u_radius );
+  vec3 splat = (u_deltaTime * u_amount * colorNormalized * dist( coord, u_radius )) / u_resolution;
 
   gl_FragColor = vec4( min( vec3( u_amount ), base + splat ), 1.0 );
     //gl_FragColor = vec4(vec3(length(coord.xyz)), 1.0);
