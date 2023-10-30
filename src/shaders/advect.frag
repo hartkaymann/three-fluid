@@ -8,6 +8,8 @@ uniform vec3 u_resolution;
 uniform float u_deltaTime; 
 uniform float u_dissipation;
 
+uniform bool u_bfecc;
+
 varying vec2 vUv;
 
 // Trilinear interpolation
@@ -47,8 +49,19 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
 void main( ) {
   vec3 pos = get3DFragCoord( u_resolution );
 
-  vec3 new_pos = (pos / u_resolution) - texture3D( u_velocityTexture, pos / u_resolution, u_resolution ).xyz;
-  gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, new_pos ).xyz, 1.0 );
+  if(u_bfecc) {
+    // BFECC
+    vec3 pos_a = pos / u_resolution; // base
+    vec3 pos_b = pos_a + texture3D(u_velocityTexture, pos_a, u_resolution).xyz; // forward step
+    vec3 pos_c = pos_b - texture3D(u_velocityTexture, pos_b, u_resolution).xyz; // backward step
+    vec3 err = (pos_c - pos_a) / 2.0; // calculate error
+    vec3 pos_d = pos_a - err; // errpr correction
 
+    vec3 pos_new = pos_a - texture3D(u_velocityTexture, pos_d, u_resolution).xyz; // new position
+    gl_FragColor = vec4(u_dissipation * trilerp(u_advectedTexture, pos_new).xyz, 1.0);
+  } else {
+    vec3 pos_new = (pos / u_resolution) - texture3D( u_velocityTexture, pos / u_resolution, u_resolution ).xyz;
+    gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_new ).xyz, 1.0 );
+  }
   //gl_FragColor = vec4(texture3D(advected, pos).xyz, 1.0); 
 }

@@ -48,6 +48,7 @@ export default class Solver {
     forceMultiplier = 5;
     targetDensity = 1.0;
     pressureMultiplier = 1.0;
+    useBfecc = false;
 
     public density: Slab;
     public velocity: Slab;
@@ -96,8 +97,8 @@ export default class Solver {
     step(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
 
         // Advection
-        this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation);
-        this.advect.compute(this.velocity, this.velocity, this.velocity, dt);
+        this.advect.compute(this.velocity, this.velocity, this.velocity, dt, 1.0, this.useBfecc);
+        this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation, this.useBfecc);
         this.boundary.compute(this.velocity, this.velocity);
 
         //this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);

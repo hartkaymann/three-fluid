@@ -103,6 +103,7 @@ function init() {
   simulationFolder.add(solver, "forceMultiplier", 0, 100, 0.1).name("Interaction Force");
   simulationFolder.add(solver, "targetDensity", 0, 100, 0.1).name("Target Density");
   simulationFolder.add(solver, "pressureMultiplier", 0, 100, 0.1).name("Pressure Multiplier");
+  simulationFolder.add(solver, "useBfecc").name("Use BFECC");
   simulationFolder.open();
 }
 init();
