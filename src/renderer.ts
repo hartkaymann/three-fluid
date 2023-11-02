@@ -16,6 +16,8 @@ export default class Renderer {
     material: THREE.RawShaderMaterial;
     pointerSphere: THREE.Mesh;
 
+    minThreshold = 0.00001;
+
     constructor(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera, window: THREE.Vector2, domain: THREE.Vector3, resolution: THREE.Vector3) {
         this.renderer = renderer;
         this.camera = camera;
@@ -32,7 +34,8 @@ export default class Renderer {
                 velocity: {value: new THREE.Texture()},
                 pressure: {value: new THREE.Texture()},
                 res: { value: resolution },
-                size: { value: domain }
+                size: { value: domain },
+                u_minThreshold: { value: 0.0},
             },
             vertexShader: vertexTiled,
             fragmentShader: fragmentTiled,
@@ -75,6 +78,7 @@ export default class Renderer {
         this.material.uniforms.density.value = density.read.texture;
         this.material.uniforms.velocity.value = velocity.read.texture;
         this.material.uniforms.pressure.value = pressure.read.texture;
+        this.material.uniforms.u_minThreshold.value = this.minThreshold;
 
         this.renderer.setRenderTarget(null);
         this.renderer.setViewport(0, 0, this.window.width, this.window.height);

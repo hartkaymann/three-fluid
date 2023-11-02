@@ -105,6 +105,10 @@ function init() {
   simulationFolder.add(solver, "pressureMultiplier", 0, 100, 0.1).name("Pressure Multiplier");
   simulationFolder.add(solver, "useBfecc").name("Use BFECC");
   simulationFolder.open();
+  
+  const renderingFolder = gui.addFolder("Rendering");
+  renderingFolder.add(renderer, "minThreshold", 0.0, 0.01, 0.00001).name("Minumim Density");
+  
 }
 init();
 
