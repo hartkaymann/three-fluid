@@ -14,8 +14,8 @@ export default class Vorticity extends Slabop {
 
         let uniforms = {
             u_resolution: { value: resolution },
-            u_halfrdx: { value: 0.5 / 1.0 },
             u_velocityTexture: { value: new THREE.Texture() },
+            u_halfrdx: { value: 0.5 / 1.0 },
         }
 
         super(renderer, resolution, vs, fs, uniforms);

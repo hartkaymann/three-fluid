@@ -31,24 +31,23 @@ import fragmentScalarAdd from './shaders/scalaradd.frag'
 
 export default class Solver {
 
-    private renderer: THREE.WebGLRenderer;
-
     applyBoundaries = true; // Needs more than just deactivating
     dissipation = 1.0; // Dissipation, lower value means faster dissipation
     applyViscosity: boolean = false;
     viscosity = 0.3; // Viscosity, higher value means more viscous fluid
     applyVorticity = false;
     curl = 0.3; // Curl
-    pressureIterations = 50; // Jacobi iterations for poisson pressure, should be between 50-80 
+    pressureIterations = 80; // Jacobi iterations for poisson pressure, should be between 50-80 
     applyGravity = false;
     gravity = new THREE.Vector3(0, -9.81, 0);
     rise = 1.0; // Tendency to rise
     fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
-    forceRadius = 3;
-    forceMultiplier = 5;
-    targetDensity = 1.0;
+    forceRadius = 0.5;
+    forceMultiplier = 1;
+    targetDensity = 0.01;
     pressureMultiplier = 1.0;
     useBfecc = false;
+    projectionOffset = 1.0;
 
     public density: Slab;
     public velocity: Slab;
@@ -70,14 +69,13 @@ export default class Solver {
     private scalarAdd: ScalarAddition;
 
     constructor(renderer: THREE.WebGLRenderer, domain: THREE.Vector3, resolution: THREE.Vector3) {
-        this.renderer = renderer;
 
         // Slabs
         this.density = new Slab(resolution, THREE.RedFormat);
         this.velocity = new Slab(resolution);
         this.pressure = new Slab(resolution, THREE.RedFormat);
         this.velocityDivergence = new Slab(resolution, THREE.RedFormat);
-        this.velocityVorticity = new Slab(resolution, THREE.RedFormat);
+        this.velocityVorticity = new Slab(resolution);
         this.densityPressure = new Slab(resolution);
 
         // Slabobs
@@ -97,7 +95,7 @@ export default class Solver {
     step(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
 
         // Advection
-        this.advect.compute(this.velocity, this.velocity, this.velocity, dt, 1.0, this.useBfecc);
+        this.advect.compute(this.velocity, this.velocity, this.velocity, dt, 1.0, false);
         this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation, this.useBfecc);
         this.boundary.compute(this.velocity, this.velocity);
 
@@ -107,6 +105,7 @@ export default class Solver {
         // Body forces  
         if (this.applyGravity) {
             this.buoyancy.compute(this.velocity, this.density, this.velocity, this.gravity, dt);
+            this.boundary.compute(this.velocity, this.velocity);
         }
 
         this.addForce(dt, keys, mousePos, mouseDir);
@@ -128,8 +127,8 @@ export default class Solver {
             this.jacobi.alpha = alpha;
             this.jacobi.beta = beta;
 
-            this.jacobi.compute(this.velocity, this.velocity, this.density, this.velocity, 1, this.boundary);
-            this.jacobi.compute(this.density, this.density, this.density, this.density, 1);
+            this.jacobi.compute(this.velocity, this.velocity, this.density, this.velocity, 20, this.boundary);
+            this.jacobi.compute(this.density, this.density, this.density, this.density, 20);
         }
 
         // Projection
@@ -155,15 +154,19 @@ export default class Solver {
 
     project() {
         // Divergence
-        this.divergence.compute(this.velocity, this.density, this.velocityDivergence);
+        this.divergence.compute(this.velocity, this.density, this.velocityDivergence, this.projectionOffset);
 
         // Poisson Pressure
         this.jacobi.alpha = -1.0;
         this.jacobi.beta = 6.0;
-        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary, 1.0);
+        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary, 1.0, this.projectionOffset);
 
         // Subtract gradient
-        this.gradient.compute(this.velocity, this.pressure, this.velocity);
+        this.gradient.compute(this.velocity, this.pressure, this.velocity, this.projectionOffset);
         this.boundary.compute(this.velocity, this.velocity);
+    }
+
+    setBoundaries(applyBounds: any) {
+        this.boundary.setScale(applyBounds ? -1.0 : 1.0);
     }
 }

@@ -5,12 +5,13 @@ uniform sampler2D u_velocityTexture;
 
 uniform vec3 u_resolution;
 
+uniform float u_offset;
 uniform float u_halfrdx;
 
 void main( ) {
   vec3 pos = get3DFragCoord( u_resolution );
     
-  mat3 offset = mat3(1.0);
+  mat3 offset = mat3(u_offset);
 
   float right = texture3D(u_pressureTexture, (pos + offset[0]) / u_resolution, u_resolution ).x;
   float left  = texture3D(u_pressureTexture, (pos - offset[0]) / u_resolution, u_resolution ).x;

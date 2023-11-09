@@ -19,7 +19,7 @@ void main( ) {
     vec3 color = mix( vec3( 0.247, 0.369, 0.984 ), vec3( 0.988, 0.275, 0.42 ), length( vel ) * 100.0 );
     //color = texture2D(velocity, coords).xyz;
 
-    float alpha = ( d.x <= u_minThreshold ) ? 0.0 : min(max(0.2, d.x), 0.25);
+    float alpha = ( d.x <= u_minThreshold ) ? 0.0 : min(max(0.05, d.x), 0.5);
 
     gl_FragColor = vec4( color, alpha );
     //gl_FragColor = vec4( texcoord.xyxy );

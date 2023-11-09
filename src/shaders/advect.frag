@@ -43,6 +43,7 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
     ),
     a.z
   );
+
 }
 
 // Advection with BFECC(int the future) to reduce unwanted dissipation
@@ -50,18 +51,16 @@ void main( ) {
   vec3 pos = get3DFragCoord( u_resolution );
 
   if(u_bfecc) {
-    // BFECC
-    vec3 pos_a = pos / u_resolution; // base
+    //BFECC
+    vec3 pos_a = pos / u_resolution;
     vec3 pos_b = pos_a + texture3D(u_velocityTexture, pos_a, u_resolution).xyz; // forward step
     vec3 pos_c = pos_b - texture3D(u_velocityTexture, pos_b, u_resolution).xyz; // backward step
-    vec3 err = (pos_c - pos_a) / 2.0; // calculate error
-    vec3 pos_d = pos_a - err; // errpr correction
+    vec3 error = 0.5 * (pos_c - pos_a) ; // calculate error
 
-    vec3 pos_new = pos_a - texture3D(u_velocityTexture, pos_d, u_resolution).xyz; // new position
+    vec3 pos_new = pos_a - texture3D(u_velocityTexture, pos_a + error, u_resolution).xyz; // new position
     gl_FragColor = vec4(u_dissipation * trilerp(u_advectedTexture, pos_new).xyz, 1.0);
   } else {
     vec3 pos_new = (pos / u_resolution) - texture3D( u_velocityTexture, pos / u_resolution, u_resolution ).xyz;
-    gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_new ).xyz, 1.0 );
+    gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_new ), 1.0 );
   }
-  //gl_FragColor = vec4(texture3D(advected, pos).xyz, 1.0); 
 }

@@ -36,7 +36,7 @@ void main( ) {
   }
 
   //vec3 splat = u_deltaTime * colorNormalized * u_amount * gauss( coord, u_radius );
-  vec3 splat = (u_deltaTime * u_amount * colorNormalized * dist( coord, u_radius )) / u_resolution;
+  vec3 splat = ( u_amount * colorNormalized * dist( coord, u_radius )) / u_resolution;
 
   gl_FragColor = vec4( min( vec3( u_amount ), base + splat ), 1.0 );
     //gl_FragColor = vec4(vec3(length(coord.xyz)), 1.0);

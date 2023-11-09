@@ -20,7 +20,7 @@ export default class Slab {
                     type: THREE.FloatType,
                     format: format ? format : THREE.RGBAFormat,
                     minFilter: THREE.LinearFilter,
-                    magFilter: THREE.LinearFilter
+                    magFilter: THREE.LinearFilter,
                 }
             );
         }

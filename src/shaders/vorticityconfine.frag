@@ -9,31 +9,32 @@ uniform float u_deltaTime;
 uniform float u_halfrdx;
 uniform float u_curl;
 
+const float epsilon = 2.4414e-4;
+
 void main( ) {
     vec3 pos = get3DFragCoord( u_resolution );
 
     mat3 offset = mat3(1.0);
 
+    // ω = ∇ × u
+    vec3 mid   = texture3D( u_vorticityTexture, pos / u_resolution, u_resolution ).xyz;
     float right = texture3D( u_vorticityTexture, (pos + offset[0]) / u_resolution, u_resolution ).x;
-    float left  = texture3D( u_vorticityTexture, (pos - offset[0]) / u_resolution, u_resolution ).x;
-    float up    = texture3D( u_vorticityTexture, (pos + offset[1]) / u_resolution, u_resolution ).x;
-    float down  = texture3D( u_vorticityTexture, (pos - offset[1]) / u_resolution, u_resolution ).x;
-    float back  = texture3D( u_vorticityTexture, (pos + offset[2]) / u_resolution, u_resolution ).x;
-    float front = texture3D( u_vorticityTexture, (pos - offset[2]) / u_resolution, u_resolution ).x;
-    float mid   = texture3D( u_vorticityTexture, pos / u_resolution ).x;
+    float up    = texture3D( u_vorticityTexture, (pos + offset[1]) / u_resolution, u_resolution ).y;
+    float back  = texture3D( u_vorticityTexture, (pos + offset[2]) / u_resolution, u_resolution ).z;
 
-    vec3 force = u_halfrdx * vec3( 
-        abs( up ) - abs( down ), 
-        abs( right ) - abs( left ), 
-        abs( back ) - abs( front) 
+    // η = ∇|ω|
+    vec3 eta = vec3( 
+        abs( right ) - abs( mid.x ), 
+        abs( up ) - abs( mid.y), 
+        abs( back ) - abs( mid.z) 
     );
+    
+    // N = η / |η|
+    vec3 N = eta / length(eta);
 
-    float epsilon = 2.4414e-4;
-    float magSqr = max( epsilon, dot( force, force ) );
-
-    force *= inversesqrt( magSqr ) * u_curl * mid; // use half live fast invsqrt?
-    force.y *= -1.0;
+    vec3 force = epsilon * cross(N, mid);
 
     vec3 base = texture3D( u_velocityTexture, pos / u_resolution, u_resolution ).xyz;
     gl_FragColor = vec4( base + ( u_deltaTime * force ), 1.0 );
+    gl_FragColor = vec4(N, 1.0);
 }

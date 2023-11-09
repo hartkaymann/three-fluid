@@ -14,10 +14,10 @@ export default class VorticityConfinement extends Slabop {
 
         let uniforms = {
             u_resolution: { value: resolution },
-            u_deltaTime: { value: 0.0 },
-            u_halfrdx: { value: 0.5 / 1.0 },
             u_velocityTexture: { value: new THREE.Texture() },
             u_vorticityTexture: { value: new THREE.Texture() },
+            u_deltaTime: { value: 0.0 },
+            u_halfrdx: { value: 0.5 / 1.0 },
             u_curl: { value: 0.0 }
         }
 

@@ -12,7 +12,6 @@ void main( ) {
 
     vec3 color = bias + scale * texture2D( read, vUv ).xyz;
 
-    float alpha = (length( color ) < threshold) ? 0.0 : max(color.x, max(color.y, color.z));
     gl_FragColor = vec4( color, 1.0 );
     //gl_FragColor = vec4( texcoord.xyxy );
 }

@@ -16,7 +16,7 @@ export default class Renderer {
     material: THREE.RawShaderMaterial;
     pointerSphere: THREE.Mesh;
 
-    minThreshold = 0.00001;
+    minThreshold = 0.0000;
 
     constructor(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera, window: THREE.Vector2, domain: THREE.Vector3, resolution: THREE.Vector3) {
         this.renderer = renderer;

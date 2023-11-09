@@ -5,15 +5,16 @@ uniform sampler2D u_markerTexture;
 
 uniform vec3 u_resolution;
 
+uniform float u_offset;
 uniform float u_halfrdx;
 
 void main( ) {
   vec3 pos = get3DFragCoord( u_resolution );
 
-  if ( texture3D( u_markerTexture, pos / u_resolution, u_resolution ).x == 0.0 )
-    discard; // we got ourselves an air cell
+  // if ( texture3D( u_markerTexture, pos / u_resolution, u_resolution ).x == 0.0 )
+    // discard; // we got ourselves an air cell
 
-  mat3 offset = mat3( 1.0 );
+  mat3 offset = mat3( u_offset );
 
   float right = texture3D( u_velocityTexture, ( pos + offset[0] ) / u_resolution, u_resolution ).x;
   float left  = texture3D( u_velocityTexture, ( pos - offset[0] ) / u_resolution, u_resolution ).x;
