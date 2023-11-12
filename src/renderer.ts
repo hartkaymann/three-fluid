@@ -16,7 +16,7 @@ export default class Renderer {
     material: THREE.RawShaderMaterial;
     pointerSphere: THREE.Mesh;
 
-    minThreshold = 0.0000;
+    minThreshold = 0.00001;
 
     constructor(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera, window: THREE.Vector2, domain: THREE.Vector3, resolution: THREE.Vector3) {
         this.renderer = renderer;
@@ -43,7 +43,7 @@ export default class Renderer {
             transparent: true
         });
 
-        for (let z = 1; z < resolution.z - 1; z++) {
+        for (let z = 0; z < resolution.z; z++) {
             const geometry = new THREE.PlaneGeometry(domain.x, domain.y);
             geometry.translate(0.0, 0.0, domain.z / 2 - z * (domain.z / resolution.z));
 

@@ -45,6 +45,6 @@ export abstract class Slabop {
             const quad = new THREE.Mesh(geometry, material);
             
             this.scene.add(quad);
-        }
+        }        
     }
 }

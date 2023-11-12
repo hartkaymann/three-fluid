@@ -63,4 +63,6 @@ void main( ) {
     vec3 pos_new = (pos / u_resolution) - texture3D( u_velocityTexture, pos / u_resolution, u_resolution ).xyz;
     gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_new ), 1.0 );
   }
+
+  gl_FragColor = vec4(texture3D(u_advectedTexture, pos / u_resolution, u_resolution));
 }

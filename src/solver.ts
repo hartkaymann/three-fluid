@@ -42,7 +42,7 @@ export default class Solver {
     gravity = new THREE.Vector3(0, -9.81, 0);
     rise = 1.0; // Tendency to rise
     fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
-    forceRadius = 0.5;
+    forceRadius = 1.;
     forceMultiplier = 1;
     targetDensity = 0.01;
     pressureMultiplier = 1.0;
@@ -132,7 +132,7 @@ export default class Solver {
         }
 
         // Projection
-        this.project();
+        //this.project();
 
     }
 

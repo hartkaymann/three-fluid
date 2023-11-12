@@ -21,8 +21,8 @@ import Renderer from './renderer';
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const domain = new THREE.Vector3(40, 20, 20);
-const resolution = new THREE.Vector3(128, 64, 64);
+const domain = new THREE.Vector3(25, 20, 20);
+const resolution = new THREE.Vector3(8, 8, 8);
 
 let solver: Solver;
 let renderer: Renderer;
@@ -42,7 +42,6 @@ let gui: GUI;
 function init() {
   let canvas = <HTMLCanvasElement>document.getElementById('c');
   let container = <HTMLElement>document.getElementById('content');
-
 
   // Setup WebGL Renderer
   wgl = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
@@ -98,9 +97,9 @@ function init() {
   //viscosityFolder.add(solver, "applyViscosity").name("Apply Viscosity");
   //viscosityFolder.add(solver, "viscosity", 0, 1, 0.01).name("Viscosity");
 
-  //const vorticityFolder = simulationFolder.addFolder("Vorticity"); 
-  //vorticityFolder.add(solver, "applyVorticity").name("Apply Vorticity");
-  //vorticityFolder.add(solver, "curl", 0, 10, 0.01).name("Curl");
+  const vorticityFolder = simulationFolder.addFolder("Vorticity");
+  vorticityFolder.add(solver, "applyVorticity").name("Apply Vorticity");
+  vorticityFolder.add(solver, "curl", 0, 10, 0.01).name("Curl");
 
   const projectionFolder = simulationFolder.addFolder("Projection");
   projectionFolder.add(solver, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");
@@ -156,7 +155,6 @@ function step() {
 }
 step();
 
-
 window.addEventListener('resize', () => {
   width = window.innerWidth;
   height = window.innerHeight;
@@ -164,3 +162,53 @@ window.addEventListener('resize', () => {
   renderer.resize(width, height);
   wgl.setSize(width, height);
 });
+
+const binarySearchResolution = () => {
+  const maxTextureResolution = new THREE.Vector2(2048, 2048);
+  const domainRatio = new THREE.Vector3(domain.x / domain.y, domain.y / domain.z, domain.z / domain.x);
+
+  let targetTileAmount = domainRatio.z;
+  let tileAmount = new THREE.Vector2(0, 0);
+
+  let areaWidthScale = (domainRatio.x * maxTextureResolution.y) * maxTextureResolution.y; // area of the result when scaled by width
+  let areaHeightScale = maxTextureResolution.x * (maxTextureResolution.x / domainRatio.x); // area of the result when scaled by height
+  let newWidth, newHeight = 0;
+  if (areaWidthScale < areaHeightScale) {
+    newWidth = domainRatio.x * maxTextureResolution.y;
+    newHeight = maxTextureResolution.y;
+  } else {
+    newWidth = maxTextureResolution.x;
+    newHeight = maxTextureResolution.x / domainRatio.x;
+  }
+
+  let tileResolutionLow = new THREE.Vector2(0, 0); // low
+  let tileResolutionHigh = new THREE.Vector2(newWidth, newHeight); // high
+  let tileResolution = new THREE.Vector2();
+  let i = 0;
+  for (; i < Math.sqrt(Math.max(tileResolutionHigh.x, tileResolutionHigh.y)); i++) {
+    tileResolution.set(
+      (tileResolutionLow.x + tileResolutionHigh.x) / 2.0,
+      (tileResolutionLow.y + tileResolutionHigh.y) / 2.0
+    ).floor(); // mid
+    console.log("Low: " + tileResolutionLow.x + ", " + tileResolutionLow.y);
+    console.log("High: " + tileResolutionHigh.x + ", " + tileResolutionHigh.y);
+    console.log("Mid: " + tileResolution.x + ", " + tileResolution.y);
+    targetTileAmount = tileResolution.x * domainRatio.z;
+    console.log("Target Tiles: " + targetTileAmount);
+
+    tileAmount = new THREE.Vector2(Math.floor(maxTextureResolution.x / tileResolution.x), Math.floor(maxTextureResolution.y / tileResolution.y));
+    let totalTiles = tileAmount.x * tileAmount.y; // mid value
+    console.log("Total Tiles: " + totalTiles);
+
+    if (totalTiles == targetTileAmount)
+      break;
+    else if (totalTiles < targetTileAmount)
+      tileResolutionHigh.copy(tileResolution);
+    else
+      tileResolutionLow.copy(tileResolution);
+  }
+  console.log("Iterations: " + i);
+  console.log("Final Tile Resolution: " + tileResolution.x + ", " + tileResolution.y);
+  console.log("Final Texture Resolution: " + tileResolution.x * tileAmount.x + ", " + tileResolution.y * tileAmount.y);
+}
+binarySearchResolution();

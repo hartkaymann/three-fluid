@@ -12,7 +12,7 @@ void main( ) {
   vec3 pos = get3DFragCoord( u_resolution );
     float mass = texture3D(u_densityTexture, pos / u_resolution, u_resolution).x; 
     
-    vec3 g = u_deltaTime * u_gravity / u_resolution ;
+    vec3 g = mass * u_deltaTime * u_gravity / u_resolution ;
 
     g = (mass == 0.0) ? vec3(0.0) : g;
 
