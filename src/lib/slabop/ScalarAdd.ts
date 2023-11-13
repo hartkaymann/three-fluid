@@ -2,24 +2,25 @@ import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
 import Slab from '../Slab';
+import TiledTexture from '../TiledTexture';
 
 export default class ScalarAddition extends Slabop {
 
     constructor(
         renderer: THREE.WebGLRenderer,
-        resolution: THREE.Vector3,
+        tiledTex: TiledTexture,
         vs: string | string[],
         fs: string | string[]
     ) {
 
         let uniforms = {
-            u_resolution: { value: resolution },
+            u_resolution: { value: tiledTex.tileResolution },
             u_augendTexture: { value: new THREE.Texture() },
             u_addendTexture: { value: new THREE.Texture() },
             u_scale: { value: 1.0 }
         }
 
-        super(renderer, resolution, vs, fs, uniforms);
+        super(renderer, tiledTex, vs, fs, uniforms);
     }
 
     compute(

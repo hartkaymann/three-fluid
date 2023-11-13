@@ -15,26 +15,31 @@ export default class SlabDebug {
     material: THREE.RawShaderMaterial;
 
 
-    constructor(title: string, slab: Slab, resolution: THREE.Vector3, vs: string, fs: string, bias: number = 0.0) {
+    constructor(title: string, slab: Slab, resolution: THREE.Vector2, vs: string, fs: string, bias: number = 0.0) {
         this.title = title;
         this.slab = slab;
 
         this.scene = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera(resolution.x / -2, resolution.x / 2, resolution.y / 2, resolution.y / -2, 1, 10);
+        this.camera = new THREE.OrthographicCamera(0, resolution.x, resolution.y, 0, 1, 100);
         this.camera.position.z = 2;
 
         const geometry = new THREE.PlaneGeometry(resolution.x, resolution.y)
+        geometry.translate(
+            resolution.x / 2,
+            resolution.y / 2,
+            0
+        );
 
         this.material = new THREE.RawShaderMaterial({
             uniforms: {
                 read: { value: slab.read.texture },
                 bias: { value: new THREE.Vector3(bias, bias, bias) },
                 scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
-                res: { value: resolution}
+                res: { value: resolution }
             },
             vertexShader: vs,
             fragmentShader: fs
-        });;
+        });
 
         let mesh = new THREE.Mesh(geometry, this.material);
         this.scene.add(mesh);
@@ -53,15 +58,15 @@ export default class SlabDebug {
         element.appendChild(descriptionElemen);
 
         container.appendChild(element);
-
-
     }
 
     render(renderer: THREE.WebGLRenderer): void {
         const rect = this.sceneElement.getBoundingClientRect();
 
-        if (rect.bottom < 0 || rect.top > renderer.domElement.clientHeight ||
-            rect.right < 0 || rect.left > renderer.domElement.clientWidth) {
+        if (rect.bottom < 0 ||
+            rect.top > renderer.domElement.clientHeight ||
+            rect.right < 0 ||
+            rect.left > renderer.domElement.clientWidth) {
             return; // it's off screen
         }
 

@@ -2,18 +2,19 @@ import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
 import Slab from '../Slab';
+import TiledTexture from '../TiledTexture';
 
 export default class VorticityConfinement extends Slabop {
 
     constructor(
         renderer: THREE.WebGLRenderer,
-        resolution: THREE.Vector3,
+        tiledTex: TiledTexture,
         vs: string | string[],
         fs: string | string[]
     ) {
 
         let uniforms = {
-            u_resolution: { value: resolution },
+            u_resolution: { value: tiledTex.tileResolution },
             u_velocityTexture: { value: new THREE.Texture() },
             u_vorticityTexture: { value: new THREE.Texture() },
             u_deltaTime: { value: 0.0 },
@@ -21,7 +22,7 @@ export default class VorticityConfinement extends Slabop {
             u_curl: { value: 0.0 }
         }
 
-        super(renderer, resolution, vs, fs, uniforms);
+        super(renderer, tiledTex, vs, fs, uniforms);
     }
 
     compute(

@@ -2,18 +2,19 @@ import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
 import Slab from '../Slab';
+import TiledTexture from '../TiledTexture';
 
 export default class Incompressability extends Slabop {
 
     constructor(
         renderer: THREE.WebGLRenderer,
-        resolution: THREE.Vector3,
+        tiledTex: TiledTexture,
         vs: string | string[],
         fs: string | string[]
     ) {
 
         let uniforms = {
-            u_resolution: { value: resolution },
+            u_resolution: { value: tiledTex.tileResolution },
             u_densityTexture: { value: new THREE.Texture() },
             u_velocityTexture: { value: new THREE.Texture() },
             u_target: { value: 10.0 },
@@ -22,7 +23,7 @@ export default class Incompressability extends Slabop {
             u_deltaTime: { value: 0.0 }
         }
 
-        super(renderer, resolution, vs, fs, uniforms);
+        super(renderer, tiledTex, vs, fs, uniforms);
     }
 
     compute(

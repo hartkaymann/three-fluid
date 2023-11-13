@@ -17,11 +17,12 @@ import Mouse from './lib/Mouse';
 import Pointer3D from './lib/Pointer3D';
 import Solver from './solver';
 import Renderer from './renderer';
+import TiledTexture from './lib/TiledTexture';
 
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-const domain = new THREE.Vector3(25, 20, 20);
+const domain = new THREE.Vector3(40, 20, 20);
 const resolution = new THREE.Vector3(8, 8, 8);
 
 let solver: Solver;
@@ -54,16 +55,20 @@ function init() {
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
   camera.position.z = 20;
 
+
+  const tiledTexture = new TiledTexture();
+  tiledTexture.computeResolution(new THREE.Vector2(128, 128), domain);
+
   // Initialize solver and renderer
-  solver = new Solver(wgl, domain, resolution);
+  solver = new Solver(wgl, domain, tiledTexture);
   renderer = new Renderer(wgl, camera, new THREE.Vector2(window.innerWidth, window.innerHeight), domain, resolution);
 
   // Texture debug panel
-  slabDebugs.push(new SlabDebug("Density", solver.density, resolution, vertexBasic, fragmentDisplayVector));
-  slabDebugs.push(new SlabDebug("Velocity", solver.velocity, resolution, vertexBasic, fragmentDisplayVector, 0.5));
-  slabDebugs.push(new SlabDebug("Pressure", solver.pressure, resolution, vertexBasic, fragmentDisplayScalar, 0.5));
-  slabDebugs.push(new SlabDebug("Divergence", solver.velocityDivergence, resolution, vertexBasic, fragmentDisplayScalar, 0.5));
-  slabDebugs.push(new SlabDebug("Vorticity", solver.velocityVorticity, resolution, vertexBasic, fragmentDisplayScalar, 0.5));
+  slabDebugs.push(new SlabDebug("Density", solver.density, tiledTexture.resolution, vertexBasic, fragmentDisplayVector));
+  slabDebugs.push(new SlabDebug("Velocity", solver.velocity, tiledTexture.resolution, vertexBasic, fragmentDisplayVector, 0.5));
+  slabDebugs.push(new SlabDebug("Pressure", solver.pressure, tiledTexture.resolution, vertexBasic, fragmentDisplayScalar, 0.5));
+  slabDebugs.push(new SlabDebug("Divergence", solver.velocityDivergence, tiledTexture.resolution, vertexBasic, fragmentDisplayScalar, 0.5));
+  slabDebugs.push(new SlabDebug("Vorticity", solver.velocityVorticity, tiledTexture.resolution, vertexBasic, fragmentDisplayScalar, 0.5));
   slabDebugs.forEach(element => {
     element.create(container);
   });
@@ -162,53 +167,3 @@ window.addEventListener('resize', () => {
   renderer.resize(width, height);
   wgl.setSize(width, height);
 });
-
-const binarySearchResolution = () => {
-  const maxTextureResolution = new THREE.Vector2(2048, 2048);
-  const domainRatio = new THREE.Vector3(domain.x / domain.y, domain.y / domain.z, domain.z / domain.x);
-
-  let targetTileAmount = domainRatio.z;
-  let tileAmount = new THREE.Vector2(0, 0);
-
-  let areaWidthScale = (domainRatio.x * maxTextureResolution.y) * maxTextureResolution.y; // area of the result when scaled by width
-  let areaHeightScale = maxTextureResolution.x * (maxTextureResolution.x / domainRatio.x); // area of the result when scaled by height
-  let newWidth, newHeight = 0;
-  if (areaWidthScale < areaHeightScale) {
-    newWidth = domainRatio.x * maxTextureResolution.y;
-    newHeight = maxTextureResolution.y;
-  } else {
-    newWidth = maxTextureResolution.x;
-    newHeight = maxTextureResolution.x / domainRatio.x;
-  }
-
-  let tileResolutionLow = new THREE.Vector2(0, 0); // low
-  let tileResolutionHigh = new THREE.Vector2(newWidth, newHeight); // high
-  let tileResolution = new THREE.Vector2();
-  let i = 0;
-  for (; i < Math.sqrt(Math.max(tileResolutionHigh.x, tileResolutionHigh.y)); i++) {
-    tileResolution.set(
-      (tileResolutionLow.x + tileResolutionHigh.x) / 2.0,
-      (tileResolutionLow.y + tileResolutionHigh.y) / 2.0
-    ).floor(); // mid
-    console.log("Low: " + tileResolutionLow.x + ", " + tileResolutionLow.y);
-    console.log("High: " + tileResolutionHigh.x + ", " + tileResolutionHigh.y);
-    console.log("Mid: " + tileResolution.x + ", " + tileResolution.y);
-    targetTileAmount = tileResolution.x * domainRatio.z;
-    console.log("Target Tiles: " + targetTileAmount);
-
-    tileAmount = new THREE.Vector2(Math.floor(maxTextureResolution.x / tileResolution.x), Math.floor(maxTextureResolution.y / tileResolution.y));
-    let totalTiles = tileAmount.x * tileAmount.y; // mid value
-    console.log("Total Tiles: " + totalTiles);
-
-    if (totalTiles == targetTileAmount)
-      break;
-    else if (totalTiles < targetTileAmount)
-      tileResolutionHigh.copy(tileResolution);
-    else
-      tileResolutionLow.copy(tileResolution);
-  }
-  console.log("Iterations: " + i);
-  console.log("Final Tile Resolution: " + tileResolution.x + ", " + tileResolution.y);
-  console.log("Final Texture Resolution: " + tileResolution.x * tileAmount.x + ", " + tileResolution.y * tileAmount.y);
-}
-binarySearchResolution();

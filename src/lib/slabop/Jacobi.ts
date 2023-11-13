@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { Slabop } from './Slabop';
 import Slab from '../Slab';
 import Boundary from './Boundary';
+import TiledTexture from '../TiledTexture';
 
 export default class Jacobi extends Slabop {
 
@@ -11,13 +12,13 @@ export default class Jacobi extends Slabop {
 
     constructor(
         renderer: THREE.WebGLRenderer,
-        resolution: THREE.Vector3,
+        tiledTex: TiledTexture,
         vs: string | string[],
         fs: string | string[]
     ) {
         
         let uniforms = {
-            u_resolution: { value: resolution },
+            u_resolution: { value: tiledTex.tileResolution },
             u_pressureTexture: { value: new THREE.Texture() },
             u_divergenceTexture: { value: new THREE.Texture() },
             u_markerTexture: { value: new THREE.Texture() },
@@ -26,7 +27,7 @@ export default class Jacobi extends Slabop {
             u_rbeta: { value: 0.0 },
         }
 
-        super(renderer, resolution, vs, fs, uniforms);
+        super(renderer, tiledTex, vs, fs, uniforms);
 
         this.alpha = -1.0;
         this.beta = 6.0;
@@ -39,7 +40,6 @@ export default class Jacobi extends Slabop {
         output: Slab,
         iterations: number,
         boundary?: Boundary,
-        scale?: number,
         offset?: number
     ): void {
         this.uniforms.u_alpha.value = this.alpha;
@@ -49,7 +49,7 @@ export default class Jacobi extends Slabop {
 
         for (let i = 0; i < iterations; i++) {
             this.step(x, b, output);
-            boundary?.compute(output, output, scale);
+            boundary?.compute(output, output);
         }
         this.renderer.setRenderTarget(null);
     }

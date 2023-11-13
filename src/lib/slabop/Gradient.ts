@@ -2,25 +2,26 @@ import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
 import Slab from '../Slab';
+import TiledTexture from '../TiledTexture';
 
 export default class Gradient extends Slabop {
 
     constructor(
         renderer: THREE.WebGLRenderer,
-        resolution: THREE.Vector3,
+        tiledTex: TiledTexture,
         vs: string | string[],
         fs: string | string[]
     ) {
 
         let uniforms = {
-            u_resolution: { value: resolution },
+            u_resolution: { value: tiledTex.tileResolution },
             u_pressureTexture: { value: new THREE.Texture() },
             u_velocityTexture: { value: new THREE.Texture() },
             u_offset: { value: 1.0},
             u_halfrdx: { value: 0.5 / 1.0 }
         }
 
-        super(renderer, resolution, vs, fs, uniforms);
+        super(renderer, tiledTex, vs, fs, uniforms);
     }
 
     compute(

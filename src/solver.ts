@@ -28,6 +28,7 @@ import fragmentVorticity from './shaders/vorticity.frag'
 import fragmentVorticityConfinement from './shaders/vorticityconfine.frag'
 import fragmentIncompressability from './shaders/incompressibility.frag'
 import fragmentScalarAdd from './shaders/scalaradd.frag'
+import TiledTexture from './lib/TiledTexture';
 
 export default class Solver {
 
@@ -68,28 +69,28 @@ export default class Solver {
     private incompressability: Incompressability;
     private scalarAdd: ScalarAddition;
 
-    constructor(renderer: THREE.WebGLRenderer, domain: THREE.Vector3, resolution: THREE.Vector3) {
+    constructor(renderer: THREE.WebGLRenderer, domain: THREE.Vector3, tiledTex: TiledTexture) {
 
         // Slabs
-        this.density = new Slab(resolution, THREE.RedFormat);
-        this.velocity = new Slab(resolution);
-        this.pressure = new Slab(resolution, THREE.RedFormat);
-        this.velocityDivergence = new Slab(resolution, THREE.RedFormat);
-        this.velocityVorticity = new Slab(resolution);
-        this.densityPressure = new Slab(resolution);
+        this.density = new Slab(tiledTex.resolution, THREE.RedFormat);
+        this.velocity = new Slab(tiledTex.resolution);
+        this.pressure = new Slab(tiledTex.resolution, THREE.RedFormat);
+        this.velocityDivergence = new Slab(tiledTex.resolution, THREE.RedFormat);
+        this.velocityVorticity = new Slab(tiledTex.resolution);
+        this.densityPressure = new Slab(tiledTex.resolution);
 
         // Slabobs
-        this.advect = new Advect(renderer, resolution, vertexBasic, [fragmentCommon, fragmentAdvect]);
-        this.force = new Force(renderer, domain, resolution, vertexBasic, [fragmentCommon, fragmentForce]);
-        this.divergence = new Divergence(renderer, resolution, vertexBasic, [fragmentCommon, fragmentDivergence]);
-        this.gradient = new Gradient(renderer, resolution, vertexBasic, [fragmentCommon, fragmentGradient]);
-        this.boundary = new Boundary(renderer, resolution, vertexOffset, fragmentBoundary);
-        this.jacobi = new Jacobi(renderer, resolution, vertexBasic, [fragmentCommon, fragmentJacobi]);
-        this.buoyancy = new Buoyancy(renderer, resolution, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
-        this.vorticity = new Vorticity(renderer, resolution, vertexBasic, [fragmentCommon, fragmentVorticity]);
-        this.vorticityConfinement = new VorticityConfinement(renderer, resolution, vertexBasic, [fragmentCommon, fragmentVorticityConfinement]);
-        this.incompressability = new Incompressability(renderer, resolution, vertexBasic, [fragmentCommon, fragmentIncompressability]);
-        this.scalarAdd = new ScalarAddition(renderer, resolution, vertexBasic, fragmentScalarAdd);
+        this.advect = new Advect(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentAdvect]);
+        this.force = new Force(renderer, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentForce]);
+        this.divergence = new Divergence(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentDivergence]);
+        this.gradient = new Gradient(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentGradient]);
+        this.boundary = new Boundary(renderer, tiledTex, vertexOffset, fragmentBoundary);
+        this.jacobi = new Jacobi(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentJacobi]);
+        this.buoyancy = new Buoyancy(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
+        this.vorticity = new Vorticity(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticity]);
+        this.vorticityConfinement = new VorticityConfinement(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticityConfinement]);
+        this.incompressability = new Incompressability(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentIncompressability]);
+        this.scalarAdd = new ScalarAddition(renderer, tiledTex, vertexBasic, fragmentScalarAdd);
     }
 
     step(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
@@ -159,7 +160,7 @@ export default class Solver {
         // Poisson Pressure
         this.jacobi.alpha = -1.0;
         this.jacobi.beta = 6.0;
-        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary, 1.0, this.projectionOffset);
+        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary, this.projectionOffset);
 
         // Subtract gradient
         this.gradient.compute(this.velocity, this.pressure, this.velocity, this.projectionOffset);

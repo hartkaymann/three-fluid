@@ -1,0 +1,74 @@
+import * as THREE from 'three'
+
+export default class TiledTexture {
+
+    private _resolution: THREE.Vector2;
+    private _tileResolution: THREE.Vector2;
+    private _tileCount: THREE.Vector3;
+
+    constructor() {
+        this._resolution = new THREE.Vector2;
+        this._tileResolution = new THREE.Vector2;
+        this._tileCount = new THREE.Vector3;
+    }
+
+    get resolution(): THREE.Vector2 { return this._resolution; }
+    get tileResolution(): THREE.Vector2 { return this._tileResolution; }
+    get tileCount(): THREE.Vector3 { return this._tileCount; }
+
+    computeResolution(maxTextureResolution: THREE.Vector2, domain: THREE.Vector3) {
+        const domainRatio = new THREE.Vector3(domain.x / domain.y, domain.y / domain.z, domain.z / domain.x);
+
+        let targetTileAmount = domainRatio.z;
+        let tileCount = new THREE.Vector2(0, 0);
+
+        let areaWidthScale = (domainRatio.x * maxTextureResolution.y) * maxTextureResolution.y; // area of the result when scaled by width
+        let areaHeightScale = maxTextureResolution.x * (maxTextureResolution.x / domainRatio.x); // area of the result when scaled by height
+        let newWidth, newHeight = 0;
+        if (areaWidthScale < areaHeightScale) {
+            newWidth = domainRatio.x * maxTextureResolution.y;
+            newHeight = maxTextureResolution.y;
+        } else {
+            newWidth = maxTextureResolution.x;
+            newHeight = maxTextureResolution.x / domainRatio.x;
+        }
+
+        let tileResolutionLow = new THREE.Vector2(0, 0); // low
+        let tileResolutionHigh = new THREE.Vector2(newWidth, newHeight); // high
+        let tileResolution = new THREE.Vector2();
+        let i = 0;
+        for (; i < Math.sqrt(Math.max(tileResolutionHigh.x, tileResolutionHigh.y)); i++) {
+            tileResolution.set(
+                (tileResolutionLow.x + tileResolutionHigh.x) / 2.0,
+                (tileResolutionLow.y + tileResolutionHigh.y) / 2.0
+            ).floor(); // mid
+
+            targetTileAmount = tileResolution.x * domainRatio.z;
+
+            tileCount = new THREE.Vector2(Math.floor(maxTextureResolution.x / tileResolution.x), Math.floor(maxTextureResolution.y / tileResolution.y));
+            let totalTiles = tileCount.x * tileCount.y; // mid value
+
+            console.log("Low: " + tileResolutionLow.x + ", " + tileResolutionLow.y);
+            console.log("High: " + tileResolutionHigh.x + ", " + tileResolutionHigh.y);
+            console.log("Mid: " + tileResolution.x + ", " + tileResolution.y);
+            console.log("Target Tiles: " + targetTileAmount);
+            console.log("Total Tiles: " + totalTiles);
+           
+            if (totalTiles == targetTileAmount)
+                break;
+            else if (totalTiles < targetTileAmount)
+                tileResolutionHigh.copy(tileResolution);
+            else
+                tileResolutionLow.copy(tileResolution);
+        }
+
+        this._resolution = new THREE.Vector2(tileResolution.x * tileCount.x, tileResolution.y * tileCount.y);
+        this._tileResolution = tileResolution;
+        this._tileCount = new THREE.Vector3(tileCount.x, tileCount.y, targetTileAmount);
+
+        console.log("Iterations: " + i);
+        console.log("Final Tile Resolution: " + tileResolution.x + ", " + tileResolution.y);
+        console.log("Final Texture Resolution: " + tileResolution.x * tileCount.x + ", " + tileResolution.y * tileCount.y);
+    }
+
+}
