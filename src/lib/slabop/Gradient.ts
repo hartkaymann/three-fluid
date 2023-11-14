@@ -14,7 +14,7 @@ export default class Gradient extends Slabop {
     ) {
 
         let uniforms = {
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_pressureTexture: { value: new THREE.Texture() },
             u_velocityTexture: { value: new THREE.Texture() },
             u_offset: { value: 1.0},

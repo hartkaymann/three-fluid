@@ -14,7 +14,7 @@ export default class ScalarAddition extends Slabop {
     ) {
 
         let uniforms = {
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_augendTexture: { value: new THREE.Texture() },
             u_addendTexture: { value: new THREE.Texture() },
             u_scale: { value: 1.0 }

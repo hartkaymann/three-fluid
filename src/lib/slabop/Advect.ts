@@ -14,7 +14,6 @@ export default class Advect extends Slabop {
     ) {
 
         let uniforms = {
-            u_resolution: { value: tiledTex.tileResolution }, // should be vec3 where z value is tiledTex.tileCount.z (i think)
             u_advectedTexture: { value: new THREE.Texture() },
             u_velocityTexture: { value: new THREE.Texture() },
             u_deltaTime: { value: 0.0 },

@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import vertexTiled from './shaders/displaytiled.vert'
 import fragmentTiled from './shaders/displaytiled.frag'
 import Slab from './lib/Slab';
+import TiledTexture from './lib/TiledTexture';
 
 export default class Renderer {
 
@@ -18,7 +19,13 @@ export default class Renderer {
 
     minThreshold = 0.00001;
 
-    constructor(renderer: THREE.WebGLRenderer, camera: THREE.PerspectiveCamera, window: THREE.Vector2, domain: THREE.Vector3, resolution: THREE.Vector3) {
+    constructor(
+        renderer: THREE.WebGLRenderer,
+        camera: THREE.PerspectiveCamera,
+        window: THREE.Vector2,
+        domain: THREE.Vector3,
+        tiledTex: TiledTexture
+    ) {
         this.renderer = renderer;
         this.camera = camera;
 
@@ -31,11 +38,13 @@ export default class Renderer {
         this.material = new THREE.RawShaderMaterial({
             uniforms: {
                 density: { value: new THREE.Texture() },
-                velocity: {value: new THREE.Texture()},
-                pressure: {value: new THREE.Texture()},
-                res: { value: resolution },
-                size: { value: domain },
-                u_minThreshold: { value: 0.0},
+                velocity: { value: new THREE.Texture() },
+                pressure: { value: new THREE.Texture() },
+                u_size: { value: domain },
+                u_resolution: { value: tiledTex.simulationResolution },
+                u_textureResolution: {value: tiledTex.resolution},
+                u_tileCount: {value: tiledTex.tileCount},
+                u_minThreshold: { value: 0.0 },
             },
             vertexShader: vertexTiled,
             fragmentShader: fragmentTiled,
@@ -43,9 +52,9 @@ export default class Renderer {
             transparent: true
         });
 
-        for (let z = 0; z < resolution.z; z++) {
+        for (let z = 0; z < tiledTex.tileCount.z; z++) {
             const geometry = new THREE.PlaneGeometry(domain.x, domain.y);
-            geometry.translate(0.0, 0.0, domain.z / 2 - z * (domain.z / resolution.z));
+            geometry.translate(0.0, 0.0, domain.z / 2 - z * (domain.z / tiledTex.tileCount.z));
 
             let attribCoord = [];
             for (let i = 0; i < geometry.getAttribute("position").count; i++) {

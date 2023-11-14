@@ -57,11 +57,11 @@ function init() {
 
 
   const tiledTexture = new TiledTexture();
-  tiledTexture.computeResolution(new THREE.Vector2(128, 128), domain);
+  tiledTexture.computeResolution(new THREE.Vector2(64, 64), domain);
 
   // Initialize solver and renderer
   solver = new Solver(wgl, domain, tiledTexture);
-  renderer = new Renderer(wgl, camera, new THREE.Vector2(window.innerWidth, window.innerHeight), domain, resolution);
+  renderer = new Renderer(wgl, camera, new THREE.Vector2(window.innerWidth, window.innerHeight), domain, tiledTexture);
 
   // Texture debug panel
   slabDebugs.push(new SlabDebug("Density", solver.density, tiledTexture.resolution, vertexBasic, fragmentDisplayVector));

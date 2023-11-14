@@ -84,7 +84,7 @@ export default class Solver {
         this.force = new Force(renderer, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentForce]);
         this.divergence = new Divergence(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentDivergence]);
         this.gradient = new Gradient(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentGradient]);
-        this.boundary = new Boundary(renderer, tiledTex, vertexOffset, fragmentBoundary);
+        this.boundary = new Boundary(renderer, tiledTex, vertexOffset, [fragmentCommon, fragmentBoundary]);
         this.jacobi = new Jacobi(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentJacobi]);
         this.buoyancy = new Buoyancy(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
         this.vorticity = new Vorticity(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticity]);
@@ -99,6 +99,8 @@ export default class Solver {
         this.advect.compute(this.velocity, this.velocity, this.velocity, dt, 1.0, false);
         this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation, this.useBfecc);
         this.boundary.compute(this.velocity, this.velocity);
+
+        return;
 
         //this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
         //this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
@@ -133,7 +135,7 @@ export default class Solver {
         }
 
         // Projection
-        //this.project();
+        this.project();
 
     }
 

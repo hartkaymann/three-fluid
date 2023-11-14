@@ -16,7 +16,7 @@ export default class Force extends Slabop {
 
         let uniforms = {
             u_size: { value: size },
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_readTexture: { value: new THREE.Texture() },
             u_deltaTime: { value: 0.0 },
             u_position: { value: new THREE.Vector3() },

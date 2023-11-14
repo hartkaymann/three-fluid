@@ -14,7 +14,7 @@ export default class Vorticity extends Slabop {
     ) {
 
         let uniforms = {
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_velocityTexture: { value: new THREE.Texture() },
             u_halfrdx: { value: 0.5 / 1.0 },
         }

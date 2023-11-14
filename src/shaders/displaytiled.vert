@@ -3,7 +3,7 @@ attribute vec3 position;
 attribute vec2 uv;
 attribute float depth;
 
-uniform vec3 size;
+uniform vec3 u_size;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
@@ -18,11 +18,5 @@ void main() {
 
     vColor = position;
 
-    vec3 tiledPos = vec3(
-        position.x,
-        position.y,
-        position.z
-    );
-
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(tiledPos, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }

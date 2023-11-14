@@ -27,9 +27,13 @@ export abstract class Slabop {
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, 100);
-        this.camera.position.z = 2;
+        this.camera.position.z = tiledTex.tileCount.z + 1;
 
         this.uniforms = uniforms;
+        // TODO: Translate tiled texture class to GLSL struct
+        this.uniforms.u_textureResolution = {value: tiledTex.resolution};
+        this.uniforms.u_tileCount = {value: tiledTex.tileCount};
+        this.uniforms.u_resolution = {value: tiledTex.simulationResolution};
 
         let vs = Array.isArray(vertexShaders) ? vertexShaders.join('\n') : vertexShaders;
         let fs = Array.isArray(fragmentShaders) ? fragmentShaders.join('\n') : fragmentShaders;
@@ -39,9 +43,9 @@ export abstract class Slabop {
             geometry.translate(
                 (tiledTex.tileResolution.x / 2) + tiledTex.tileResolution.x * (i % tiledTex.tileCount.x),
                 (tiledTex.tileResolution.y / 2) + tiledTex.tileResolution.y * Math.floor(i / tiledTex.tileCount.x),
-                0.0
+                i
             );
-
+            
             const material = new THREE.RawShaderMaterial({
                 uniforms: this.uniforms,
                 vertexShader: vs,

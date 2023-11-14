@@ -11,19 +11,27 @@ export default class Boundary {
 
     private uniforms: { [uniform: string]: THREE.IUniform<any> }
 
-    constructor(renderer: THREE.WebGLRenderer, tiledTex: TiledTexture, vs: string, fs: string) {
+    constructor(
+        renderer: THREE.WebGLRenderer,
+        tiledTex: TiledTexture,
+        vertexShaders: string | string[],
+        fragmentShaders: string | string[]
+    ) {
 
         this.renderer = renderer;
 
         this.scene = new THREE.Scene();
         this.camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, 100);
-        this.camera.position.z = 2;
+        this.camera.position.z = tiledTex.tileCount.z + 1;
 
         this.uniforms = {
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_readTexture: { value: new THREE.Texture() },
             u_scale: { value: -1.0 }
         }
+
+        let vs = Array.isArray(vertexShaders) ? vertexShaders.join('\n') : vertexShaders;
+        let fs = Array.isArray(fragmentShaders) ? fragmentShaders.join('\n') : fragmentShaders;
 
         const material = new THREE.RawShaderMaterial({
             uniforms: this.uniforms,
@@ -32,18 +40,18 @@ export default class Boundary {
         });
 
         var createLine = function (
-            start: THREE.Vector2,
-            end: THREE.Vector2,
-            offset: THREE.Vector2
+            start: THREE.Vector3,
+            end: THREE.Vector3,
+            offset: THREE.Vector3
         ): THREE.Line {
             let geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
-            geometry.setAttribute("offset", new THREE.Float32BufferAttribute([offset.x, offset.y, offset.x, offset.y], 2));
+            geometry.setAttribute("offset", new THREE.Float32BufferAttribute([offset.x, offset.y, offset.z, offset.x, offset.y, offset.z], 3));
             const line = new THREE.Line(geometry, material);
             return line;
         }
 
-        let x0 = 0.0;
-        let y0 = 0.0;
+        let x0 = 0.5;
+        let y0 = 0.5;
         let x1 = tiledTex.resolution.x;
         let y1 = tiledTex.resolution.y;
 
@@ -52,17 +60,17 @@ export default class Boundary {
             let xl = x0 + i * tiledTex.tileResolution.x;
             this.scene.add(
                 createLine(
-                    new THREE.Vector2(xl, y0),
-                    new THREE.Vector2(xl, y1),
-                    new THREE.Vector2(1, 0)
+                    new THREE.Vector3(xl, y0, i),
+                    new THREE.Vector3(xl, y1, i),
+                    new THREE.Vector3(1, 0)
                 )
             );
             let xr = x0 + (tiledTex.tileResolution.x - 1) + i * tiledTex.tileResolution.x
             this.scene.add(
                 createLine(
-                    new THREE.Vector2(xr, y0),
-                    new THREE.Vector2(xr, y1),
-                    new THREE.Vector2(-1, 0)
+                    new THREE.Vector3(xr, y0, i),
+                    new THREE.Vector3(xr, y1, i),
+                    new THREE.Vector3(-1, 0, 0)
                 )
             );
         }
@@ -71,17 +79,17 @@ export default class Boundary {
             let yb = y0 + i * tiledTex.tileResolution.y;
             this.scene.add(
                 createLine(
-                    new THREE.Vector2(x0, yb),
-                    new THREE.Vector2(x1, yb),
-                    new THREE.Vector2(0, 1)
+                    new THREE.Vector3(x0, yb, i),
+                    new THREE.Vector3(x1, yb, i),
+                    new THREE.Vector3(0, 1, 0)
                 )
             );
             let yt = y0 + (tiledTex.tileResolution.y - 1) + i * tiledTex.tileResolution.y
             this.scene.add(
                 createLine(
-                    new THREE.Vector2(x0, yt),
-                    new THREE.Vector2(x1, yt),
-                    new THREE.Vector2(0, -1)
+                    new THREE.Vector3(x0, yt, i),
+                    new THREE.Vector3(x1, yt, i),
+                    new THREE.Vector3(0, -1, 0)
                 )
             );
         }
@@ -96,20 +104,18 @@ export default class Boundary {
             0
         );
         geometryBack.translate(
-            (tiledTex.tileResolution.x) / 2 * (tiledTex.tileCount.x * tiledTex.tileResolution.x),
-            (tiledTex.tileResolution.y) / 2 * (tiledTex.tileCount.y * tiledTex.tileResolution.y),
-            0
+            (tiledTex.tileResolution.x) / 2 + tiledTex.tileResolution.x * ((tiledTex.tileCount.z - 1) % tiledTex.tileCount.x),
+            (tiledTex.tileResolution.y) / 2 + tiledTex.tileResolution.y * (tiledTex.tileCount.y - 1),
+            tiledTex.tileCount.z
         );
         let attribOffsetFront = [];
         let attribOffsetBack = [];
         for (let i = 0; i < geometryFront.getAttribute("position").count; i++) {
-            attribOffsetFront.push(tiledTex.tileResolution.x);
-            attribOffsetFront.push(0);
-            attribOffsetBack.push(-tiledTex.tileResolution.x);
-            attribOffsetBack.push(0);
+            attribOffsetFront.push(0, 0, 1);
+            attribOffsetBack.push(0, 0, -1);
         }
-        geometryFront.setAttribute("offset", new THREE.Float32BufferAttribute(attribOffsetFront, 2));
-        geometryBack.setAttribute("offset", new THREE.Float32BufferAttribute(attribOffsetBack, 2));
+        geometryFront.setAttribute("offset", new THREE.Float32BufferAttribute(attribOffsetFront, 3));
+        geometryBack.setAttribute("offset", new THREE.Float32BufferAttribute(attribOffsetBack, 3));
         const quadFront = new THREE.Mesh(geometryFront, material);
         const quadBack = new THREE.Mesh(geometryBack, material);
         this.scene.add(quadFront);

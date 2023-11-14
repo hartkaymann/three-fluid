@@ -18,7 +18,7 @@ export default class Jacobi extends Slabop {
     ) {
         
         let uniforms = {
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_pressureTexture: { value: new THREE.Texture() },
             u_divergenceTexture: { value: new THREE.Texture() },
             u_markerTexture: { value: new THREE.Texture() },

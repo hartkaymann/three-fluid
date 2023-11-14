@@ -14,7 +14,7 @@ export default class Incompressability extends Slabop {
     ) {
 
         let uniforms = {
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_densityTexture: { value: new THREE.Texture() },
             u_velocityTexture: { value: new THREE.Texture() },
             u_target: { value: 10.0 },

@@ -14,7 +14,7 @@ export default class VorticityConfinement extends Slabop {
     ) {
 
         let uniforms = {
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_velocityTexture: { value: new THREE.Texture() },
             u_vorticityTexture: { value: new THREE.Texture() },
             u_deltaTime: { value: 0.0 },

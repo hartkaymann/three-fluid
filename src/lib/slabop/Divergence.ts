@@ -14,7 +14,7 @@ export default class Divergence extends Slabop {
     ) {
 
         let uniforms = {
-            u_resolution: { value: tiledTex.tileResolution },
+            u_resolution: { value: tiledTex.simulationResolution },
             u_offset: { value: 1.0 },
             u_halfrdx: { value: 0.5 / 1.0 },
             u_velocityTexture: { value: new THREE.Texture() },
