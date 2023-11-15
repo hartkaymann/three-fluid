@@ -19,8 +19,8 @@ export default class Slab {
                 {
                     type: THREE.FloatType,
                     format: format ? format : THREE.RGBAFormat,
-                    minFilter: THREE.NearestFilter,
-                    magFilter: THREE.NearestFilter,
+                    minFilter: THREE.LinearFilter,
+                    magFilter: THREE.LinearFilter,
                 }
             );
         }

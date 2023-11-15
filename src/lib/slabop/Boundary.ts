@@ -21,7 +21,7 @@ export default class Boundary {
         this.renderer = renderer;
 
         this.scene = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, 100);
+        this.camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, 1000);
         this.camera.position.z = tiledTex.tileCount.z + 1;
 
         this.uniforms = {

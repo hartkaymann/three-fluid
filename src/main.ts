@@ -23,7 +23,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector3(40, 20, 20);
-const maxResolution = new THREE.Vector2(1024, 1024);
+const maxResolution = new THREE.Vector2(4096, 4096);
 
 let solver: Solver;
 let renderer: Renderer;
@@ -130,7 +130,7 @@ init();
 function step() {
   setTimeout(() => {
     requestAnimationFrame(step);
-  }, 1000 / 60);
+  });
 
   let dt = clock.getDelta();
 

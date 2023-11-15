@@ -12,5 +12,6 @@ void main( ) {
     vec3 pos = get3DFragCoord( u_resolution );
 
     gl_FragColor = vec4( u_scale * texture3D( u_readTexture, (pos + vOffset) / u_resolution, u_resolution ).xyz, 1.0 );
-    //gl_FragColor = vec4( vOffset, 1.0 );
+    //gl_FragColor = vec4( u_scale * vOffset, 1.0 );
+    //gl_FragColor = vec4( 0., 1.0, 0.5, 1.0);
 }

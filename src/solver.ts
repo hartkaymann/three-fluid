@@ -99,18 +99,17 @@ export default class Solver {
         this.advect.compute(this.velocity, this.velocity, this.velocity, dt, 1.0, false);
         this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation, this.useBfecc);
         this.boundary.compute(this.velocity, this.velocity);
-
-        this.addForce(dt, keys, mousePos, mouseDir);
-
-        //this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
-        //this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
-
+        
+       // this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
+       // this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
+        
         // Body forces  
         if (this.applyGravity) {
             this.buoyancy.compute(this.velocity, this.density, this.velocity, this.gravity, dt);
             this.boundary.compute(this.velocity, this.velocity);
         }
-
+        
+        this.addForce(dt, keys, mousePos, mouseDir);
 
         // Vorticity confinement
         if (this.applyVorticity && this.curl > 0) {

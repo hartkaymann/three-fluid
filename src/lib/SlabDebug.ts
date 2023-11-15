@@ -34,7 +34,7 @@ export default class SlabDebug {
             uniforms: {
                 read: { value: slab.read.texture },
                 bias: { value: new THREE.Vector3(bias, bias, bias) },
-                scale: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
+                scale: { value: new THREE.Vector3(resolution.x, resolution.x, resolution.x) },
                 res: { value: resolution }
             },
             vertexShader: vs,
