@@ -9,7 +9,7 @@ vec3 get3DFragCoord (vec3 resolution) {
   return vec3(
     mod(gl_FragCoord.x, resolution.x),
     mod(gl_FragCoord.y, resolution.y),
-    vZ
+    vZ + 0.5
   );
 }
 

@@ -40,5 +40,5 @@ void main( ) {
 
   gl_FragColor = vec4( min( vec3( u_amount ), base + splat ), 1.0 );
     //gl_FragColor = vec4(vec3(length(coord.xyz)), 1.0);
-    //gl_FragColor = vec4(position, 1.0);
+  // gl_FragColor = vec4(position, 1.0);
 }

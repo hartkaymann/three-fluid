@@ -100,7 +100,7 @@ export default class Solver {
         this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation, this.useBfecc);
         this.boundary.compute(this.velocity, this.velocity);
 
-        return;
+        this.addForce(dt, keys, mousePos, mouseDir);
 
         //this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
         //this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
@@ -111,7 +111,6 @@ export default class Solver {
             this.boundary.compute(this.velocity, this.velocity);
         }
 
-        this.addForce(dt, keys, mousePos, mouseDir);
 
         // Vorticity confinement
         if (this.applyVorticity && this.curl > 0) {

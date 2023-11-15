@@ -23,7 +23,7 @@ let width = window.innerWidth;
 let height = window.innerHeight;
 
 const domain = new THREE.Vector3(40, 20, 20);
-const resolution = new THREE.Vector3(8, 8, 8);
+const maxResolution = new THREE.Vector2(1024, 1024);
 
 let solver: Solver;
 let renderer: Renderer;
@@ -55,9 +55,8 @@ function init() {
   const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
   camera.position.z = 20;
 
-
   const tiledTexture = new TiledTexture();
-  tiledTexture.computeResolution(new THREE.Vector2(64, 64), domain);
+  tiledTexture.computeResolution(maxResolution, domain);
 
   // Initialize solver and renderer
   solver = new Solver(wgl, domain, tiledTexture);
