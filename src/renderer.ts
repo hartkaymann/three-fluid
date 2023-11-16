@@ -11,7 +11,6 @@ export default class Renderer {
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera;
 
-    window: THREE.Vector2;
     domain: THREE.Vector3;
 
     material: THREE.RawShaderMaterial;
@@ -22,14 +21,12 @@ export default class Renderer {
     constructor(
         renderer: THREE.WebGLRenderer,
         camera: THREE.PerspectiveCamera,
-        window: THREE.Vector2,
         domain: THREE.Vector3,
         tiledTex: TiledTexture
     ) {
         this.renderer = renderer;
         this.camera = camera;
 
-        this.window = window;
         this.domain = domain;
 
         this.scene = new THREE.Scene();
@@ -42,8 +39,8 @@ export default class Renderer {
                 pressure: { value: new THREE.Texture() },
                 u_size: { value: domain },
                 u_resolution: { value: tiledTex.simulationResolution },
-                u_textureResolution: {value: tiledTex.resolution},
-                u_tileCount: {value: tiledTex.tileCount},
+                u_textureResolution: { value: tiledTex.resolution },
+                u_tileCount: { value: tiledTex.tileCount },
                 u_minThreshold: { value: 0.0 },
             },
             vertexShader: vertexTiled,
@@ -90,8 +87,8 @@ export default class Renderer {
         this.material.uniforms.u_minThreshold.value = this.minThreshold;
 
         this.renderer.setRenderTarget(null);
-        this.renderer.setViewport(0, 0, this.window.width, this.window.height);
-        this.renderer.setScissor(0, 0, this.window.width - 350, this.window.height);
+        this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
+        this.renderer.setScissor(0, 0,  window.innerWidth - 350, window.innerHeight);
         this.renderer.render(this.scene, this.camera);
 
     }
@@ -101,8 +98,4 @@ export default class Renderer {
         this.pointerSphere.position.set(position.x, position.y, position.z);
     }
 
-    resize(w: number, h: number) {
-        this.camera.aspect = w / h;
-        this.camera.updateProjectionMatrix();
-    }
 }

@@ -13,7 +13,6 @@ import VorticityConfinement from './lib/slabop/VorticityConfinement';
 import Incompressability from './lib/slabop/Incompressibility';
 import ScalarAddition from './lib/slabop/ScalarAdd';
 
-
 import vertexBasic from './shaders/basic.vert'
 import vertexOffset from './shaders/offset.vert'
 import fragmentCommon from './shaders/common.frag'
@@ -50,6 +49,8 @@ export default class Solver {
     useBfecc = false;
     projectionOffset = 1.0;
 
+    renderer: THREE.WebGLRenderer;
+
     public density: Slab;
     public velocity: Slab;
     public pressure: Slab;
@@ -69,8 +70,11 @@ export default class Solver {
     private incompressability: Incompressability;
     private scalarAdd: ScalarAddition;
 
-    constructor(renderer: THREE.WebGLRenderer, domain: THREE.Vector3, tiledTex: TiledTexture) {
-
+    constructor(renderer: THREE.WebGLRenderer, ) {
+        this.renderer = renderer;
+    }
+    
+    reset(domain: THREE.Vector3, tiledTex: TiledTexture) {
         // Slabs
         this.density = new Slab(tiledTex.resolution, THREE.RedFormat);
         this.velocity = new Slab(tiledTex.resolution);
@@ -78,19 +82,19 @@ export default class Solver {
         this.velocityDivergence = new Slab(tiledTex.resolution, THREE.RedFormat);
         this.velocityVorticity = new Slab(tiledTex.resolution);
         this.densityPressure = new Slab(tiledTex.resolution);
-
+    
         // Slabobs
-        this.advect = new Advect(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentAdvect]);
-        this.force = new Force(renderer, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentForce]);
-        this.divergence = new Divergence(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentDivergence]);
-        this.gradient = new Gradient(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentGradient]);
-        this.boundary = new Boundary(renderer, tiledTex, vertexOffset, [fragmentCommon, fragmentBoundary]);
-        this.jacobi = new Jacobi(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentJacobi]);
-        this.buoyancy = new Buoyancy(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
-        this.vorticity = new Vorticity(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticity]);
-        this.vorticityConfinement = new VorticityConfinement(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticityConfinement]);
-        this.incompressability = new Incompressability(renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentIncompressability]);
-        this.scalarAdd = new ScalarAddition(renderer, tiledTex, vertexBasic, fragmentScalarAdd);
+        this.advect = new Advect(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentAdvect]);
+        this.force = new Force(this.renderer, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentForce]);
+        this.divergence = new Divergence(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentDivergence]);
+        this.gradient = new Gradient(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentGradient]);
+        this.boundary = new Boundary(this.renderer, tiledTex, vertexOffset, [fragmentCommon, fragmentBoundary]);
+        this.jacobi = new Jacobi(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentJacobi]);
+        this.buoyancy = new Buoyancy(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
+        this.vorticity = new Vorticity(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticity]);
+        this.vorticityConfinement = new VorticityConfinement(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticityConfinement]);
+        this.incompressability = new Incompressability(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentIncompressability]);
+        this.scalarAdd = new ScalarAddition(this.renderer, tiledTex, vertexBasic, fragmentScalarAdd);
     }
 
     step(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
@@ -99,16 +103,16 @@ export default class Solver {
         this.advect.compute(this.velocity, this.velocity, this.velocity, dt, 1.0, false);
         this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation, this.useBfecc);
         this.boundary.compute(this.velocity, this.velocity);
-        
-       // this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
-       // this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
-        
+
+        // this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
+        // this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
+
         // Body forces  
         if (this.applyGravity) {
             this.buoyancy.compute(this.velocity, this.density, this.velocity, this.gravity, dt);
             this.boundary.compute(this.velocity, this.velocity);
         }
-        
+
         this.addForce(dt, keys, mousePos, mouseDir);
 
         // Vorticity confinement
@@ -169,5 +173,15 @@ export default class Solver {
 
     setBoundaries(applyBounds: any) {
         this.boundary.setScale(applyBounds ? -1.0 : 1.0);
+    }
+
+    getDebugSlabs(): { name: string, slab: Slab }[] {
+        return [
+            { name: "Density", slab: this.density },
+            { name: "Velocity", slab: this.velocity },
+            { name: "Pressure", slab: this.pressure },
+            { name: "Divergence", slab: this.velocityDivergence },
+            { name: "Vorticity", slab: this.velocityVorticity },
+        ];
     }
 }

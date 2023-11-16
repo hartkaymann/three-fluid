@@ -26,8 +26,8 @@ export abstract class Slabop {
         this.renderer = renderer;
 
         this.scene = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, 1000);
-        this.camera.position.z = tiledTex.tileCount.z + 1;
+        this.camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, tiledTex.tileCount.z + 1);
+        this.camera.position.z = tiledTex.tileCount.z + 2;
 
         this.uniforms = uniforms;
         // TODO: Translate tiled texture class to GLSL struct

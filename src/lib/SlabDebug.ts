@@ -1,6 +1,10 @@
 import * as THREE from 'three';
 import Slab from './Slab';
 
+import vertexBasic from '../shaders/basic.vert'
+
+import fragmentDisplayVector from '../shaders/displayvector.frag'
+import fragmentDisplayScalar from '../shaders/displayscalar.frag'
 
 export default class SlabDebug {
 
@@ -15,18 +19,26 @@ export default class SlabDebug {
     material: THREE.RawShaderMaterial;
 
 
-    constructor(title: string, slab: Slab, resolution: THREE.Vector2, vs: string, fs: string, bias: number = 0.0) {
+    constructor(title: string, slab: Slab) {
         this.title = title;
         this.slab = slab;
 
+        const res = slab.resolution;
+        
         this.scene = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera(0, resolution.x, resolution.y, 0, 1, 100);
+        this.camera = new THREE.OrthographicCamera(0, res.x, res.y, 0, 1, 100);
         this.camera.position.z = 2;
+        
+        
+        let isVectorFormat = slab.read.texture.format == THREE.RGBAFormat;
+        const vs = vertexBasic;
+        const fs = isVectorFormat ? fragmentDisplayVector : fragmentDisplayScalar;
+        let bias = isVectorFormat ? 0.5 : 0.0; 
 
-        const geometry = new THREE.PlaneGeometry(resolution.x, resolution.y)
+        const geometry = new THREE.PlaneGeometry(res.x, res.y)
         geometry.translate(
-            resolution.x / 2,
-            resolution.y / 2,
+            res.x / 2,
+            res.y / 2,
             0
         );
 
@@ -34,8 +46,8 @@ export default class SlabDebug {
             uniforms: {
                 read: { value: slab.read.texture },
                 bias: { value: new THREE.Vector3(bias, bias, bias) },
-                scale: { value: new THREE.Vector3(resolution.x, resolution.x, resolution.x) },
-                res: { value: resolution }
+                scale: { value: new THREE.Vector3(res.x, res.x, res.x) },
+                res: { value: res }
             },
             vertexShader: vs,
             fragmentShader: fs
