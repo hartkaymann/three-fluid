@@ -38,7 +38,7 @@ export default class Solver {
     applyVorticity = false;
     curl = 0.3; // Curl
     pressureIterations = 80; // Jacobi iterations for poisson pressure, should be between 50-80 
-    applyGravity = false;
+    applyGravity = true;
     gravity = new THREE.Vector3(0, -9.81, 0);
     rise = 1.0; // Tendency to rise
     fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
@@ -99,21 +99,20 @@ export default class Solver {
 
     step(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
 
-        // Advection
-        this.advect.compute(this.velocity, this.velocity, this.velocity, dt, 1.0, false);
-        this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation, this.useBfecc);
-        this.boundary.compute(this.velocity, this.velocity);
-
-        // this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
-        // this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
-
         // Body forces  
         if (this.applyGravity) {
             this.buoyancy.compute(this.velocity, this.density, this.velocity, this.gravity, dt);
             this.boundary.compute(this.velocity, this.velocity);
         }
-
         this.addForce(dt, keys, mousePos, mouseDir);
+
+        // Advection
+        this.advect.compute(this.density, this.velocity, this.density, dt, this.dissipation, this.useBfecc);
+        this.advect.compute(this.velocity, this.velocity, this.velocity, dt, 1.0, false);
+        this.boundary.compute(this.velocity, this.velocity);
+
+        //this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
+        //this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
 
         // Vorticity confinement
         if (this.applyVorticity && this.curl > 0) {

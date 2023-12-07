@@ -29,6 +29,11 @@ void main( ) {
     float alpha = ( d.x <= u_minThreshold ) ? 0.0 : min(max(0.05, d.x), 0.75);
     gl_FragColor = vec4( color, alpha );
 
+    // Display velocity instead
+    // vec3 v = texture2D(velocity, coords).xyz;
+    // alpha = length(v) >= 0.001 ? 0.1 : 0.0;
+    // gl_FragColor = vec4(0.5 + u_resolution * v, alpha);
+
     //gl_FragColor = vec4(d, alpha);
     //gl_FragColor = vec4(coords.y, 0.0, 0.0, 1.0);
     //gl_FragColor = vec4( 0.0, 0.0, vZ / res.x, 1.0);

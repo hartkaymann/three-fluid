@@ -14,7 +14,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 export default class Simulation {
 
     domain = new THREE.Vector3(40, 20, 20);
-    resolution = new THREE.Vector2(1024, 1024);
+    resolution = new THREE.Vector2(512, 512);
 
     private wgl: THREE.WebGLRenderer;
 
@@ -105,9 +105,9 @@ export default class Simulation {
         bodyForcesFolder.add(this.solver, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
         bodyForcesFolder.add(this.solver, "forceMultiplier", 0, 100, 0.1).name("Interaction Force");
 
-        const incompressibilityFolder = simulationFolder.addFolder("Incompressibility");
-        incompressibilityFolder.add(this.solver, "targetDensity", 0, 10, 0.0001).name("Target Density");
-        incompressibilityFolder.add(this.solver, "pressureMultiplier", 0, 100, 0.1).name("Pressure Multiplier");
+        // const incompressibilityFolder = simulationFolder.addFolder("Incompressibility");
+        // incompressibilityFolder.add(this.solver, "targetDensity", 0, 10, 0.0001).name("Target Density");
+        // incompressibilityFolder.add(this.solver, "pressureMultiplier", 0, 100, 0.1).name("Pressure Multiplier");
 
         simulationFolder.open();
 
