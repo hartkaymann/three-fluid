@@ -21,6 +21,9 @@ export default class Slab {
                     format: format ? format : THREE.RGBAFormat,
                     minFilter: THREE.LinearFilter,
                     magFilter: THREE.LinearFilter,
+                    //minFilter: THREE.NearestFilter,
+                    //magFilter: THREE.NearestFilter,
+
                 }
             );
         }

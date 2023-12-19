@@ -132,7 +132,7 @@ export default class Solver {
             this.jacobi.beta = beta;
 
             this.jacobi.compute(this.velocity, this.velocity, this.density, this.velocity, 20, this.boundary);
-            this.jacobi.compute(this.density, this.density, this.density, this.density, 20);
+            this.jacobi.compute(this.density, this.density, this.density, this.density, 20, this.boundary);
         }
 
         // Projection

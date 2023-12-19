@@ -136,4 +136,8 @@ export default class Boundary {
     setScale(scale: number) {
         this.uniforms.u_scale.value = scale;
     }
+
+    getScale() {
+        return this.uniforms.u_scale.value;
+    }
 }

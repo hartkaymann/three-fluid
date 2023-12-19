@@ -13,8 +13,8 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 export default class Simulation {
 
-    domain = new THREE.Vector3(40, 20, 20);
-    resolution = new THREE.Vector2(512, 512);
+    domain = new THREE.Vector3(20, 60, 20);
+    resolution = new THREE.Vector2(256, 256);
 
     private wgl: THREE.WebGLRenderer;
 
@@ -131,6 +131,7 @@ export default class Simulation {
     }
 
     reset = () => {
+        // TODO: Also debug slabs have to be set to the new ones otherwise they dont update!
         this.stop();
         this.tiledTexture.computeResolution(this.resolution, this.domain);
         this.solver.reset(this.domain, this.tiledTexture);

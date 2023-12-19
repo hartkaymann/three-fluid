@@ -64,6 +64,9 @@ void main( ) {
     gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_new ), 1.0 );
   }
 
+  //f(length(texture3D(u_advectedTexture, pos / u_resolution, u_resolution).xyz) < 0.000000001)
+    // gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+
   //gl_FragColor = vec4(texture3D(u_advectedTexture, pos / u_resolution, u_resolution));
   //gl_FragColor = vec4(1.0, 0.0, 0.0,0.0);
 }
