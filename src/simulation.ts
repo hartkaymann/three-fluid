@@ -14,7 +14,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 export default class Simulation {
 
     domain = new THREE.Vector3(20, 60, 20);
-    resolution = new THREE.Vector2(256, 256);
+    resolution = new THREE.Vector2(512, 512);
 
     private wgl: THREE.WebGLRenderer;
 
@@ -87,9 +87,10 @@ export default class Simulation {
         generalFolder.add(this.solver, "applyBoundaries").name("Apply Boundaries").onChange((val) => { this.solver.setBoundaries(val) });
         generalFolder.add(this.solver, "useBfecc").name("Use BFECC");
 
-        //const viscosityFolder = simulationFolder.addFolder("Viscosity"); 
-        //viscosityFolder.add(solver, "applyViscosity").name("Apply Viscosity");
-        //viscosityFolder.add(solver, "viscosity", 0, 1, 0.01).name("Viscosity");
+        const viscosityFolder = simulationFolder.addFolder("Viscosity"); 
+        viscosityFolder.add(this.solver, "applyViscosity").name("Apply Viscosity");
+        viscosityFolder.add(this.solver, "viscosityIterations", 20, 50, 1).name("Viscosity Iterations");
+        viscosityFolder.add(this.solver, "viscosity", 0, 1, 0.01).name("Viscosity");
 
         const vorticityFolder = simulationFolder.addFolder("Vorticity");
         vorticityFolder.add(this.solver, "applyVorticity").name("Apply Vorticity");
