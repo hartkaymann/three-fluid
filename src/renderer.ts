@@ -95,6 +95,7 @@ export default class Renderer {
 
     updateGuides(position: THREE.Vector3, visible: boolean) {
         this.pointerSphere.visible = visible;
+        // TODO: change sphere color to be interaction direction?s
         this.pointerSphere.position.set(position.x, position.y, position.z);
     }
 

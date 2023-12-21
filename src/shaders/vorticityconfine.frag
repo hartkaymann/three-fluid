@@ -53,13 +53,8 @@ void main( ) {
 
     vec3 grad = vec3( r.x - l.x, t.y - b.y, u.z - d.z );
     
-    vec3 v = vec3(0.0);
-    vec3 force = vec3(0.0);
-
-    if(dot(grad, grad) != 0.0) {
-        v = normalize(grad);
-        force = u_curl * cross(v, c.xyz);
-    }
+    vec3 N = normalize(grad);
+    vec3 force = u_curl * cross(N, c.xyz);
 
     vec3 base = texture3D(u_velocityTexture, pos / u_resolution, u_resolution).xyz;
     gl_FragColor = vec4(base + force * u_deltaTime, 1.0) ; // * dt?

@@ -26,11 +26,17 @@ void main( ) {
     // Compute vorticity as curl
     // vec3 vorticity = vec3(ddz.y - ddy.z, ddx.z - ddz.x, ddy.x - ddx.y); 
 
-    vec3 vorticity = vec3( 
-        ( t.z - b.z ) - ( u.y - d.y ), 
-        ( r.z - l.z ) - ( u.x - d.x ), 
-        ( r.y - l.y ) - ( t.x - b.x ) 
-    );
+    // vec3 vorticity = vec3( 
+    //     ( t.z - b.z ) - ( u.y - d.y ), 
+    //     ( r.z - l.z ) - ( u.x - d.x ), 
+    //     ( r.y - l.y ) - ( t.x - b.x ) 
+    // );
+
+    vec3 vorticity = vec3(
+        (t.z - b.z - u.y + d.y),
+        (u.x - d.x - r.z + l.z),
+        (r.y - l.y - t.x + b.x) 
+    ) * u_halfrdx;
 
     gl_FragColor = vec4( vorticity, 1.0 );
 }

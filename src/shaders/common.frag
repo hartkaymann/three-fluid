@@ -14,7 +14,12 @@ vec3 get3DFragCoord (vec3 resolution) {
 }
 
 // Texture lookup in tiled grid
-vec4 texture3D( sampler2D texture, vec3 coordinates, vec3 resolution ) {
+vec4 texture3D( 
+  sampler2D texture, 
+  vec3 coordinates, 
+  vec3 resolution 
+  ) {
+
   vec3 fullCoords = coordinates * resolution;
 
   fullCoords = clamp(fullCoords, vec3(0.5), vec3(resolution - 0.5));
