@@ -7,16 +7,17 @@ uniform vec3 u_size;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
+uniform mat4 modelMatrix;
 
-varying vec2 vUv;
-varying vec3 vColor;
-varying float vZ;
+varying vec2 v_uv;
+varying vec3 v_position;
+varying float v_z;
 
 void main() {
-    vUv = uv;
-    vZ = depth;
+    v_uv = uv;
+    v_z = position.z;
 
-    vColor = position;
+    v_position = (modelMatrix * vec4(position, 1.0)).xyz;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }

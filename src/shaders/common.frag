@@ -3,13 +3,13 @@ precision highp float;
 uniform vec2 u_textureResolution;
 uniform vec3 u_tileCount;
 
-varying float vZ;
+varying float v_z;
 
 vec3 get3DFragCoord (vec3 resolution) {
   return vec3(
     mod(gl_FragCoord.x, resolution.x),
     mod(gl_FragCoord.y, resolution.y),
-    vZ + 0.5
+    v_z + 0.5
   );
 }
 

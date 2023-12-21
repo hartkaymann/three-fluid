@@ -39,7 +39,7 @@ export default class Solver {
     applyVorticity = false;
     curl = 0.3; // Curl
     pressureIterations = 80; // Jacobi iterations for poisson pressure, should be between 50-80 
-    applyGravity = true;
+    applyGravity = false;
     gravity = new THREE.Vector3(0, -9.81, 0);
     rise = 1.0; // Tendency to rise
     fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth

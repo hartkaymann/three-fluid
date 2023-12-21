@@ -11,8 +11,6 @@ let simulation: Simulation;
 let wgl: THREE.WebGLRenderer;
 
 
-
-
 function init() {
   let canvas = <HTMLCanvasElement>document.getElementById('c');
   let container = <HTMLElement>document.getElementById('content');

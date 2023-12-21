@@ -5,12 +5,12 @@ attribute vec3 offset;
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
 
-varying vec3 vOffset;
-varying float vZ;
+varying vec3 v_offset;
+varying float v_z;
 
 void main() {
-    vOffset = offset;
-    vZ = position.z;
+    v_offset = offset;
+    v_z = position.z;
 
     gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }
