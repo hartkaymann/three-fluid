@@ -48,7 +48,6 @@ export default class Solver {
     targetDensity = 0.01;
     pressureMultiplier = 1.0;
     useBfecc = false;
-    projectionOffset = 1.0;
 
     renderer: THREE.WebGLRenderer;
 
@@ -159,15 +158,15 @@ export default class Solver {
 
     project() {
         // Divergence
-        this.divergence.compute(this.velocity, this.density, this.velocityDivergence, this.projectionOffset);
+        this.divergence.compute(this.velocity, this.density, this.velocityDivergence);
 
         // Poisson Pressure
         this.jacobi.alpha = -1.0;
         this.jacobi.beta = 6.0;
-        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary, this.projectionOffset);
+        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary);
 
         // Subtract gradient
-        this.gradient.compute(this.velocity, this.pressure, this.velocity, this.projectionOffset);
+        this.gradient.compute(this.velocity, this.pressure, this.velocity);
         this.boundary.compute(this.velocity, this.velocity);
     }
 
