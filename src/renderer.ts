@@ -59,7 +59,7 @@ export default class Renderer {
         this.group = new THREE.Group();
         for (let z = 0; z < sideLength; z++) {
             const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
-            geometry.translate(0.0, 0.0, domain.z / 2 - z * (domain.z / sideLength));
+            geometry.translate(0.0, 0.0, sideLength / 2 - z );
 
             let attribCoord = [];
             for (let i = 0; i < geometry.getAttribute("position").count; i++) {
@@ -90,7 +90,10 @@ export default class Renderer {
     render(density: Slab, velocity: Slab, pressure: Slab) {
 
         this.group.rotation.copy(this.camera.rotation);
+        // this.group.rotation.y += 0.02;
         this.group.matrixWorldNeedsUpdate = true;
+
+
 
         // Render 
         this.material.uniforms.density.value = density.read.texture;
@@ -105,7 +108,7 @@ export default class Renderer {
         this.renderer.setScissor(0, 0, window.innerWidth - 350, window.innerHeight);
         this.renderer.render(this.scene, this.camera);
     }
-
+    
     updateGuides(position: THREE.Vector3, visible: boolean) {
         this.pointerSphere.visible = visible;
         // TODO: change sphere color to be interaction direction?s
