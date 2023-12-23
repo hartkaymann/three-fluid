@@ -18,6 +18,7 @@ export default class Renderer {
     material: THREE.RawShaderMaterial;
     pointerSphere: THREE.Mesh;
 
+    applyShading = true;
     color1 = '#3f5efb';
     color2 = '#fc466b';
     minThreshold = 0.00001;
@@ -48,11 +49,13 @@ export default class Renderer {
                 u_color1: { value: new THREE.Vector3() },
                 u_color2: { value: new THREE.Vector3() },
                 u_minThreshold: { value: 0.0 },
+                u_applyShading: { value: true }
             },
             vertexShader: vertexTiled,
             fragmentShader: [fragmentCommon, fragmentTiled].join('\n'),
             side: THREE.DoubleSide,
-            transparent: true
+            transparent: true,
+            depthTest: false,
         });
 
         let sideLength = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z);
@@ -100,6 +103,7 @@ export default class Renderer {
         this.material.uniforms.u_color1.value = new THREE.Color(this.color1);
         this.material.uniforms.u_color2.value = new THREE.Color(this.color2);
         this.material.uniforms.u_minThreshold.value = this.minThreshold;
+        this.material.uniforms.u_applyShading.value = this.applyShading;
 
         this.renderer.setRenderTarget(null);
         this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);

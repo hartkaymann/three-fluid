@@ -43,8 +43,9 @@ export default class Solver {
     gravity = new THREE.Vector3(0, -9.81, 0);
     rise = 1.0; // Tendency to rise
     fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
-    forceRadius = 1.;
-    forceMultiplier = 1;
+    forceRadius = 2.0;
+    forceDensity = 20.0;
+    forceVelocity = 0.2;
     targetDensity = 0.01;
     pressureMultiplier = 1.0;
     useBfecc = false;
@@ -145,13 +146,13 @@ export default class Solver {
             return;
 
         if (keys[0]) {
-            this.force.compute(this.density, this.density, dt, mousePos, new THREE.Vector3(1, 1, 1), this.forceRadius, this.forceMultiplier);
+            this.force.compute(this.density, this.density, dt, mousePos, new THREE.Vector3(1, 1, 1), this.forceRadius, this.forceDensity);
         }
 
         if (keys[1]) {
             let direction = mouseDir;
 
-            this.force.compute(this.velocity, this.velocity, dt, mousePos, direction, this.forceRadius, this.forceMultiplier);
+            this.force.compute(this.velocity, this.velocity, dt, mousePos, direction, this.forceRadius, this.forceVelocity);
             this.boundary.compute(this.velocity, this.velocity);
         }
     }

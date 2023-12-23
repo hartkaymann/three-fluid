@@ -89,7 +89,7 @@ export default class Simulation {
 
         const viscosityFolder = simulationFolder.addFolder("Viscosity"); 
         viscosityFolder.add(this.solver, "applyViscosity").name("Apply Viscosity");
-        viscosityFolder.add(this.solver, "viscosityIterations", 20, 50, 1).name("Viscosity Iterations");
+        viscosityFolder.add(this.solver, "viscosityIterations", 20, 50, 1).name("Iterations");
         viscosityFolder.add(this.solver, "viscosity", 0, 1, 0.01).name("Viscosity");
 
         const vorticityFolder = simulationFolder.addFolder("Vorticity");
@@ -104,7 +104,8 @@ export default class Simulation {
         bodyForcesFolder.add(this.solver, "applyGravity").name("Apply Gravity");
         bodyForcesFolder.add(this.solver.gravity, "y", -25, 25, 0.01).name("Gravity Force");
         bodyForcesFolder.add(this.solver, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
-        bodyForcesFolder.add(this.solver, "forceMultiplier", 0, 100, 0.1).name("Interaction Force");
+        bodyForcesFolder.add(this.solver, "forceDensity", 0, 100, 1).name("Added Density");
+        bodyForcesFolder.add(this.solver, "forceVelocity", 0, 1, 0.01).name("Added Velocity");
 
         // const incompressibilityFolder = simulationFolder.addFolder("Incompressibility");
         // incompressibilityFolder.add(this.solver, "targetDensity", 0, 10, 0.0001).name("Target Density");
@@ -113,9 +114,10 @@ export default class Simulation {
         simulationFolder.open();
 
         const renderingFolder = this.gui.addFolder("Rendering");
+        renderingFolder.add(this.renderer, "applyShading").name("Shading");
         renderingFolder.addColor(this.renderer, "color1").name("Color Slow");
         renderingFolder.addColor(this.renderer, "color2").name("Color Fast");
-        renderingFolder.add(this.renderer, "minThreshold", 0.0, 0.01, 0.00001).name("Minumim Density");
+        renderingFolder.add(this.renderer, "minThreshold", 0.0, 0.1, 0.0001).name("Minumim Density");
 
         this.start();
         this.step();
