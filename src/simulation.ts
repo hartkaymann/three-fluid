@@ -13,8 +13,8 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 export default class Simulation {
 
-    domain = new THREE.Vector3(10, 40, 40);
-    resolution = new THREE.Vector2(512, 512);
+    domain = new THREE.Vector3(40, 40, 40);
+    resolution = new THREE.Vector2(256, 256);
 
     private wgl: THREE.WebGLRenderer;
 
@@ -113,6 +113,8 @@ export default class Simulation {
         simulationFolder.open();
 
         const renderingFolder = this.gui.addFolder("Rendering");
+        renderingFolder.addColor(this.renderer, "color1").name("Color Slow");
+        renderingFolder.addColor(this.renderer, "color2").name("Color Fast");
         renderingFolder.add(this.renderer, "minThreshold", 0.0, 0.01, 0.00001).name("Minumim Density");
 
         this.start();

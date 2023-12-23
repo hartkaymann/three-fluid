@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 
 import vertexTiled from './shaders/displaytiled.vert'
-import fragmentCommon from './shaders/common.frag' 
+import fragmentCommon from './shaders/common.frag'
 import fragmentTiled from './shaders/displaytiled.frag'
 import Slab from './lib/Slab';
 import TiledTexture from './lib/TiledTexture';
@@ -14,10 +14,12 @@ export default class Renderer {
 
     domain: THREE.Vector3;
     group: THREE.Group;
-    
+
     material: THREE.RawShaderMaterial;
     pointerSphere: THREE.Mesh;
 
+    color1 = '#3f5efb';
+    color2 = '#fc466b';
     minThreshold = 0.00001;
 
     constructor(
@@ -43,6 +45,8 @@ export default class Renderer {
                 u_resolution: { value: tiledTex.simulationResolution },
                 u_textureResolution: { value: tiledTex.resolution },
                 u_tileCount: { value: tiledTex.tileCount },
+                u_color1: { value: new THREE.Vector3() },
+                u_color2: { value: new THREE.Vector3() },
                 u_minThreshold: { value: 0.0 },
             },
             vertexShader: vertexTiled,
@@ -51,11 +55,11 @@ export default class Renderer {
             transparent: true
         });
 
-        let sideLength = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z );
+        let sideLength = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z);
         this.group = new THREE.Group();
         for (let z = 0; z < sideLength; z++) {
             const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
-            geometry.translate(0.0, 0.0, domain.z / 2 - z * (domain.z / sideLength));
+            geometry.translate(0.0, 0.0, sideLength / 2 - z );
 
             let attribCoord = [];
             for (let i = 0; i < geometry.getAttribute("position").count; i++) {
@@ -66,7 +70,7 @@ export default class Renderer {
             const quad = new THREE.Mesh(geometry, this.material);
             this.group.add(quad);
         }
-        
+
         this.scene.add(this.group);
         // Add visual guides
         const geometryDomainBox = new THREE.BoxGeometry(domain.x, domain.y, domain.z);
@@ -86,17 +90,20 @@ export default class Renderer {
     render(density: Slab, velocity: Slab, pressure: Slab) {
 
         this.group.rotation.copy(this.camera.rotation);
+        // this.group.rotation.y += 0.02;
         this.group.matrixWorldNeedsUpdate = true;
 
         // Render 
         this.material.uniforms.density.value = density.read.texture;
         this.material.uniforms.velocity.value = velocity.read.texture;
         this.material.uniforms.pressure.value = pressure.read.texture;
+        this.material.uniforms.u_color1.value = new THREE.Color(this.color1);
+        this.material.uniforms.u_color2.value = new THREE.Color(this.color2);
         this.material.uniforms.u_minThreshold.value = this.minThreshold;
 
         this.renderer.setRenderTarget(null);
         this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-        this.renderer.setScissor(0, 0,  window.innerWidth - 350, window.innerHeight);
+        this.renderer.setScissor(0, 0, window.innerWidth - 350, window.innerHeight);
         this.renderer.render(this.scene, this.camera);
     }
 

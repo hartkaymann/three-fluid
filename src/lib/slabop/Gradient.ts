@@ -28,13 +28,11 @@ export default class Gradient extends Slabop {
         velocity: Slab,
         pressure: Slab,
         output: Slab,
-        offset?: number 
     ): void {
         this.uniforms.u_velocityTexture.value = velocity.read.texture;
         this.uniforms.u_pressureTexture.value = pressure.read.texture;
 
-        this.uniforms.u_offset.value = offset ? offset : 1.0;
-        this.uniforms.u_halfrdx.value = offset ? 0.5 / offset : 0.5;
+        this.uniforms.u_halfrdx.value = 0.5;
         this.renderer.setRenderTarget(output.write);
         this.renderer.render(this.scene, this.camera);
         output.swap();

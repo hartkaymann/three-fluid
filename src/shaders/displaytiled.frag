@@ -6,6 +6,8 @@ uniform sampler2D pressure;
 
 uniform vec3 u_size;
 uniform vec3 u_resolution;
+uniform vec3 u_color1;
+uniform vec3 u_color2;
 
 uniform float u_minThreshold;
 
@@ -24,6 +26,6 @@ void main( ) {
 
     float alpha = ( d.x <= u_minThreshold ) ? 0.0 : min(max(0.05, d.x), 0.75);    
 
-    vec3 color = mix( vec3( 0.247, 0.369, 0.984 ), vec3( 0.988, 0.275, 0.42 ), length( vel ) * 100.0 );
+    vec3 color = mix( u_color1, u_color2, length( vel ) * 100.0 );
     gl_FragColor = vec4(color, alpha);
 }
