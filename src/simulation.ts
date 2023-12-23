@@ -13,7 +13,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 
 export default class Simulation {
 
-    domain = new THREE.Vector3(40, 40, 40);
+    domain = new THREE.Vector3(10, 40, 40);
     resolution = new THREE.Vector2(512, 512);
 
     private wgl: THREE.WebGLRenderer;
