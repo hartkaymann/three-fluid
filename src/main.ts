@@ -12,6 +12,7 @@ let wgl: THREE.WebGLRenderer;
 
 
 function init() {
+  // TODO: add webgl compatability check before anything else
   let canvas = <HTMLCanvasElement>document.getElementById('c');
   let container = <HTMLElement>document.getElementById('content');
 

@@ -93,8 +93,6 @@ export default class Renderer {
         // this.group.rotation.y += 0.02;
         this.group.matrixWorldNeedsUpdate = true;
 
-
-
         // Render 
         this.material.uniforms.density.value = density.read.texture;
         this.material.uniforms.velocity.value = velocity.read.texture;
@@ -108,7 +106,7 @@ export default class Renderer {
         this.renderer.setScissor(0, 0, window.innerWidth - 350, window.innerHeight);
         this.renderer.render(this.scene, this.camera);
     }
-    
+
     updateGuides(position: THREE.Vector3, visible: boolean) {
         this.pointerSphere.visible = visible;
         // TODO: change sphere color to be interaction direction?s
