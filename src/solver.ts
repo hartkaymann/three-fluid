@@ -28,6 +28,9 @@ import fragmentVorticityConfinement from './shaders/vorticityconfine.frag'
 import fragmentIncompressability from './shaders/incompressibility.frag'
 import fragmentScalarAdd from './shaders/scalaradd.frag'
 import TiledTexture from './lib/TiledTexture';
+import Mouse from './lib/Mouse';
+import Pointer3D from './lib/Pointer3D';
+import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
 export default class Solver {
 
@@ -50,6 +53,7 @@ export default class Solver {
     pressureMultiplier = 1.0;
     useBfecc = false;
 
+    domain: THREE.Vector3;
     renderer: THREE.WebGLRenderer;
 
     public density: Slab;
@@ -71,8 +75,9 @@ export default class Solver {
     private incompressability: Incompressability;
     private scalarAdd: ScalarAddition;
 
-    constructor(renderer: THREE.WebGLRenderer, ) {
+    constructor(renderer: THREE.WebGLRenderer, domain: THREE.Vector3) {
         this.renderer = renderer;
+        this.domain = domain;
     }
     
     reset(domain: THREE.Vector3, tiledTex: TiledTexture) {
@@ -98,14 +103,14 @@ export default class Solver {
         this.scalarAdd = new ScalarAddition(this.renderer, tiledTex, vertexBasic, fragmentScalarAdd);
     }
 
-    step(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
+    step(dt: number, mouse: Mouse, pointer: Pointer3D) {
 
         // Body forces  
         if (this.applyGravity) {
             this.buoyancy.compute(this.velocity, this.density, this.velocity, this.gravity, dt);
             this.boundary.compute(this.velocity, this.velocity);
         }
-        this.addForce(dt, keys, mousePos, mouseDir);
+        this.addForce(dt, mouse, pointer);
 
         // Advection
         this.advect.compute(this.density, this.velocity, this.density, dt, 1.0, this.useBfecc);
@@ -141,18 +146,28 @@ export default class Solver {
 
     }
 
-    addForce(dt: number, keys: [boolean, boolean], mousePos: THREE.Vector3, mouseDir: THREE.Vector3) {
-        if (!(keys[0] || keys[1]))
+    addForce(dt: number, mouse: Mouse, pointer: Pointer3D) {
+        if (!(mouse.keys[0] || mouse.keys[1]))
             return;
 
-        if (keys[0]) {
-            this.force.compute(this.density, this.density, dt, mousePos, new THREE.Vector3(1, 1, 1), this.forceRadius, this.forceDensity);
+        if(!pointer.isHit)
+            return;
+
+        let position = new THREE.Vector3(
+            (pointer.position.x + this.domain.x / 2),
+            (pointer.position.y + this.domain.y / 2),
+            this.domain.z - (pointer.position.z + this.domain.z / 2)
+        );
+
+        let direction = pointer.direction;
+        direction.z *= -1;
+
+        if (mouse.keys[0]) {
+            this.force.compute(this.density, this.density, dt, position, new THREE.Vector3(1, 1, 1), this.forceRadius, this.forceDensity);
         }
 
-        if (keys[1]) {
-            let direction = mouseDir;
-
-            this.force.compute(this.velocity, this.velocity, dt, mousePos, direction, this.forceRadius, this.forceVelocity);
+        if (mouse.keys[1]) {
+            this.force.compute(this.velocity, this.velocity, dt, position, direction, this.forceRadius, this.forceVelocity);
             this.boundary.compute(this.velocity, this.velocity);
         }
     }

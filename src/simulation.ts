@@ -50,7 +50,7 @@ export default class Simulation {
 
 
         // Initialize solver and renderer
-        this.solver = new Solver(this.wgl);
+        this.solver = new Solver(this.wgl, this.domain);
         this.solver.reset(this.domain, this.tiledTexture);
 
         this.renderer = new Renderer(this.wgl, this.camera, this.domain, this.tiledTexture);
@@ -146,7 +146,7 @@ export default class Simulation {
         this.tiledTexture.computeResolution(this.resolution, this.domain);
         this.solver.reset(this.domain, this.tiledTexture);
         this.debugPanel.setSlabs(this.solver.getDebugSlabs());
-//        this.renderer = new Renderer(this.wgl, this.camera, this.domain, this.tiledTexture);
+        //        this.renderer = new Renderer(this.wgl, this.camera, this.domain, this.tiledTexture);
         this.start();
     }
 
@@ -162,20 +162,11 @@ export default class Simulation {
         this.controls.update();
         this.pointer.update();
 
-        this.renderer.updateGuides(this.pointer.position, this.mouse.keys[0] || this.mouse.keys[1]);
-
-        let position = new THREE.Vector3(
-            (this.pointer.position.x + this.domain.x / 2),
-            (this.pointer.position.y + this.domain.y / 2),
-            this.domain.z - (this.pointer.position.z + this.domain.z / 2)
-        );
-
-        let direction = this.pointer.direction;
-        direction.z *= -1;
+        this.renderer.updateGuides(this.pointer.position, (this.mouse.keys[0] || this.mouse.keys[1]) && this.pointer.isHit);
 
         if (!this.isRunning)
             dt = 0.0;
-        this.solver.step(dt, this.mouse.keys, position, direction);
+        this.solver.step(dt, this.mouse, this.pointer);
         this.renderer.render(this.solver.density, this.solver.velocity, this.solver.densityPressure);
 
         this.debugPanel.render();

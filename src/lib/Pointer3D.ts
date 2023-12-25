@@ -12,8 +12,9 @@ export default class Pointer3D extends THREE.Raycaster {
     position: THREE.Vector3;
     first: THREE.Vector3;
     last: THREE.Vector3;
-
     direction: THREE.Vector3;
+    
+    isHit: boolean;
 
     constructor(camera: THREE.Camera, mouse: Mouse, domain: THREE.Vector3) {
         super();
@@ -21,9 +22,10 @@ export default class Pointer3D extends THREE.Raycaster {
         this.mouse = mouse;
 
         this.position = new THREE.Vector3();
-        this.direction = new THREE.Vector3();
         this.first = new THREE.Vector3();
         this.last = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        this.isHit = false;
 
         this.geometry = new THREE.Mesh(
             new THREE.BoxGeometry(domain.x, domain.y, domain.z),
@@ -39,8 +41,11 @@ export default class Pointer3D extends THREE.Raycaster {
 
         this.setFromCamera(mousePosition, this.camera);
         const intersects = this.intersectObject(this.geometry);
-        if (intersects.length == 0)
+        if (intersects.length == 0) {
+            this.isHit = false;
             return;
+        }
+        this.isHit = true;
 
         let intersectFirst = intersects[0].point
         let intersectLast = intersects[intersects.length - 1].point;
