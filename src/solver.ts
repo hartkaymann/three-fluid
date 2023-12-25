@@ -43,7 +43,7 @@ export default class Solver {
     fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
     forceRadius = 2.0;
     forceDensity = 20.0;
-    forceVelocity = 0.2;
+    forceVelocity = 2;
     targetDensity = 0.01;
     pressureMultiplier = 1.0;
     useBfecc = false;

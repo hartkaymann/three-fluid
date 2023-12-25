@@ -113,7 +113,7 @@ export default class Simulation {
         bodyForcesFolder.add(this.solver.gravity, "y", -25, 25, 0.01).name("Gravity Force");
         bodyForcesFolder.add(this.solver, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
         bodyForcesFolder.add(this.solver, "forceDensity", 0, 100, 1).name("Added Density");
-        bodyForcesFolder.add(this.solver, "forceVelocity", 0, 1, 0.01).name("Added Velocity");
+        bodyForcesFolder.add(this.solver, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
 
         // const incompressibilityFolder = simulationFolder.addFolder("Incompressibility");
         // incompressibilityFolder.add(this.solver, "targetDensity", 0, 10, 0.0001).name("Target Density");

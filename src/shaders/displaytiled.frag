@@ -5,7 +5,6 @@ uniform sampler2D velocity;
 uniform sampler2D pressure;
 
 uniform vec3 u_size;
-uniform vec3 u_resolution;
 uniform vec3 u_color1;
 uniform vec3 u_color2;
 
@@ -25,25 +24,25 @@ void main( ) {
         discard;
 
     //gl_FragColor = vec4(pos, .1);
-    vec3 d = texture3D( density, pos, u_resolution ).xxx;
-    vec3 vel = texture3D( velocity, pos, u_resolution ).xyz;
+    vec3 d = texture3D( density, pos * u_resolution).xxx;
+    vec3 vel = texture3D( velocity, pos * u_resolution).xyz;
 
     bool visible = d.x >= u_minThreshold;
     float alpha = visible ? d.x : 0.0;
 
-    vec3 color = mix( u_color1, u_color2, length( vel ) * 100.0 );
+    vec3 color = mix( u_color1, u_color2, length( vel ) * 10.0 );
 
     if ( u_applyShading && visible ) {
         gl_FragColor = vec4( color, alpha );
 
         pos *= u_resolution;
         mat3 offset = mat3( 1.0 );
-        float right = texture3D( density, ( pos + offset[0] ) / u_resolution, u_resolution ).x;
-        float left = texture3D( density, ( pos - offset[0] ) / u_resolution, u_resolution ).x;
-        float up = texture3D( density, ( pos + offset[1] ) / u_resolution, u_resolution ).x;
-        float down = texture3D( density, ( pos - offset[1] ) / u_resolution, u_resolution ).x;
-        float back = texture3D( density, ( pos + offset[2] ) / u_resolution, u_resolution ).x;
-        float front = texture3D( density, ( pos - offset[2] ) / u_resolution, u_resolution ).x;
+        float right = texture3D( density, ( pos + offset[0] ) ).x;
+        float left  = texture3D( density, ( pos - offset[0] ) ).x;
+        float up    = texture3D( density, ( pos + offset[1] ) ).x;
+        float down  = texture3D( density, ( pos - offset[1] ) ).x;
+        float back  = texture3D( density, ( pos + offset[2] ) ).x;
+        float front = texture3D( density, ( pos - offset[2] ) ).x;
 
         vec3 gradient = 0.5 * vec3( right - left, up - down, back - front );
         float dot = max( dot( normalize( gradient ), light ), 0.1 );

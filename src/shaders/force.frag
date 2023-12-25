@@ -4,7 +4,6 @@ precision highp sampler2D;
 uniform sampler2D u_readTexture;
 
 uniform vec3 u_size;
-uniform vec3 u_resolution;
 uniform vec3 u_position;
 uniform vec3 u_color;
 
@@ -23,9 +22,9 @@ float dist( vec3 p, float r ) {
 }
 
 void main( ) {
-  vec3 pos = get3DFragCoord( u_resolution );
+  vec3 pos = get3DFragCoord( );
 
-  vec3 base = texture3D( u_readTexture, pos / u_resolution, u_resolution ).xyz;
+  vec3 base = texture3D( u_readTexture, pos ).xyz;
 
   vec3 worldPos = ( pos / u_resolution ) * u_size;
   vec3 coord = u_position.xyz - worldPos;

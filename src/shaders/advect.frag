@@ -3,8 +3,6 @@ precision highp float;
 uniform sampler2D u_advectedTexture;
 uniform sampler2D u_velocityTexture;
 
-uniform vec3 u_resolution;
-
 uniform float u_deltaTime; 
 uniform float u_dissipation;
 
@@ -20,15 +18,15 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
 
   vec3 a = fract(fullCoords - 0.5);
 
-  vec3 tex000 = texture3D( tex, vec3( vi.xyz ) / u_resolution, u_resolution ).xyz; // l b f
-  vec3 tex100 = texture3D( tex, vec3( vj.x, vi.yz ) / u_resolution, u_resolution ).xyz;  // r b f
-  vec3 tex010 = texture3D( tex, vec3( vi.x, vj.y, vi.z ) / u_resolution, u_resolution ).xyz; // l t f
-  vec3 tex110 = texture3D( tex, vec3( vj.xy, vi.z ) / u_resolution, u_resolution ).xyz;  // r t f
+  vec3 tex000 = texture3D( tex, vec3( vi.xyz ) / u_resolution ).xyz; // l b f
+  vec3 tex100 = texture3D( tex, vec3( vj.x, vi.yz ) / u_resolution ).xyz;  // r b f
+  vec3 tex010 = texture3D( tex, vec3( vi.x, vj.y, vi.z ) / u_resolution ).xyz; // l t f
+  vec3 tex110 = texture3D( tex, vec3( vj.xy, vi.z ) / u_resolution ).xyz;  // r t f
 
-  vec3 tex001 = texture3D( tex, vec3( vi.xy, vj.z ) / u_resolution, u_resolution ).xyz;  // l b b
-  vec3 tex101 = texture3D( tex, vec3( vj.x, vi.y, vj.z ) / u_resolution, u_resolution ).xyz; // r b b
-  vec3 tex011 = texture3D( tex, vec3( vi.x, vj.yz ) / u_resolution, u_resolution ).xyz;  // l t b
-  vec3 tex111 = texture3D( tex, vec3( vj.xyz ) / u_resolution, u_resolution ).xyz; // r t b
+  vec3 tex001 = texture3D( tex, vec3( vi.xy, vj.z ) / u_resolution ).xyz;  // l b b
+  vec3 tex101 = texture3D( tex, vec3( vj.x, vi.y, vj.z ) / u_resolution ).xyz; // r b b
+  vec3 tex011 = texture3D( tex, vec3( vi.x, vj.yz ) / u_resolution ).xyz;  // l t b
+  vec3 tex111 = texture3D( tex, vec3( vj.xyz ) / u_resolution ).xyz; // r t b
   
   return mix(
   mix( 
@@ -48,9 +46,9 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
 
 // Advection with BFECC(int the future) to reduce unwanted dissipation
 void main( ) {
-  vec3 pos = get3DFragCoord( u_resolution ) / u_resolution;
+  vec3 pos = get3DFragCoord();
 
-  vec3 velocity = texture3D( u_velocityTexture, pos, u_resolution ).xyz;
+  vec3 velocity = texture3D( u_velocityTexture, pos ).xyz;
   vec3 pos_prev = pos - velocity;
 
   gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_prev ), 1.0 );
