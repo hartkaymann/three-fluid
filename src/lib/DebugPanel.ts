@@ -36,4 +36,17 @@ export default class DebugPanel {
             element.render(this.wgl);
         });
     }
+
+    setSlabs(slabs: { name: string, slab: Slab }[]) {
+        if(this.slabDebugs.length != slabs.length) {
+            console.warn("Warning! Slabs could not be reset.")
+            return;
+        }
+
+        for(let i = 0; i < this.slabDebugs.length; i++) {
+            this.slabDebugs[i].setSlab(slabs[i].slab);
+        } 
+
+        
+    }
 }

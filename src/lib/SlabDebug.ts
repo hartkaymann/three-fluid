@@ -95,4 +95,8 @@ export default class SlabDebug {
 
         renderer.render(this.scene, this.camera);
     }
+
+    setSlab(slab: Slab){
+        this.slab = slab;
+    }
 }

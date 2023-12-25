@@ -48,11 +48,17 @@ export default class Simulation {
         this.tiledTexture = new TiledTexture();
         this.tiledTexture.computeResolution(this.resolution, this.domain);
 
+
         // Initialize solver and renderer
-        this.solver = new Solver(wgl);
+        this.solver = new Solver(this.wgl);
         this.solver.reset(this.domain, this.tiledTexture);
 
-        this.renderer = new Renderer(wgl, this.camera, this.domain, this.tiledTexture);
+        this.renderer = new Renderer(this.wgl, this.camera, this.domain, this.tiledTexture);
+
+        this.debugPanel = new DebugPanel(this.wgl, container, this.solver.getDebugSlabs());
+        this.debugPanel.create();
+
+        this.initGui();
 
         // Additionals
         this.mouse = new Mouse();
@@ -72,9 +78,11 @@ export default class Simulation {
             MIDDLE: THREE.MOUSE.ROTATE
         }
 
-        this.debugPanel = new DebugPanel(wgl, container, this.solver.getDebugSlabs());
-        this.debugPanel.create();
+        this.start();
+        this.step();
+    }
 
+    initGui() {
         this.gui = new GUI();
         this.gui.domElement.id = 'gui';
         const simulationFolder = this.gui.addFolder("Simulation");
@@ -87,7 +95,7 @@ export default class Simulation {
         generalFolder.add(this.solver, "applyBoundaries").name("Apply Boundaries").onChange((val) => { this.solver.setBoundaries(val) });
         generalFolder.add(this.solver, "useBfecc").name("Use BFECC");
 
-        const viscosityFolder = simulationFolder.addFolder("Viscosity"); 
+        const viscosityFolder = simulationFolder.addFolder("Viscosity");
         viscosityFolder.add(this.solver, "applyViscosity").name("Apply Viscosity");
         viscosityFolder.add(this.solver, "viscosityIterations", 20, 50, 1).name("Iterations");
         viscosityFolder.add(this.solver, "viscosity", 0, 1, 0.01).name("Viscosity");
@@ -109,8 +117,7 @@ export default class Simulation {
 
         // const incompressibilityFolder = simulationFolder.addFolder("Incompressibility");
         // incompressibilityFolder.add(this.solver, "targetDensity", 0, 10, 0.0001).name("Target Density");
-        // incompressibilityFolder.add(this.solver, "pressureMultiplier", 0, 100, 0.1).name("Pressure Multiplier");
-
+        // incompressibilityFolder.add(this.solver, "pressureMultiplier", 0, 100, 0.1).name("Pressure Multiplier");   
         simulationFolder.open();
 
         const renderingFolder = this.gui.addFolder("Rendering");
@@ -118,10 +125,8 @@ export default class Simulation {
         renderingFolder.addColor(this.renderer, "color1").name("Color Slow");
         renderingFolder.addColor(this.renderer, "color2").name("Color Fast");
         renderingFolder.add(this.renderer, "minThreshold", 0.0, 0.1, 0.0001).name("Minumim Density");
-
-        this.start();
-        this.step();
     }
+
 
     start = () => {
         if (this.isRunning)
@@ -140,7 +145,8 @@ export default class Simulation {
         this.stop();
         this.tiledTexture.computeResolution(this.resolution, this.domain);
         this.solver.reset(this.domain, this.tiledTexture);
-        this.renderer = new Renderer(this.wgl, this.camera, this.domain, this.tiledTexture);
+        this.debugPanel.setSlabs(this.solver.getDebugSlabs());
+//        this.renderer = new Renderer(this.wgl, this.camera, this.domain, this.tiledTexture);
         this.start();
     }
 
