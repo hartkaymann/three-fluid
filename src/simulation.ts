@@ -127,7 +127,6 @@ export default class Simulation {
         renderingFolder.add(this.renderer, "minThreshold", 0.0, 0.1, 0.0001).name("Minumim Density");
     }
 
-
     start = () => {
         if (this.isRunning)
             return;
@@ -162,7 +161,7 @@ export default class Simulation {
         this.controls.update();
         this.pointer.update();
 
-        this.renderer.updateGuides(this.pointer.position, (this.mouse.keys[0] || this.mouse.keys[1]) && this.pointer.isHit);
+        this.renderer.updateGuides(this.pointer.position, this.pointer.direction, (this.mouse.keys[0] || this.mouse.keys[1]) && this.pointer.isHit);
 
         if (!this.isRunning)
             dt = 0.0;

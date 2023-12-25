@@ -17,6 +17,7 @@ export default class Renderer {
 
     material: THREE.RawShaderMaterial;
     pointerSphere: THREE.Mesh;
+    pointerArrow: THREE.ArrowHelper;
 
     applyShading = true;
     color1 = '#3f5efb';
@@ -62,7 +63,7 @@ export default class Renderer {
         this.group = new THREE.Group();
         for (let z = 0; z < sideLength; z++) {
             const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
-            geometry.translate(0.0, 0.0, sideLength / 2 - z );
+            geometry.translate(0.0, 0.0, sideLength / 2 - z);
 
             let attribCoord = [];
             for (let i = 0; i < geometry.getAttribute("position").count; i++) {
@@ -88,6 +89,16 @@ export default class Renderer {
             new THREE.MeshBasicMaterial({ color: 0x1473e6 })
         );
         this.scene.add(this.pointerSphere);
+
+        this.pointerArrow = new THREE.ArrowHelper(
+            new THREE.Vector3(1, 0, 0),
+            new THREE.Vector3(0, 0, 0),
+            2,
+            0x1473e6,
+            0.5,
+            0.5
+        );
+        this.scene.add(this.pointerArrow);
     }
 
     render(density: Slab, velocity: Slab, pressure: Slab) {
@@ -111,10 +122,19 @@ export default class Renderer {
         this.renderer.render(this.scene, this.camera);
     }
 
-    updateGuides(position: THREE.Vector3, visible: boolean) {
+    updateGuides(position: THREE.Vector3, direction: THREE.Vector3, visible: boolean) {
         this.pointerSphere.visible = visible;
-        // TODO: change sphere color to be interaction direction?s
+        this.pointerArrow.visible = visible && (direction.length() > 0);
+
+        let color = new THREE.Color(0.5 + direction.x, 0.5 + direction.y, 0.5 + direction.z);
+
+        // TODO: change sphere color to be interaction direction?
         this.pointerSphere.position.set(position.x, position.y, position.z);
+        this.pointerSphere.material.color.set(color);
+
+        this.pointerArrow.position.set(position.x, position.y, position.z);
+        this.pointerArrow.setDirection(direction.normalize());
+        this.pointerArrow.setColor(color);
     }
 
 }
