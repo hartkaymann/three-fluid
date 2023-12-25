@@ -10,8 +10,6 @@ import Buoyancy from './lib/slabop/Buoyancy';
 import Jacobi from './lib/slabop/Jacobi';
 import Vorticity from './lib/slabop/Vorticity';
 import VorticityConfinement from './lib/slabop/VorticityConfinement';
-import Incompressability from './lib/slabop/Incompressibility';
-import ScalarAddition from './lib/slabop/ScalarAdd';
 
 import vertexBasic from './shaders/basic.vert'
 import vertexOffset from './shaders/offset.vert'
@@ -25,12 +23,9 @@ import fragmentBoundary from './shaders/boundary.frag'
 import fragmentBuoyancy from './shaders/buoyancy.frag'
 import fragmentVorticity from './shaders/vorticity.frag'
 import fragmentVorticityConfinement from './shaders/vorticityconfine.frag'
-import fragmentIncompressability from './shaders/incompressibility.frag'
-import fragmentScalarAdd from './shaders/scalaradd.frag'
 import TiledTexture from './lib/TiledTexture';
 import Mouse from './lib/Mouse';
 import Pointer3D from './lib/Pointer3D';
-import { ThreeMFLoader } from 'three/examples/jsm/loaders/3MFLoader.js';
 
 export default class Solver {
 
@@ -72,8 +67,6 @@ export default class Solver {
     private jacobi: Jacobi;
     private vorticity: Vorticity;
     private vorticityConfinement: VorticityConfinement;
-    private incompressability: Incompressability;
-    private scalarAdd: ScalarAddition;
 
     constructor(renderer: THREE.WebGLRenderer, domain: THREE.Vector3) {
         this.renderer = renderer;
@@ -99,8 +92,6 @@ export default class Solver {
         this.buoyancy = new Buoyancy(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
         this.vorticity = new Vorticity(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticity]);
         this.vorticityConfinement = new VorticityConfinement(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticityConfinement]);
-        this.incompressability = new Incompressability(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentIncompressability]);
-        this.scalarAdd = new ScalarAddition(this.renderer, tiledTex, vertexBasic, fragmentScalarAdd);
     }
 
     step(dt: number, mouse: Mouse, pointer: Pointer3D) {
