@@ -125,9 +125,11 @@ export default class Boundary {
     compute(
         read: Slab,
         output: Slab,
+        scale: number
     ): void {
         this.uniforms.u_readTexture.value = read.read.texture;
-
+        this.uniforms.u_scale.value = scale;
+        
         this.renderer.setRenderTarget(output.write);
         this.renderer.render(this.scene, this.camera);
         this.renderer.setRenderTarget(null);

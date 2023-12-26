@@ -14,8 +14,9 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 export default class Simulation {
 
     domain = new THREE.Vector3(40, 40, 40);
-    resolution = new THREE.Vector2(256, 256);
+    resolution = new THREE.Vector2(128, 128);
 
+    timeout: number;
     private wgl: THREE.WebGLRenderer;
 
     private isRunning = false;
@@ -93,7 +94,6 @@ export default class Simulation {
         const generalFolder = simulationFolder.addFolder("General");
         generalFolder.add(this.solver, "dissipation", 0.9, 1, 0.001).name("Dissipation");
         generalFolder.add(this.solver, "applyBoundaries").name("Apply Boundaries").onChange((val) => { this.solver.setBoundaries(val) });
-        generalFolder.add(this.solver, "useBfecc").name("Use BFECC");
 
         const viscosityFolder = simulationFolder.addFolder("Viscosity");
         viscosityFolder.add(this.solver, "applyViscosity").name("Apply Viscosity");
@@ -131,6 +131,8 @@ export default class Simulation {
         if (this.isRunning)
             return;
         this.isRunning = true;
+
+        this.step();
     }
 
     stop = () => {
@@ -145,30 +147,25 @@ export default class Simulation {
         this.tiledTexture.computeResolution(this.resolution, this.domain);
         this.solver.reset(this.domain, this.tiledTexture);
         this.debugPanel.setSlabs(this.solver.getDebugSlabs());
-        //        this.renderer = new Renderer(this.wgl, this.camera, this.domain, this.tiledTexture);
         this.start();
     }
 
     step = () => {
-        setTimeout(() => {
-            requestAnimationFrame(this.step);
-        }, 60 / 1000);
+        this.timeout = requestAnimationFrame(this.step);
 
         let dt = this.clock.getDelta();
+        if (this.isRunning) {
+            this.solver.step(dt, this.mouse, this.pointer);
+        }
+
+        this.renderer.render(this.solver.density, this.solver.velocity, this.solver.densityPressure);
+        this.renderer.updateGuides(this.pointer.position, this.pointer.direction, (this.mouse.keys[0] || this.mouse.keys[1]) && this.pointer.isHit);
+        this.debugPanel.render();
 
         // Required updates
         this.stats.update();
         this.controls.update();
         this.pointer.update();
-
-        this.renderer.updateGuides(this.pointer.position, this.pointer.direction, (this.mouse.keys[0] || this.mouse.keys[1]) && this.pointer.isHit);
-
-        if (!this.isRunning)
-            dt = 0.0;
-        this.solver.step(dt, this.mouse, this.pointer);
-        this.renderer.render(this.solver.density, this.solver.velocity, this.solver.densityPressure);
-
-        this.debugPanel.render();
     }
 
     resize(w: number, h: number) {

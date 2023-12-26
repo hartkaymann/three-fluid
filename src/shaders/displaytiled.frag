@@ -30,7 +30,7 @@ void main( ) {
     bool visible = d.x >= u_minThreshold;
     float alpha = visible ? d.x : 0.0;
 
-    vec3 color = mix( u_color1, u_color2, length( vel ) * 10.0 );
+    vec3 color = mix( u_color1, u_color2, length( vel ) * u_resolution );
 
     if ( u_applyShading && visible ) {
         gl_FragColor = vec4( color, alpha );

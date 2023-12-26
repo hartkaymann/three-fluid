@@ -77,7 +77,7 @@ export default class Renderer {
 
         this.scene.add(this.group);
         // Add visual guides
-        const geometryDomainBox = new THREE.BoxGeometry(domain.x, domain.y, domain.z);
+        const geometryDomainBox = new THREE.BoxGeometry(domain.x - 1, domain.y - 1, domain.z - 1);
         const domainBox = new THREE.LineSegments(
             new THREE.EdgesGeometry(geometryDomainBox),
             new THREE.LineBasicMaterial({ color: 0xffffff })
@@ -86,15 +86,15 @@ export default class Renderer {
 
         this.pointerSphere = new THREE.Mesh(
             new THREE.SphereGeometry(0.5, 16, 8),
-            new THREE.MeshBasicMaterial({ color: 0x1473e6 })
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
         );
         this.scene.add(this.pointerSphere);
 
         this.pointerArrow = new THREE.ArrowHelper(
             new THREE.Vector3(1, 0, 0),
             new THREE.Vector3(0, 0, 0),
-            2,
-            0x1473e6,
+            1.5,
+            0x000000,
             0.5,
             0.5
         );
@@ -128,13 +128,11 @@ export default class Renderer {
 
         let color = new THREE.Color(0.5 + direction.x, 0.5 + direction.y, 0.5 + direction.z);
 
-        // TODO: change sphere color to be interaction direction?
         this.pointerSphere.position.set(position.x, position.y, position.z);
-        this.pointerSphere.material.color.set(color);
+        (this.pointerSphere.material as THREE.MeshBasicMaterial).color.set(color);
 
         this.pointerArrow.position.set(position.x, position.y, position.z);
         this.pointerArrow.setDirection(direction.normalize());
         this.pointerArrow.setColor(color);
     }
-
 }

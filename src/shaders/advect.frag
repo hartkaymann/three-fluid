@@ -6,27 +6,24 @@ uniform sampler2D u_velocityTexture;
 uniform float u_deltaTime; 
 uniform float u_dissipation;
 
-uniform bool u_bfecc;
-
 varying vec2 vUv;
 
 // Trilinear interpolation
 vec3 trilerp( sampler2D tex, vec3 p ) {
-  vec3 fullCoords = p * u_resolution; 
-  vec3 vi = floor( fullCoords - 0.5 ) + 0.5;
+  vec3 vi = floor( p - 0.5 ) + 0.5;
   vec3 vj = vi + 1.0 ;
 
-  vec3 a = fract(fullCoords - 0.5);
+  vec3 a = fract(p - 0.5);
 
-  vec3 tex000 = texture3D( tex, vec3( vi.xyz ) / u_resolution ).xyz; // l b f
-  vec3 tex100 = texture3D( tex, vec3( vj.x, vi.yz ) / u_resolution ).xyz;  // r b f
-  vec3 tex010 = texture3D( tex, vec3( vi.x, vj.y, vi.z ) / u_resolution ).xyz; // l t f
-  vec3 tex110 = texture3D( tex, vec3( vj.xy, vi.z ) / u_resolution ).xyz;  // r t f
+  vec3 tex000 = texture3D( tex, vec3( vi.xyz ) ).xyz; // l b f
+  vec3 tex100 = texture3D( tex, vec3( vj.x, vi.yz ) ).xyz;  // r b f
+  vec3 tex010 = texture3D( tex, vec3( vi.x, vj.y, vi.z ) ).xyz; // l t f
+  vec3 tex110 = texture3D( tex, vec3( vj.xy, vi.z ) ).xyz;  // r t f
 
-  vec3 tex001 = texture3D( tex, vec3( vi.xy, vj.z ) / u_resolution ).xyz;  // l b b
-  vec3 tex101 = texture3D( tex, vec3( vj.x, vi.y, vj.z ) / u_resolution ).xyz; // r b b
-  vec3 tex011 = texture3D( tex, vec3( vi.x, vj.yz ) / u_resolution ).xyz;  // l t b
-  vec3 tex111 = texture3D( tex, vec3( vj.xyz ) / u_resolution ).xyz; // r t b
+  vec3 tex001 = texture3D( tex, vec3( vi.xy, vj.z ) ).xyz;  // l b b
+  vec3 tex101 = texture3D( tex, vec3( vj.x, vi.y, vj.z ) ).xyz; // r b b
+  vec3 tex011 = texture3D( tex, vec3( vi.x, vj.yz ) ).xyz;  // l t b
+  vec3 tex111 = texture3D( tex, vec3( vj.xyz ) ).xyz; // r t b
   
   return mix(
   mix( 
@@ -49,7 +46,8 @@ void main( ) {
   vec3 pos = get3DFragCoord();
 
   vec3 velocity = texture3D( u_velocityTexture, pos ).xyz;
-  vec3 pos_prev = pos - velocity;
+
+  vec3 pos_prev = pos - velocity * u_resolution  * u_deltaTime;
 
   gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_prev ), 1.0 );
 }

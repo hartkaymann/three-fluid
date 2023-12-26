@@ -13,7 +13,8 @@ void main( ) {
 
   vec3 g = u_deltaTime * ( u_gravity / u_resolution );
 
-  g = ( mass == 0.0 ) ? vec3( 0.0 ) : g;
+  if( mass == 0.0 ) 
+    g = vec3( 0.0 );
 
   vec3 base = texture3D( u_velocityTexture, pos ).xyz;
 

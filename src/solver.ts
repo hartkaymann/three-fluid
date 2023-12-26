@@ -46,7 +46,6 @@ export default class Solver {
     forceVelocity = 2;
     targetDensity = 0.01;
     pressureMultiplier = 1.0;
-    useBfecc = false;
 
     domain: THREE.Vector3;
     renderer: THREE.WebGLRenderer;
@@ -96,27 +95,24 @@ export default class Solver {
 
     step(dt: number, mouse: Mouse, pointer: Pointer3D) {
 
+        // Advection
+        this.advect.compute(this.density, this.velocity, this.density, dt, 1.0);
+        this.advect.compute(this.velocity, this.velocity, this.velocity, dt, this.dissipation);
+        this.boundary.compute(this.velocity, this.velocity, -1);
+        
         // Body forces  
         if (this.applyGravity) {
             this.buoyancy.compute(this.velocity, this.density, this.velocity, this.gravity, dt);
-            this.boundary.compute(this.velocity, this.velocity);
+            this.boundary.compute(this.velocity, this.velocity, -1);
         }
         this.addForce(dt, mouse, pointer);
-
-        // Advection
-        this.advect.compute(this.density, this.velocity, this.density, dt, 1.0, this.useBfecc);
-        this.advect.compute(this.velocity, this.velocity, this.velocity, dt, this.dissipation, false);
-        this.boundary.compute(this.velocity, this.velocity);
-
-        //this.incompressability.compute(this.density, this.velocity, this.densityPressure, this.targetDensity, this.pressureMultiplier, dt);
-        //this.scalarAdd.compute(this.velocity, this.densityPressure, this.velocity);
 
         // Vorticity confinement
         if (this.applyVorticity && this.curl > 0) {
             this.vorticity.compute(this.velocity, this.velocityVorticity);
             this.vorticityConfinement.compute(this.velocity, this.velocityVorticity, this.velocity, dt, this.curl);
 
-            this.boundary.compute(this.velocity, this.velocity);
+            this.boundary.compute(this.velocity, this.velocity, -1);
         }
 
         // Viscous diffusion
@@ -128,8 +124,8 @@ export default class Solver {
             this.jacobi.alpha = alpha;
             this.jacobi.beta = beta;
 
-            this.jacobi.compute(this.velocity, this.velocity, this.density, this.velocity, this.viscosityIterations, this.boundary);
-            this.boundary.compute(this.velocity, this.velocity);
+            this.jacobi.compute(this.velocity, this.velocity, this.density, this.velocity, this.viscosityIterations, this.boundary, -1);
+            this.boundary.compute(this.velocity, this.velocity, -1);
         }
 
         // Projection
@@ -159,7 +155,7 @@ export default class Solver {
 
         if (mouse.keys[1]) {
             this.force.compute(this.velocity, this.velocity, dt, position, direction, this.forceRadius, this.forceVelocity);
-            this.boundary.compute(this.velocity, this.velocity);
+            this.boundary.compute(this.velocity, this.velocity, -1);
         }
     }
 
@@ -170,11 +166,11 @@ export default class Solver {
         // Poisson Pressure
         this.jacobi.alpha = -1.0;
         this.jacobi.beta = 6.0;
-        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary);
+        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary, 1);
 
         // Subtract gradient
         this.gradient.compute(this.velocity, this.pressure, this.velocity);
-        this.boundary.compute(this.velocity, this.velocity);
+        this.boundary.compute(this.velocity, this.velocity, -1);
     }
 
     setBoundaries(applyBounds: any) {

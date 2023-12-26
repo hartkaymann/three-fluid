@@ -7,11 +7,10 @@ uniform float u_halfrdx;
 
 void main( ) {
   vec3 pos = get3DFragCoord( );
-
-  // if ( texture3D( u_markerTexture, pos ).x == 0.0 )
-  //   discard; // we got ourselves an air cell
-
   mat3 offset = mat3( 1.0 );
+
+  if ( texture3D( u_markerTexture, pos ).x == 0.0 )
+    discard; // we got ourselves an air cell
 
   float right = texture3D( u_velocityTexture, ( pos + offset[0] ) ).x;
   float left  = texture3D( u_velocityTexture, ( pos - offset[0] ) ).x;

@@ -29,7 +29,6 @@ export default class SlabDebug {
         this.camera = new THREE.OrthographicCamera(0, res.x, res.y, 0, 1, 100);
         this.camera.position.z = 2;
         
-        
         let isVectorFormat = slab.read.texture.format == THREE.RGBAFormat;
         const vs = vertexBasic;
         const fs = isVectorFormat ? fragmentDisplayVector : fragmentDisplayScalar;

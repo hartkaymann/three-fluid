@@ -40,20 +40,16 @@ export default class Jacobi extends Slabop {
         output: Slab,
         iterations: number,
         boundary: Boundary,
+        scale: number
     ): void {
         this.uniforms.u_alpha.value = this.alpha;
         this.uniforms.u_rbeta.value = 1.0 / this.beta;
         this.uniforms.u_markerTexture.value = marker.read.texture;
         
-        const tempBoundaryScale = boundary.getScale();
-        boundary.setScale(1);
-
         for (let i = 0; i < iterations; i++) {
             this.step(x, b, output);
-            boundary.compute(output, output);
+            boundary.compute(output, output, scale);
         }
-        
-        boundary.setScale(tempBoundaryScale);
 
         this.renderer.setRenderTarget(null);
     }
