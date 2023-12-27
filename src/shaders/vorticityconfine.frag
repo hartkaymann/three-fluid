@@ -23,7 +23,7 @@ void main( ) {
     // Get local vorticity gradient 
     vec3 grad = vec3( r.x - l.x, t.y - b.y, u.z - d.z );
 
-    if(length(grad) > 0)
+    if(length(grad) == 0.0)
         discard;
     
     // Normalize vorticity gradient

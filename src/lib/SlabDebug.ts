@@ -5,7 +5,8 @@ import vertexBasic from '../shaders/basic.vert'
 
 import fragmentDisplayVector from '../shaders/displayvector.frag'
 import fragmentDisplayScalar from '../shaders/displayscalar.frag'
-
+    
+// TODO: add text to debug view that details the texture resolution
 export default class SlabDebug {
 
     title: string;

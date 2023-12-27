@@ -14,7 +14,7 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 export default class Simulation {
 
     domain = new THREE.Vector3(40, 40, 40);
-    resolution = new THREE.Vector2(128, 128);
+    resolution = new THREE.Vector2(512, 512);
 
     timeout: number;
     private wgl: THREE.WebGLRenderer;
@@ -37,6 +37,7 @@ export default class Simulation {
 
     private debugPanel: DebugPanel;
 
+    // TODO: add instructions as text on screen! maybe with (i)-button that can be toggled
     constructor(
         wgl: THREE.WebGLRenderer,
         container: HTMLElement
@@ -102,7 +103,7 @@ export default class Simulation {
 
         const vorticityFolder = simulationFolder.addFolder("Vorticity");
         vorticityFolder.add(this.solver, "applyVorticity").name("Apply Vorticity");
-        vorticityFolder.add(this.solver, "curl", 0, 10, 0.01).name("Curl");
+        vorticityFolder.add(this.solver, "curl", 0, 5, 0.01).name("Curl");
 
         const projectionFolder = simulationFolder.addFolder("Projection");
         projectionFolder.add(this.solver, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");
@@ -110,7 +111,7 @@ export default class Simulation {
 
         const bodyForcesFolder = simulationFolder.addFolder("Body Forces");
         bodyForcesFolder.add(this.solver, "applyGravity").name("Apply Gravity");
-        bodyForcesFolder.add(this.solver.gravity, "y", -25, 25, 0.01).name("Gravity Force");
+        bodyForcesFolder.add(this.solver.gravity, "y", -10, 0, 0.01).name("Gravity Force");
         bodyForcesFolder.add(this.solver, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
         bodyForcesFolder.add(this.solver, "forceDensity", 0, 100, 1).name("Added Density");
         bodyForcesFolder.add(this.solver, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
@@ -124,15 +125,13 @@ export default class Simulation {
         renderingFolder.add(this.renderer, "applyShading").name("Shading");
         renderingFolder.addColor(this.renderer, "color1").name("Color Slow");
         renderingFolder.addColor(this.renderer, "color2").name("Color Fast");
-        renderingFolder.add(this.renderer, "minThreshold", 0.0, 0.1, 0.0001).name("Minumim Density");
+        renderingFolder.add(this.renderer, "minThreshold", 0.0, 1.1, 0.0001).name("Minumim Density");
     }
 
     start = () => {
         if (this.isRunning)
             return;
         this.isRunning = true;
-
-        this.step();
     }
 
     stop = () => {

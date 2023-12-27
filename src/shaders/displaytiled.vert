@@ -14,7 +14,7 @@ varying float v_z;
 
 void main() {
     v_uv = uv;
-    v_z = position.z;
+    v_z = depth;
 
     v_position = (modelMatrix * vec4(position, 1.0)).xyz;
 

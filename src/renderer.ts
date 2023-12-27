@@ -50,7 +50,7 @@ export default class Renderer {
                 u_color1: { value: new THREE.Vector3() },
                 u_color2: { value: new THREE.Vector3() },
                 u_minThreshold: { value: 0.0 },
-                u_applyShading: { value: true }
+                u_applyShading: { value: true },
             },
             vertexShader: vertexTiled,
             fragmentShader: [fragmentCommon, fragmentTiled].join('\n'),
@@ -63,7 +63,7 @@ export default class Renderer {
         this.group = new THREE.Group();
         for (let z = 0; z < sideLength; z++) {
             const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
-            geometry.translate(0.0, 0.0, sideLength / 2 - z);
+            geometry.translate(0.0, 0.0, (sideLength / -2) + z);
 
             let attribCoord = [];
             for (let i = 0; i < geometry.getAttribute("position").count; i++) {

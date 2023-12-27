@@ -15,6 +15,7 @@ uniform bool u_applyShading;
 varying vec3 v_position;
 
 vec3 light = normalize( vec3( 2, -5, 3 ) );
+float ambient = 0.1;
 
 void main( ) {
     vec3 pos = ( v_position + u_size / 2.0 ) / u_size;
@@ -45,10 +46,9 @@ void main( ) {
         float front = texture3D( density, ( pos - offset[2] ) ).x;
 
         vec3 gradient = 0.5 * vec3( right - left, up - down, back - front );
-        float dot = max( dot( normalize( gradient ), light ), 0.1 );
-        color *= dot;
+        float dot = max( dot( normalize( gradient ), normalize(light )), 0.0 );
+        color *= (dot + vec3(ambient));
     }
 
     gl_FragColor = vec4( color, alpha );
-
 }
