@@ -21,7 +21,6 @@ export default class Jacobi extends Slabop {
             u_resolution: { value: tiledTex.simulationResolution },
             u_pressureTexture: { value: new THREE.Texture() },
             u_divergenceTexture: { value: new THREE.Texture() },
-            u_markerTexture: { value: new THREE.Texture() },
             u_offset: { value: 1.0},
             u_alpha: { value: 0.0 },
             u_rbeta: { value: 0.0 },
@@ -36,7 +35,6 @@ export default class Jacobi extends Slabop {
     compute(
         x: Slab,
         b: Slab,
-        marker: Slab,
         output: Slab,
         iterations: number,
         boundary: Boundary,
@@ -44,7 +42,6 @@ export default class Jacobi extends Slabop {
     ): void {
         this.uniforms.u_alpha.value = this.alpha;
         this.uniforms.u_rbeta.value = 1.0 / this.beta;
-        this.uniforms.u_markerTexture.value = marker.read.texture;
         
         for (let i = 0; i < iterations; i++) {
             this.step(x, b, output);

@@ -50,12 +50,12 @@ export default class Simulation {
         this.tiledTexture = new TiledTexture();
         this.tiledTexture.computeResolution(this.resolution, this.domain);
 
-
         // Initialize solver and renderer
         this.solver = new Solver(this.wgl, this.domain);
         this.solver.reset(this.domain, this.tiledTexture);
 
-        this.renderer = new Renderer(this.wgl, this.camera, this.domain, this.tiledTexture);
+        this.renderer = new Renderer(this.wgl, this.camera);
+        this.renderer.reset(this.domain, this.tiledTexture);
 
         this.debugPanel = new DebugPanel(this.wgl, container, this.solver.getDebugSlabs());
         this.debugPanel.create();
@@ -85,6 +85,9 @@ export default class Simulation {
     }
 
     initGui() {
+        // TODO: add settings class that uses json files to generate an object that can be used in the gui
+        // does that make sense or doe sit just not work with callbacks at all and is overly complicated?
+
         this.gui = new GUI();
         this.gui.domElement.id = 'gui';
         const simulationFolder = this.gui.addFolder("Simulation");
@@ -93,6 +96,12 @@ export default class Simulation {
         simulationFolder.add(this, "reset").name("Reset");
 
         const generalFolder = simulationFolder.addFolder("General");
+
+        const domainFolder = generalFolder.addFolder("Domain");
+        domainFolder.add(this.domain, "x", 1, 100, 1).name("Width").onChange(() => { this.reset(); });
+        domainFolder.add(this.domain, "y", 1, 100, 1).name("Height").onChange(() => { this.reset(); });
+        domainFolder.add(this.domain, "z", 1, 100, 1).name("Depth").onChange(() => { this.reset(); });
+
         generalFolder.add(this.solver, "dissipation", 0.9, 1, 0.001).name("Dissipation");
         generalFolder.add(this.solver, "applyBoundaries").name("Apply Boundaries").onChange((val) => { this.solver.setBoundaries(val) });
 
@@ -141,11 +150,16 @@ export default class Simulation {
     }
 
     reset = () => {
-        // TODO: Also debug slabs have to be set to the new ones otherwise they dont update!
+        // TODO: add function that copies existing slabs into new ones if possible
         this.stop();
+
         this.tiledTexture.computeResolution(this.resolution, this.domain);
         this.solver.reset(this.domain, this.tiledTexture);
+        this.renderer.reset(this.domain, this.tiledTexture);
+
+        this.pointer = new Pointer3D(this.camera, this.mouse, this.domain);
         this.debugPanel.setSlabs(this.solver.getDebugSlabs());
+
         this.start();
     }
 

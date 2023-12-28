@@ -47,7 +47,7 @@ void main( ) {
 
   vec3 velocity = texture3D( u_velocityTexture, pos ).xyz;
 
-  vec3 pos_prev = pos - velocity * u_resolution  * u_deltaTime;
+  vec3 pos_prev = pos - velocity * u_resolution * u_deltaTime;
 
   gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_prev ), 1.0 );
 }

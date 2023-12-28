@@ -12,7 +12,7 @@ export default class Renderer {
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera;
 
-    domain: THREE.Vector3;
+    domainBox: THREE.LineSegments;
     group: THREE.Group;
 
     material: THREE.RawShaderMaterial;
@@ -27,13 +27,9 @@ export default class Renderer {
     constructor(
         renderer: THREE.WebGLRenderer,
         camera: THREE.PerspectiveCamera,
-        domain: THREE.Vector3,
-        tiledTex: TiledTexture
     ) {
         this.renderer = renderer;
         this.camera = camera;
-
-        this.domain = domain;
 
         this.scene = new THREE.Scene();
 
@@ -43,10 +39,10 @@ export default class Renderer {
                 density: { value: new THREE.Texture() },
                 velocity: { value: new THREE.Texture() },
                 pressure: { value: new THREE.Texture() },
-                u_size: { value: domain },
-                u_resolution: { value: tiledTex.simulationResolution },
-                u_textureResolution: { value: tiledTex.resolution },
-                u_tileCount: { value: tiledTex.tileCount },
+                u_size: { value: new THREE.Vector3() },
+                u_resolution: { value: new THREE.Vector3() },
+                u_textureResolution: { value: new THREE.Vector2() },
+                u_tileCount: { value: new THREE.Vector3() },
                 u_color1: { value: new THREE.Vector3() },
                 u_color2: { value: new THREE.Vector3() },
                 u_minThreshold: { value: 0.0 },
@@ -58,6 +54,36 @@ export default class Renderer {
             transparent: true,
             depthTest: false,
         });
+
+        // Add visual guides
+        this.pointerSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.5, 16, 8),
+            new THREE.MeshBasicMaterial({ color: 0x000000 })
+        );
+        this.scene.add(this.pointerSphere);
+
+        this.pointerArrow = new THREE.ArrowHelper(
+            new THREE.Vector3(1, 0, 0),
+            new THREE.Vector3(0, 0, 0),
+            1.5,
+            0x000000,
+            0.5,
+            0.5
+        );
+        this.scene.add(this.pointerArrow);
+    }
+
+    reset(
+        domain: THREE.Vector3,
+        tiledTex: TiledTexture
+    ) {
+        this.material.uniforms.u_size.value = domain;
+        this.material.uniforms.u_resolution.value = tiledTex.simulationResolution;
+        this.material.uniforms.u_textureResolution.value = tiledTex.resolution;
+        this.material.uniforms.u_tileCount.value = tiledTex.tileCount;
+
+        this.scene.remove(this.group);
+        this.scene.remove(this.domainBox);
 
         let sideLength = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z);
         this.group = new THREE.Group();
@@ -74,31 +100,14 @@ export default class Renderer {
             const quad = new THREE.Mesh(geometry, this.material);
             this.group.add(quad);
         }
-
         this.scene.add(this.group);
-        // Add visual guides
-        const geometryDomainBox = new THREE.BoxGeometry(domain.x - 1, domain.y - 1, domain.z - 1);
-        const domainBox = new THREE.LineSegments(
+
+        const geometryDomainBox = new THREE.BoxGeometry(domain.x, domain.y, domain.z);
+        this.domainBox = new THREE.LineSegments(
             new THREE.EdgesGeometry(geometryDomainBox),
             new THREE.LineBasicMaterial({ color: 0xffffff })
         );
-        this.scene.add(domainBox);
-
-        this.pointerSphere = new THREE.Mesh(
-            new THREE.SphereGeometry(0.5, 16, 8),
-            new THREE.MeshBasicMaterial({ color: 0x000000 })
-        );
-        this.scene.add(this.pointerSphere);
-
-        this.pointerArrow = new THREE.ArrowHelper(
-            new THREE.Vector3(1, 0, 0),
-            new THREE.Vector3(0, 0, 0),
-            1.5,
-            0x000000,
-            0.5,
-            0.5
-        );
-        this.scene.add(this.pointerArrow);
+        this.scene.add(this.domainBox);
     }
 
     render(density: Slab, velocity: Slab, pressure: Slab) {

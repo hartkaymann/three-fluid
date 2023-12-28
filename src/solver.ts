@@ -18,6 +18,7 @@ import fragmentForce from './shaders/force.frag'
 import fragmentAdvect from './shaders/advect.frag'
 import fragmentJacobi from './shaders/jacobi.frag'
 import fragmentDivergence from './shaders/divergence.frag'
+import fragmentMacCormack from './shaders/maccormack.frag'
 import fragmentGradient from './shaders/gradient.frag'
 import fragmentBoundary from './shaders/boundary.frag'
 import fragmentBuoyancy from './shaders/buoyancy.frag'
@@ -26,9 +27,11 @@ import fragmentVorticityConfinement from './shaders/vorticityconfine.frag'
 import TiledTexture from './lib/TiledTexture';
 import Mouse from './lib/Mouse';
 import Pointer3D from './lib/Pointer3D';
+import MacCormack from './lib/slabop/MacCormack';
 
 export default class Solver {
 
+    // TODO: move to settings class
     applyBoundaries = true; // Needs more than just deactivating
     dissipation = 1.0; // Dissipation, lower value means faster dissipation
     applyViscosity: boolean = false;
@@ -58,6 +61,7 @@ export default class Solver {
     public densityPressure: Slab;
 
     private advect: Advect;
+    private maccormack: MacCormack;
     private force: Force;
     private divergence: Divergence;
     private gradient: Gradient;
@@ -83,6 +87,7 @@ export default class Solver {
     
         // Slabobs
         this.advect = new Advect(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentAdvect]);
+        this.maccormack = new MacCormack(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentMacCormack])
         this.force = new Force(this.renderer, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentForce]);
         this.divergence = new Divergence(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentDivergence]);
         this.gradient = new Gradient(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentGradient]);
@@ -97,7 +102,7 @@ export default class Solver {
 
         // Advection
         this.advect.compute(this.density, this.velocity, this.density, dt, 1.0);
-        this.advect.compute(this.velocity, this.velocity, this.velocity, dt, this.dissipation);
+        this.advectMackCormack(this.velocity, this.velocity, this.velocity, dt, this.dissipation);
         this.boundary.compute(this.velocity, this.velocity, -1);
         
         // Body forces  
@@ -124,13 +129,32 @@ export default class Solver {
             this.jacobi.alpha = alpha;
             this.jacobi.beta = beta;
 
-            this.jacobi.compute(this.velocity, this.velocity, this.density, this.velocity, this.viscosityIterations, this.boundary, -1);
+            this.jacobi.compute(this.velocity, this.velocity, this.velocity, this.viscosityIterations, this.boundary, -1);
             this.boundary.compute(this.velocity, this.velocity, -1);
         }
 
         // Projection
         this.project();
 
+    }
+
+    advectMackCormack(
+        advected: Slab,
+        velocity: Slab,
+        output: Slab,
+        dt: number,
+        dissipation?: number // this might be redundant with maccorman?
+    ) {
+        let intermediate = new Slab(advected.resolution, advected.read.texture.format);
+
+        // Forward step
+        this.advect.compute(advected, velocity, intermediate, dt, 1.0);
+
+        // Backward step
+        this.advect.compute(intermediate, velocity, intermediate, -dt, 1.0);
+
+        // Correction
+        this.maccormack.compute(advected, velocity, intermediate.write.texture, intermediate.read.texture, output);
     }
 
     addForce(dt: number, mouse: Mouse, pointer: Pointer3D) {
@@ -161,12 +185,12 @@ export default class Solver {
 
     project() {
         // Divergence
-        this.divergence.compute(this.velocity, this.density, this.velocityDivergence);
+        this.divergence.compute(this.velocity, this.velocityDivergence);
 
         // Poisson Pressure
         this.jacobi.alpha = -1.0;
         this.jacobi.beta = 6.0;
-        this.jacobi.compute(this.pressure, this.velocityDivergence, this.density, this.pressure, this.pressureIterations, this.boundary, 1);
+        this.jacobi.compute(this.pressure, this.velocityDivergence, this.pressure, this.pressureIterations, this.boundary, 1);
 
         // Subtract gradient
         this.gradient.compute(this.velocity, this.pressure, this.velocity);

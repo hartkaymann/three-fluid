@@ -2,7 +2,6 @@ precision highp float;
 
 uniform sampler2D u_pressureTexture; // x
 uniform sampler2D u_divergenceTexture; // b
-uniform sampler2D u_markerTexture;
 
 uniform float u_alpha;
 uniform float u_rbeta;
@@ -11,10 +10,6 @@ void main( ) {
   vec3 pos = get3DFragCoord( );
   mat3 offset = mat3( 1.0 );
   
-  if(texture3D( u_markerTexture, pos ).x == 0.0)
-    discard; // We got ourselves an air cell
-
-
   // Get the divergence at the current cell
   vec3 center = texture3D( u_divergenceTexture, pos).xyz;
   

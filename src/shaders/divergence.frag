@@ -1,16 +1,12 @@
 precision highp float;
 
 uniform sampler2D u_velocityTexture;
-uniform sampler2D u_markerTexture;
 
 uniform float u_halfrdx;
 
 void main( ) {
   vec3 pos = get3DFragCoord( );
   mat3 offset = mat3( 1.0 );
-
-  if ( texture3D( u_markerTexture, pos ).x == 0.0 )
-    discard; // we got ourselves an air cell
 
   float right = texture3D( u_velocityTexture, ( pos + offset[0] ) ).x;
   float left  = texture3D( u_velocityTexture, ( pos - offset[0] ) ).x;

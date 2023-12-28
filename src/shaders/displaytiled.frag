@@ -29,7 +29,7 @@ void main( ) {
     vec3 vel = texture3D( velocity, pos * u_resolution).xyz;
 
     bool visible = d.x >= u_minThreshold;
-    float alpha = visible ? d.x : 0.0;
+    float alpha = visible ?  min(d.x, 1.0) : 0.0;
 
     vec3 color = mix( u_color1, u_color2, length( vel ) * u_resolution );
 

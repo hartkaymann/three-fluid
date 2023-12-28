@@ -12,7 +12,6 @@ export default class Advect extends Slabop {
         vs: string | string[],
         fs: string | string[]
     ) {
-
         let uniforms = {
             u_advectedTexture: { value: new THREE.Texture() },
             u_velocityTexture: { value: new THREE.Texture() },
