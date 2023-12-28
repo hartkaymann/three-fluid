@@ -10,11 +10,12 @@ import { Clock } from 'three/src/core/Clock.js'
 import DebugPanel from './lib/DebugPanel';
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
-
 export default class Simulation {
 
-    domain = new THREE.Vector3(40, 40, 40);
-    resolution = new THREE.Vector2(512, 512);
+    settings = {
+        domain: new THREE.Vector3(40, 40, 40),
+        resolution: new THREE.Vector2(512, 512)
+    }
 
     timeout: number;
     private wgl: THREE.WebGLRenderer;
@@ -48,23 +49,24 @@ export default class Simulation {
         this.camera.position.z = 20;
 
         this.tiledTexture = new TiledTexture();
-        this.tiledTexture.computeResolution(this.resolution, this.domain);
+        this.tiledTexture.computeResolution(this.settings.resolution, this.settings.domain);
 
         // Initialize solver and renderer
-        this.solver = new Solver(this.wgl, this.domain);
-        this.solver.reset(this.domain, this.tiledTexture);
+        this.solver = new Solver(this.wgl, this.settings.domain);
+        this.solver.reset(this.settings.domain, this.tiledTexture);
 
         this.renderer = new Renderer(this.wgl, this.camera);
-        this.renderer.reset(this.domain, this.tiledTexture);
+        this.renderer.reset(this.settings.domain, this.tiledTexture);
 
         this.debugPanel = new DebugPanel(this.wgl, container, this.solver.getDebugSlabs());
         this.debugPanel.create();
+        this.debugPanel.setHeader(this.settings.resolution, this.tiledTexture.tileCount.z);
 
         this.initGui();
 
         // Additionals
         this.mouse = new Mouse();
-        this.pointer = new Pointer3D(this.camera, this.mouse, this.domain);
+        this.pointer = new Pointer3D(this.camera, this.mouse, this.settings.domain);
 
         this.clock = new Clock();
         this.clock.start();
@@ -96,11 +98,24 @@ export default class Simulation {
         simulationFolder.add(this, "reset").name("Reset");
 
         const generalFolder = simulationFolder.addFolder("General");
+        generalFolder.add(this.settings, "resolution",
+            {
+                Low: 128,
+                Medium: 256,
+                High: 512,
+                Super: 1024,
+                Ulta: 2048
+            }).setValue(this.settings.resolution.x)
+            .name("Resolution")
+            .onChange(val => {
+                this.settings.resolution = new THREE.Vector2(val, val);
+                this.reset();
+            });
 
         const domainFolder = generalFolder.addFolder("Domain");
-        domainFolder.add(this.domain, "x", 1, 100, 1).name("Width").onChange(() => { this.reset(); });
-        domainFolder.add(this.domain, "y", 1, 100, 1).name("Height").onChange(() => { this.reset(); });
-        domainFolder.add(this.domain, "z", 1, 100, 1).name("Depth").onChange(() => { this.reset(); });
+        domainFolder.add(this.settings.domain, "x", 1, 100, 1).name("Width").onChange(() => { this.reset(); });
+        domainFolder.add(this.settings.domain, "y", 1, 100, 1).name("Height").onChange(() => { this.reset(); });
+        domainFolder.add(this.settings.domain, "z", 1, 100, 1).name("Depth").onChange(() => { this.reset(); });
 
         const viscosityFolder = simulationFolder.addFolder("Viscosity");
         viscosityFolder.add(this.solver, "applyViscosity").name("Apply Viscosity");
@@ -150,11 +165,20 @@ export default class Simulation {
         // TODO: add function that copies existing slabs into new ones if possible
         this.stop();
 
-        this.tiledTexture.computeResolution(this.resolution, this.domain);
-        this.solver.reset(this.domain, this.tiledTexture);
-        this.renderer.reset(this.domain, this.tiledTexture);
+        const isResolutionPossible =
+            this.tiledTexture.computeResolution(this.settings.resolution, this.settings.domain);
+        if(!isResolutionPossible) {
+            (this.renderer.domainBox.material as THREE.MeshBasicMaterial).color.set(THREE.Color.NAMES.red);
+            return;
+        } else {
+            (this.renderer.domainBox.material as THREE.MeshBasicMaterial).color.set(THREE.Color.NAMES.white);
+        }
 
-        this.pointer = new Pointer3D(this.camera, this.mouse, this.domain);
+        this.solver.reset(this.settings.domain, this.tiledTexture);
+        this.renderer.reset(this.settings.domain, this.tiledTexture);
+
+        this.pointer = new Pointer3D(this.camera, this.mouse, this.settings.domain);
+        this.debugPanel.setHeader(this.settings.resolution, this.tiledTexture.tileCount.z);
         this.debugPanel.setSlabs(this.solver.getDebugSlabs());
 
         this.start();

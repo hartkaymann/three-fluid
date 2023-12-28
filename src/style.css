@@ -12,7 +12,7 @@ body {
   height: 100%;
 }
 
-#content {
+#debug-panel {
   position: absolute;
   top: 0;
   right: 0;
@@ -21,7 +21,7 @@ body {
   display: flex;
   flex-flow: column nowrap;
   justify-content: flex-start;
-  align-items: flex-end;
+  align-items: center;
   align-content: flex-start;
   overflow: scroll;
   border-left: 1px solid #e1e1e1;
@@ -29,9 +29,16 @@ body {
 
 .debug-item {
   display: inline-block;
-  margin: 1em;
   padding: 1em;
   /* box-shadow: 1px 2px 4px 0px rgba(0, 0, 0, 0.25); */
+}
+
+.debug-header {
+  align-self: stretch;
+  font-family: sans-serif;
+  color: #888;
+  border-bottom: 1px solid #e1e1e1;
+  padding-left: 1em;
 }
 
 .debug-item>div:nth-child(1) {

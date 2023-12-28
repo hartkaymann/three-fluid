@@ -18,14 +18,14 @@ export default class TiledTexture {
     get tileResolution(): THREE.Vector2 { return this._tileResolution; }
     get tileCount(): THREE.Vector3 { return this._tileCount; }
     get simulationResolution(): THREE.Vector3 { return this._simulationResolution; }
-    
+
     // TODO: 
     // To keep ratio correct, the total tiles should be bigger than the target tile amount.
     // The target tile amount should then be taken as the z value for the tile count. 
     // This would waste a bit of space but the grid would be guaranteed equally spaced.
     // Aternatively might have to change halfrdx in shaders when computing gradient. 
     // Solution: Cache the best result and use that at the end.
-    computeResolution(maxTextureResolution: THREE.Vector2, domain: THREE.Vector3) {
+    computeResolution(maxTextureResolution: THREE.Vector2, domain: THREE.Vector3) : boolean {
         const domainRatio = new THREE.Vector3(domain.x / domain.y, domain.y / domain.z, domain.z / domain.x);
 
         let targetTileAmount = domainRatio.z;
@@ -58,12 +58,6 @@ export default class TiledTexture {
             tileCount = new THREE.Vector2(Math.floor(maxTextureResolution.x / tileResolution.x), Math.floor(maxTextureResolution.y / tileResolution.y));
             totalTiles = tileCount.x * tileCount.y; // mid value
 
-            // console.log("Low: " + tileResolutionLow.x + ", " + tileResolutionLow.y);
-            // console.log("High: " + tileResolutionHigh.x + ", " + tileResolutionHigh.y);
-            // console.log("Mid: " + tileResolution.x + ", " + tileResolution.y);
-            // console.log("Target Tiles: " + targetTileAmount);
-            // console.log("Total Tiles: " + totalTiles);
-           
             if (totalTiles == targetTileAmount)
                 break;
             else if (totalTiles < targetTileAmount)
@@ -80,6 +74,7 @@ export default class TiledTexture {
         console.log("Iterations: " + i);
         console.log("Final Simulation Resolution: " + tileResolution.x + ", " + tileResolution.y + ", " + totalTiles);
         console.log("Final Texture Resolution: " + tileResolution.x * tileCount.x + ", " + tileResolution.y * tileCount.y);
+        return totalTiles != 0;
     }
 
 }

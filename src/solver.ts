@@ -120,7 +120,6 @@ export default class Solver {
 
         // Viscous diffusion
         if (this.applyViscosity && this.viscosity > 0) {
-
             let alpha = 1.0 / (this.viscosity * 1.0); // timestep = 1.0
             let beta = 6.0 + alpha;
 
@@ -133,7 +132,6 @@ export default class Solver {
 
         // Projection
         this.project();
-
     }
 
     advectMackCormack(
