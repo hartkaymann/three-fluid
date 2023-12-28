@@ -4,7 +4,6 @@ uniform sampler2D u_advectedTexture;
 uniform sampler2D u_velocityTexture;
 
 uniform float u_deltaTime; 
-uniform float u_dissipation;
 
 varying vec2 vUv;
 
@@ -49,5 +48,5 @@ void main( ) {
 
   vec3 pos_prev = pos - velocity * u_resolution * u_deltaTime;
 
-  gl_FragColor = vec4( u_dissipation * trilerp( u_advectedTexture, pos_prev ), 1.0 );
+  gl_FragColor = vec4( trilerp( u_advectedTexture, pos_prev ), 1.0 );
 }

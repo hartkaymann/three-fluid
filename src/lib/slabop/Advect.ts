@@ -16,7 +16,6 @@ export default class Advect extends Slabop {
             u_advectedTexture: { value: new THREE.Texture() },
             u_velocityTexture: { value: new THREE.Texture() },
             u_deltaTime: { value: 0.0 },
-            u_dissipation: { value: 0.998 },
         }
 
         super(renderer, tiledTex, vs, fs, uniforms);
@@ -26,13 +25,11 @@ export default class Advect extends Slabop {
         advected: Slab,
         velocity: Slab,
         output: Slab,
-        dt: number,
-        dissipation: number,
+        dt: number
     ): void {
         this.uniforms.u_velocityTexture.value = velocity.read.texture;
         this.uniforms.u_advectedTexture.value = advected.read.texture;
         this.uniforms.u_deltaTime.value = dt;
-        this.uniforms.u_dissipation.value = dissipation;
 
         this.renderer.setRenderTarget(output.write);
         this.renderer.render(this.scene, this.camera);

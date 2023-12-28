@@ -102,9 +102,6 @@ export default class Simulation {
         domainFolder.add(this.domain, "y", 1, 100, 1).name("Height").onChange(() => { this.reset(); });
         domainFolder.add(this.domain, "z", 1, 100, 1).name("Depth").onChange(() => { this.reset(); });
 
-        generalFolder.add(this.solver, "dissipation", 0.9, 1, 0.001).name("Dissipation");
-        generalFolder.add(this.solver, "applyBoundaries").name("Apply Boundaries").onChange((val) => { this.solver.setBoundaries(val) });
-
         const viscosityFolder = simulationFolder.addFolder("Viscosity");
         viscosityFolder.add(this.solver, "applyViscosity").name("Apply Viscosity");
         viscosityFolder.add(this.solver, "viscosityIterations", 20, 50, 1).name("Iterations");

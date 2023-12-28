@@ -32,8 +32,6 @@ import MacCormack from './lib/slabop/MacCormack';
 export default class Solver {
 
     // TODO: move to settings class
-    applyBoundaries = true; // Needs more than just deactivating
-    dissipation = 1.0; // Dissipation, lower value means faster dissipation
     applyViscosity: boolean = false;
     viscosityIterations = 30;
     viscosity = 0.3; // Viscosity, higher value means more viscous fluid
@@ -101,8 +99,8 @@ export default class Solver {
     step(dt: number, mouse: Mouse, pointer: Pointer3D) {
 
         // Advection
-        this.advect.compute(this.density, this.velocity, this.density, dt, 1.0);
-        this.advectMackCormack(this.velocity, this.velocity, this.velocity, dt, this.dissipation);
+        this.advect.compute(this.density, this.velocity, this.density, dt);
+        this.advectMackCormack(this.velocity, this.velocity, this.velocity, dt);
         this.boundary.compute(this.velocity, this.velocity, -1);
         
         // Body forces  
@@ -143,15 +141,14 @@ export default class Solver {
         velocity: Slab,
         output: Slab,
         dt: number,
-        dissipation?: number // this might be redundant with maccorman?
     ) {
         let intermediate = new Slab(advected.resolution, advected.read.texture.format);
 
         // Forward step
-        this.advect.compute(advected, velocity, intermediate, dt, 1.0);
+        this.advect.compute(advected, velocity, intermediate, dt);
 
         // Backward step
-        this.advect.compute(intermediate, velocity, intermediate, -dt, 1.0);
+        this.advect.compute(intermediate, velocity, intermediate, -dt);
 
         // Correction
         this.maccormack.compute(advected, velocity, intermediate.write.texture, intermediate.read.texture, output);
@@ -195,10 +192,6 @@ export default class Solver {
         // Subtract gradient
         this.gradient.compute(this.velocity, this.pressure, this.velocity);
         this.boundary.compute(this.velocity, this.velocity, -1);
-    }
-
-    setBoundaries(applyBounds: any) {
-        this.boundary.setScale(applyBounds ? -1.0 : 1.0);
     }
 
     getDebugSlabs(): { name: string, slab: Slab }[] {
