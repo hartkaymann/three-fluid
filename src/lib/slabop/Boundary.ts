@@ -46,8 +46,7 @@ export default class Boundary {
         ): THREE.Line {
             let geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
             geometry.setAttribute("offset", new THREE.Float32BufferAttribute([offset.x, offset.y, offset.z, offset.x, offset.y, offset.z], 3));
-            const line = new THREE.Line(geometry, material);
-            return line;
+            return new THREE.Line(geometry, material);
         }
 
         let x0 = 0.5;
@@ -94,7 +93,6 @@ export default class Boundary {
             );
         }
 
-
         // Create and add front and back boundary quads
         let geometryFront = new THREE.PlaneGeometry(tiledTex.tileResolution.x, tiledTex.tileResolution.y);
         let geometryBack = new THREE.PlaneGeometry(tiledTex.tileResolution.x, tiledTex.tileResolution.y);
@@ -129,7 +127,7 @@ export default class Boundary {
     ): void {
         this.uniforms.u_readTexture.value = read.read.texture;
         this.uniforms.u_scale.value = scale;
-        
+
         this.renderer.setRenderTarget(output.write);
         this.renderer.render(this.scene, this.camera);
         this.renderer.setRenderTarget(null);

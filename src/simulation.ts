@@ -14,6 +14,7 @@ export default class Simulation {
 
     settings = {
         domain: new THREE.Vector3(40, 40, 40),
+        _res: 0, // required for gui to work
         resolution: new THREE.Vector2(512, 512)
     }
 
@@ -98,15 +99,16 @@ export default class Simulation {
         simulationFolder.add(this, "reset").name("Reset");
 
         const generalFolder = simulationFolder.addFolder("General");
-        generalFolder.add(this.settings, "resolution",
+        generalFolder.add(this.settings, "_res",
             {
-                Low: 128,
-                Medium: 256,
-                High: 512,
-                Super: 1024,
-                Ulta: 2048
-            }).setValue(this.settings.resolution.x)
-            .name("Resolution")
+                'Very Low': 64,
+                'Low': 128,
+                'Medium': 256,
+                'High': 512,
+                'Very High': 1024,
+                'Super High': 2048
+            }).name("Resolution")
+            .setValue(this.settings.resolution.x)
             .onChange(val => {
                 this.settings.resolution = new THREE.Vector2(val, val);
                 this.reset();
@@ -118,35 +120,32 @@ export default class Simulation {
         domainFolder.add(this.settings.domain, "z", 1, 100, 1).name("Depth").onChange(() => { this.reset(); });
 
         const viscosityFolder = simulationFolder.addFolder("Viscosity");
-        viscosityFolder.add(this.solver, "applyViscosity").name("Apply Viscosity");
-        viscosityFolder.add(this.solver, "viscosityIterations", 20, 50, 1).name("Iterations");
-        viscosityFolder.add(this.solver, "viscosity", 0, 1, 0.01).name("Viscosity");
+        viscosityFolder.add(this.solver.settings, "hasViscosity").name("Apply Viscosity");
+        viscosityFolder.add(this.solver.settings, "viscosityIterations", 20, 50, 1).name("Iterations");
+        viscosityFolder.add(this.solver.settings, "viscosity", 0, 1, 0.01).name("Viscosity");
 
         const vorticityFolder = simulationFolder.addFolder("Vorticity");
-        vorticityFolder.add(this.solver, "applyVorticity").name("Apply Vorticity");
-        vorticityFolder.add(this.solver, "curl", 0, 5, 0.01).name("Curl");
+        vorticityFolder.add(this.solver.settings, "hasVorticity").name("Apply Vorticity");
+        vorticityFolder.add(this.solver.settings, "curl", 0, 5, 0.01).name("Curl");
 
         const projectionFolder = simulationFolder.addFolder("Projection");
-        projectionFolder.add(this.solver, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");
-        //projectionFolder.add(solver, "projectionOffset", 0.5, 5.0, 0.01).name("Projection Offset");
+        projectionFolder.add(this.solver.settings, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");
 
         const bodyForcesFolder = simulationFolder.addFolder("Body Forces");
-        bodyForcesFolder.add(this.solver, "applyGravity").name("Apply Gravity");
-        bodyForcesFolder.add(this.solver.gravity, "y", -10, 0, 0.01).name("Gravity Force");
-        bodyForcesFolder.add(this.solver, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
-        bodyForcesFolder.add(this.solver, "forceDensity", 0, 100, 1).name("Added Density");
-        bodyForcesFolder.add(this.solver, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
+        bodyForcesFolder.add(this.solver.settings, "hasGravity").name("Apply Gravity");
+        bodyForcesFolder.add(this.solver.settings.gravity, "y", -10, 0, 0.01).name("Gravity Force");
+        bodyForcesFolder.add(this.solver.settings, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
+        bodyForcesFolder.add(this.solver.settings, "forceDensity", 0, 100, 1).name("Added Density");
+        bodyForcesFolder.add(this.solver.settings, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
 
-        // const incompressibilityFolder = simulationFolder.addFolder("Incompressibility");
-        // incompressibilityFolder.add(this.solver, "targetDensity", 0, 10, 0.0001).name("Target Density");
-        // incompressibilityFolder.add(this.solver, "pressureMultiplier", 0, 100, 0.1).name("Pressure Multiplier");   
         simulationFolder.open();
 
         const renderingFolder = this.gui.addFolder("Rendering");
-        renderingFolder.add(this.renderer, "applyShading").name("Shading");
-        renderingFolder.addColor(this.renderer, "color1").name("Color Slow");
-        renderingFolder.addColor(this.renderer, "color2").name("Color Fast");
-        renderingFolder.add(this.renderer, "minThreshold", 0.0, 1.1, 0.0001).name("Minumim Density");
+        renderingFolder.add(this.renderer.settings, "hasShading").name("Shading");
+        renderingFolder.addColor(this.renderer.settings, "color1").name("Color Slow");
+        renderingFolder.addColor(this.renderer.settings, "color2").name("Color Fast");
+        renderingFolder.add(this.renderer.settings, "minThreshold", 0.0, 1.1, 0.0001).name("Minumim Density");
+        renderingFolder.add(this.renderer.settings, "showGuides").name("Guides");
     }
 
     start = () => {
@@ -167,7 +166,7 @@ export default class Simulation {
 
         const isResolutionPossible =
             this.tiledTexture.computeResolution(this.settings.resolution, this.settings.domain);
-        if(!isResolutionPossible) {
+        if (!isResolutionPossible) {
             (this.renderer.domainBox.material as THREE.MeshBasicMaterial).color.set(THREE.Color.NAMES.red);
             return;
         } else {

@@ -2,8 +2,6 @@ attribute vec3 position;
 attribute vec2 uv;
 attribute float depth;
 
-uniform vec3 u_size;
-
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
 uniform mat4 modelMatrix;

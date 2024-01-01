@@ -55,6 +55,7 @@ export default class DebugPanel {
         resolution: THREE.Vector2,
         tiles: number
     ) {
+        // TODO: target and actual resolution both here!
         this.elementResolution.innerText = `Resolution: ${resolution.x}x${resolution.x}`;
         this.elementTiles.innerText = `Tiles: ${tiles}`;
     }

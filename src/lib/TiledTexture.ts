@@ -41,6 +41,7 @@ export default class TiledTexture {
             newWidth = maxTextureResolution.x;
             newHeight = maxTextureResolution.x / domainRatio.x;
         }
+        console.log("Max Res: " +  maxTextureResolution.x + ", " + maxTextureResolution.y);
 
         let tileResolutionLow = new THREE.Vector2(0, 0); // low
         let tileResolutionHigh = new THREE.Vector2(newWidth, newHeight); // high

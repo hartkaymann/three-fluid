@@ -19,10 +19,13 @@ export default class Renderer {
     pointerSphere: THREE.Mesh;
     pointerArrow: THREE.ArrowHelper;
 
-    applyShading = true;
-    color1 = '#3f5efb';
-    color2 = '#fc466b';
-    minThreshold = 0.00001;
+    settings = {
+        showGuides: true,
+        hasShading: true,
+        color1: '#3f5efb',
+        color2: '#fc466b',
+        minThreshold: 0.00001
+    }
 
     constructor(
         renderer: THREE.WebGLRenderer,
@@ -120,10 +123,10 @@ export default class Renderer {
         this.material.uniforms.density.value = density.read.texture;
         this.material.uniforms.velocity.value = velocity.read.texture;
         this.material.uniforms.pressure.value = pressure.read.texture;
-        this.material.uniforms.u_color1.value = new THREE.Color(this.color1);
-        this.material.uniforms.u_color2.value = new THREE.Color(this.color2);
-        this.material.uniforms.u_minThreshold.value = this.minThreshold;
-        this.material.uniforms.u_applyShading.value = this.applyShading;
+        this.material.uniforms.u_color1.value = new THREE.Color(this.settings.color1);
+        this.material.uniforms.u_color2.value = new THREE.Color(this.settings.color2);
+        this.material.uniforms.u_minThreshold.value = this.settings.minThreshold;
+        this.material.uniforms.u_applyShading.value = this.settings.hasShading;
 
         this.renderer.setRenderTarget(null);
         this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
@@ -131,10 +134,12 @@ export default class Renderer {
         this.renderer.render(this.scene, this.camera);
     }
 
-    updateGuides(position: THREE.Vector3, direction: THREE.Vector3, visible: boolean) {
-        this.pointerSphere.visible = visible;
-        this.pointerArrow.visible = visible && (direction.length() > 0);
+    updateGuides(position: THREE.Vector3, direction: THREE.Vector3, isPointerVisible: boolean) {
+        this.domainBox.visible = this.settings.showGuides;
+        this.pointerSphere.visible = this.settings.showGuides && isPointerVisible;
+        this.pointerArrow.visible = this.settings.showGuides && isPointerVisible && (direction.length() > 0);
 
+        direction.z *= -1;
         let color = new THREE.Color(0.5 + direction.x, 0.5 + direction.y, 0.5 + direction.z);
 
         this.pointerSphere.position.set(position.x, position.y, position.z);

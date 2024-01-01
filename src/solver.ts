@@ -31,22 +31,21 @@ import MacCormack from './lib/slabop/MacCormack';
 
 export default class Solver {
 
-    // TODO: move to settings class
-    applyViscosity: boolean = false;
-    viscosityIterations = 30;
-    viscosity = 0.3; // Viscosity, higher value means more viscous fluid
-    applyVorticity = false;
-    curl = 0.3; // Curl
-    pressureIterations = 80; // Jacobi iterations for poisson pressure, should be between 50-80 
-    applyGravity = false;
-    gravity = new THREE.Vector3(0, -9.81, 0);
-    rise = 1.0; // Tendency to rise
-    fall = 1.0 // Tendency to fall, maybe link both with "weight" or sth
-    forceRadius = 2.0;
-    forceDensity = 20.0;
-    forceVelocity = 2;
-    targetDensity = 0.01;
-    pressureMultiplier = 1.0;
+    settings = {
+        hasViscosity: false,
+        viscosityIterations: 30,
+        viscosity: 0.3,
+        hasVorticity: false,
+        curl: 0.3,
+        pressureIterations: 80,
+        hasGravity: false,
+        gravity: new THREE.Vector3(0, -9.81, 0),
+        forceRadius: 2.0,
+        forceDensity: 20.0,
+        forceVelocity: 2,
+        targetDensity: 0.01,
+        pressureMultiplier: 1.0
+    }
 
     domain: THREE.Vector3;
     renderer: THREE.WebGLRenderer;
@@ -73,7 +72,7 @@ export default class Solver {
         this.renderer = renderer;
         this.domain = domain;
     }
-    
+
     reset(domain: THREE.Vector3, tiledTex: TiledTexture) {
         // Slabs
         this.density = new Slab(tiledTex.resolution, THREE.RedFormat);
@@ -82,7 +81,7 @@ export default class Solver {
         this.velocityDivergence = new Slab(tiledTex.resolution, THREE.RedFormat);
         this.velocityVorticity = new Slab(tiledTex.resolution);
         this.densityPressure = new Slab(tiledTex.resolution);
-    
+
         // Slabobs
         this.advect = new Advect(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentAdvect]);
         this.maccormack = new MacCormack(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentMacCormack])
@@ -102,31 +101,31 @@ export default class Solver {
         this.advect.compute(this.density, this.velocity, this.density, dt);
         this.advectMackCormack(this.velocity, this.velocity, this.velocity, dt);
         this.boundary.compute(this.velocity, this.velocity, -1);
-        
+
         // Body forces  
-        if (this.applyGravity) {
-            this.buoyancy.compute(this.velocity, this.density, this.velocity, this.gravity, dt);
+        if (this.settings.hasGravity) {
+            this.buoyancy.compute(this.velocity, this.density, this.velocity, this.settings.gravity, dt);
             this.boundary.compute(this.velocity, this.velocity, -1);
         }
         this.addForce(dt, mouse, pointer);
 
         // Vorticity confinement
-        if (this.applyVorticity && this.curl > 0) {
+        if (this.settings.hasVorticity && this.settings.curl > 0) {
             this.vorticity.compute(this.velocity, this.velocityVorticity);
-            this.vorticityConfinement.compute(this.velocity, this.velocityVorticity, this.velocity, dt, this.curl);
+            this.vorticityConfinement.compute(this.velocity, this.velocityVorticity, this.velocity, dt, this.settings.curl);
 
             this.boundary.compute(this.velocity, this.velocity, -1);
         }
 
         // Viscous diffusion
-        if (this.applyViscosity && this.viscosity > 0) {
-            let alpha = 1.0 / (this.viscosity * 1.0); // timestep = 1.0
+        if (this.settings.hasViscosity && this.settings.viscosity > 0) {
+            let alpha = 1.0 / (this.settings.viscosity * 1.0); // timestep = 1.0
             let beta = 6.0 + alpha;
 
             this.jacobi.alpha = alpha;
             this.jacobi.beta = beta;
 
-            this.jacobi.compute(this.velocity, this.velocity, this.velocity, this.viscosityIterations, this.boundary, -1);
+            this.jacobi.compute(this.velocity, this.velocity, this.velocity, this.settings.viscosityIterations, this.boundary, -1);
             this.boundary.compute(this.velocity, this.velocity, -1);
         }
 
@@ -156,7 +155,7 @@ export default class Solver {
         if (!(mouse.keys[0] || mouse.keys[1]))
             return;
 
-        if(!pointer.isHit)
+        if (!pointer.isHit)
             return;
 
         let position = new THREE.Vector3(
@@ -169,11 +168,11 @@ export default class Solver {
         direction.z *= -1;
 
         if (mouse.keys[0]) {
-            this.force.compute(this.density, this.density, dt, position, new THREE.Vector3(1, 1, 1), this.forceRadius, this.forceDensity);
+            this.force.compute(this.density, this.density, dt, position, new THREE.Vector3(1, 1, 1), this.settings.forceRadius, this.settings.forceDensity);
         }
 
         if (mouse.keys[1]) {
-            this.force.compute(this.velocity, this.velocity, dt, position, direction, this.forceRadius, this.forceVelocity);
+            this.force.compute(this.velocity, this.velocity, dt, position, direction, this.settings.forceRadius, this.settings.forceVelocity);
             this.boundary.compute(this.velocity, this.velocity, -1);
         }
     }
@@ -185,7 +184,7 @@ export default class Solver {
         // Poisson Pressure
         this.jacobi.alpha = -1.0;
         this.jacobi.beta = 6.0;
-        this.jacobi.compute(this.pressure, this.velocityDivergence, this.pressure, this.pressureIterations, this.boundary, 1);
+        this.jacobi.compute(this.pressure, this.velocityDivergence, this.pressure, this.settings.pressureIterations, this.boundary, 1);
 
         // Subtract gradient
         this.gradient.compute(this.velocity, this.pressure, this.velocity);

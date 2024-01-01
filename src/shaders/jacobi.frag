@@ -1,4 +1,4 @@
-precision highp float;
+precision mediump float;
 
 uniform sampler2D u_pressureTexture; // x
 uniform sampler2D u_divergenceTexture; // b
