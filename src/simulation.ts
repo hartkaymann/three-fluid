@@ -56,7 +56,7 @@ export default class Simulation {
         this.solver = new Solver(this.wgl, this.settings.domain);
         this.solver.reset(this.settings.domain, this.tiledTexture);
 
-        this.renderer = new Renderer(this.wgl, this.camera);
+        this.renderer = new Renderer(this.wgl, this.camera, this.settings.domain);
         this.renderer.reset(this.settings.domain, this.tiledTexture);
 
         this.debugPanel = new DebugPanel(this.wgl, container, this.solver.getDebugSlabs());
@@ -141,11 +141,13 @@ export default class Simulation {
         simulationFolder.open();
 
         const renderingFolder = this.gui.addFolder("Rendering");
+        renderingFolder.add(this.renderer.settings, "showGuides").name("Guides");
         renderingFolder.add(this.renderer.settings, "hasShading").name("Shading");
+        renderingFolder.add(this.renderer.settings, "slices", 10, 1000, 1).name("Volume Resolution").onChange(()=>{this.renderer.reset(this.settings.domain, this.tiledTexture)});
         renderingFolder.addColor(this.renderer.settings, "color1").name("Color Slow");
         renderingFolder.addColor(this.renderer.settings, "color2").name("Color Fast");
-        renderingFolder.add(this.renderer.settings, "minThreshold", 0.0, 1.1, 0.0001).name("Minumim Density");
-        renderingFolder.add(this.renderer.settings, "showGuides").name("Guides");
+        renderingFolder.add(this.renderer.settings, "ambient", 0.0, 1.0, 0.01).name("Ambient Intensity");
+        renderingFolder.add(this.renderer.settings, "minThreshold", 0.0, 1.1, 0.0001).name("Density Threshold");
     }
 
     start = () => {

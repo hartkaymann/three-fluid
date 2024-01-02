@@ -22,6 +22,8 @@ export default class Renderer {
     settings = {
         showGuides: true,
         hasShading: true,
+        slices: 0,
+        ambient: 0.1,
         color1: '#3f5efb',
         color2: '#fc466b',
         minThreshold: 0.00001
@@ -30,11 +32,14 @@ export default class Renderer {
     constructor(
         renderer: THREE.WebGLRenderer,
         camera: THREE.PerspectiveCamera,
+        domain: THREE.Vector3
     ) {
         this.renderer = renderer;
         this.camera = camera;
 
         this.scene = new THREE.Scene();
+
+        this.settings.slices = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z); // TODO: mention default slice count in vis cahpter
 
         // Setup tiled rendering
         this.material = new THREE.RawShaderMaterial({
@@ -49,6 +54,7 @@ export default class Renderer {
                 u_color1: { value: new THREE.Vector3() },
                 u_color2: { value: new THREE.Vector3() },
                 u_minThreshold: { value: 0.0 },
+                u_ambient: { value: 0.0 },
                 u_applyShading: { value: true },
             },
             vertexShader: vertexTiled,
@@ -90,9 +96,10 @@ export default class Renderer {
 
         let sideLength = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z);
         this.group = new THREE.Group();
-        for (let z = 0; z < sideLength; z++) {
+        this.group.matrixAutoUpdate = true;
+        for (let z = 0; z < this.settings.slices; z++) {
             const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
-            geometry.translate(0.0, 0.0, (sideLength / -2) + z);
+            geometry.translate(0.0, 0.0, (sideLength / -2) + (sideLength / this.settings.slices) * z);
 
             let attribCoord = [];
             for (let i = 0; i < geometry.getAttribute("position").count; i++) {
@@ -114,10 +121,7 @@ export default class Renderer {
     }
 
     render(density: Slab, velocity: Slab, pressure: Slab) {
-
         this.group.rotation.copy(this.camera.rotation);
-        // this.group.rotation.y += 0.02;
-        this.group.matrixWorldNeedsUpdate = true;
 
         // Render 
         this.material.uniforms.density.value = density.read.texture;
@@ -125,6 +129,7 @@ export default class Renderer {
         this.material.uniforms.pressure.value = pressure.read.texture;
         this.material.uniforms.u_color1.value = new THREE.Color(this.settings.color1);
         this.material.uniforms.u_color2.value = new THREE.Color(this.settings.color2);
+        this.material.uniforms.u_ambient.value = this.settings.ambient;
         this.material.uniforms.u_minThreshold.value = this.settings.minThreshold;
         this.material.uniforms.u_applyShading.value = this.settings.hasShading;
 
