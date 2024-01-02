@@ -6,7 +6,6 @@ import vertexBasic from '../shaders/basic.vert'
 import fragmentDisplayVector from '../shaders/displayvector.frag'
 import fragmentDisplayScalar from '../shaders/displayscalar.frag'
     
-// TODO: add text to debug view that details the texture resolution
 export default class SlabDebug {
 
     title: string;
@@ -20,7 +19,7 @@ export default class SlabDebug {
     material: THREE.RawShaderMaterial;
 
 
-    constructor(title: string, slab: Slab) {
+    constructor(title: string, slab: Slab, bias: number) {
         this.title = title;
         this.slab = slab;
 
@@ -33,7 +32,6 @@ export default class SlabDebug {
         let isVectorFormat = slab.read.texture.format == THREE.RGBAFormat;
         const vs = vertexBasic;
         const fs = isVectorFormat ? fragmentDisplayVector : fragmentDisplayScalar;
-        let bias = isVectorFormat ? 0.5 : 0.0; 
 
         const geometry = new THREE.PlaneGeometry(res.x, res.y)
         geometry.translate(
@@ -44,10 +42,9 @@ export default class SlabDebug {
 
         this.material = new THREE.RawShaderMaterial({
             uniforms: {
-                read: { value: slab.read.texture },
-                bias: { value: new THREE.Vector3(bias, bias, bias) },
-                scale: { value: new THREE.Vector3(res.x, res.x, res.x) },
-                res: { value: res }
+                u_readTexture: { value: slab.read.texture },
+                u_bias: { value: new THREE.Vector3(bias, bias, bias) },
+                u_scale: { value: new THREE.Vector3(res.x, res.x, res.x) },
             },
             vertexShader: vs,
             fragmentShader: fs
@@ -91,7 +88,7 @@ export default class SlabDebug {
         renderer.setScissor(left, bottom, width, height);
         renderer.clearColor();
 
-        this.material.uniforms.read.value = this.slab.read.texture;
+        this.material.uniforms.u_readTexture.value = this.slab.read.texture;
 
         renderer.render(this.scene, this.camera);
     }

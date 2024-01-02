@@ -9,6 +9,7 @@ uniform vec3 u_color1;
 uniform vec3 u_color2;
 
 uniform float u_minThreshold;
+uniform float u_ambient;
 
 uniform bool u_applyShading;
 
@@ -16,7 +17,6 @@ varying vec3 v_position;
 varying vec3 v_cameraPos;
 
 vec3 light = normalize( vec3( 2, -5, 3 ) );
-float ambient = 0.1;
 
 vec3 gradient( vec3 coords ) {
     mat3 offset = mat3( 1.0 );
@@ -62,13 +62,12 @@ void main( ) {
 
         vec3 grad = gradient( pos );
         float dot = max( dot( normalize( grad ), normalize( light ) ), 0.0 );
-        color *= dot;
+        color *= dot + vec3( u_ambient );
     }
 
-    gl_FragColor = vec4( color + vec3( ambient ), alpha );
+    gl_FragColor = vec4( color , alpha );
 
     // if ( border( pos ) )
     //     gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );
 
-        //gl_FragColor = vec4( pos / u_resolution, 0.5);
 }

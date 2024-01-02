@@ -18,7 +18,7 @@ void main( ) {
 
   // Get values at the closest eight cell centers of position after one semi-lagrangian step
   vec3 pos_new = pos - velocity * u_resolution * u_deltaTime;
-  vec3 vi = floor( pos_new - 0.5 ) + 0.5;
+  vec3 vi = floor( pos_new - 0.5 );
   vec3 vj = vi + 1.0 ;
 
   vec3 tex000 = texture3D( u_advectedTexture, vec3( vi.xyz ) ).xyz; // l b f

@@ -6,6 +6,7 @@ uniform vec3 u_tileCount;
 
 varying float v_z;
 
+// Returns position at center of fragment in range [0, 0, 0] - [u_resolution.x, u_resolution.x, u_resolution.z] 
 vec3 get3DFragCoord () {
   return vec3(
     mod(gl_FragCoord.x, u_resolution.x),

@@ -84,7 +84,8 @@ export default class Renderer {
 
     reset(
         domain: THREE.Vector3,
-        tiledTex: TiledTexture
+        tiledTex: TiledTexture,
+        resetSlices?: boolean
     ) {
         this.material.uniforms.u_size.value = domain;
         this.material.uniforms.u_resolution.value = tiledTex.simulationResolution;
@@ -95,6 +96,8 @@ export default class Renderer {
         this.scene.remove(this.domainBox);
 
         let sideLength = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z);
+        if(resetSlices) 
+            this.settings.slices = sideLength;
         this.group = new THREE.Group();
         this.group.matrixAutoUpdate = true;
         for (let z = 0; z < this.settings.slices; z++) {

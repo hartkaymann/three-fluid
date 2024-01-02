@@ -98,8 +98,8 @@ export default class Solver {
     step(dt: number, mouse: Mouse, pointer: Pointer3D) {
 
         // Advection
-        this.advect.compute(this.density, this.velocity, this.density, dt);
         this.advectMackCormack(this.velocity, this.velocity, this.velocity, dt);
+        this.advectMackCormack(this.density, this.velocity, this.density, dt);
         this.boundary.compute(this.velocity, this.velocity, -1);
 
         // Body forces  
@@ -119,7 +119,7 @@ export default class Solver {
 
         // Viscous diffusion
         if (this.settings.hasViscosity && this.settings.viscosity > 0) {
-            let alpha = 1.0 / (this.settings.viscosity * 1.0); // timestep = 1.0
+            let alpha = 1.0 / (this.settings.viscosity * dt);
             let beta = 6.0 + alpha;
 
             this.jacobi.alpha = alpha;
@@ -191,13 +191,13 @@ export default class Solver {
         this.boundary.compute(this.velocity, this.velocity, -1);
     }
 
-    getDebugSlabs(): { name: string, slab: Slab }[] {
+    getDebugSlabs(): { name: string, slab: Slab, bias: number }[] {
         return [
-            { name: "Density", slab: this.density },
-            { name: "Velocity", slab: this.velocity },
-            { name: "Pressure", slab: this.pressure },
-            { name: "Divergence", slab: this.velocityDivergence },
-            { name: "Vorticity", slab: this.velocityVorticity },
+            { name: "Density", slab: this.density, bias: 0.0 },
+            { name: "Velocity", slab: this.velocity, bias: 0.5 },
+            { name: "Pressure", slab: this.pressure, bias: 0.5 },
+            { name: "Divergence", slab: this.velocityDivergence, bias: 0.5 },
+            { name: "Vorticity", slab: this.velocityVorticity, bias: 0.5 },
         ];
     }
 }

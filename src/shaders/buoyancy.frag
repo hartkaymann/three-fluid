@@ -15,7 +15,7 @@ void main( ) {
 
   if( mass == 0.0 ) 
     g = vec3( 0.0 );
-
+ 
   vec3 base = texture3D( u_velocityTexture, pos ).xyz;
 
   gl_FragColor = vec4( base + g, 1.0 );
