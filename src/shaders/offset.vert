@@ -1,11 +1,11 @@
 attribute vec3 position;
 attribute vec2 uv;
-attribute vec3 offset;
+attribute vec2 offset;
 
 uniform mat4 projectionMatrix;
 uniform mat4 modelViewMatrix;
 
-varying vec3 v_offset;
+varying vec2 v_offset;
 varying float v_z;
 
 void main() {

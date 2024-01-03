@@ -45,7 +45,7 @@ export default class Jacobi extends Slabop {
         
         for (let i = 0; i < iterations; i++) {
             this.step(x, b, output);
-            boundary.compute(output, output, scale);
+            boundary.compute(output, x, scale);
         }
 
         this.renderer.setRenderTarget(null);
@@ -62,7 +62,6 @@ export default class Jacobi extends Slabop {
         this.renderer.setRenderTarget(output.write);
         this.renderer.render(this.scene, this.camera);
         output.swap();
-
     }
 
 }

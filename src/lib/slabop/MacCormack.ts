@@ -6,6 +6,8 @@ import TiledTexture from '../TiledTexture';
 
 export default class MacCormack extends Slabop {
 
+    public intermediate: Slab;
+
     constructor(
         renderer: THREE.WebGLRenderer,
         tiledTex: TiledTexture,
@@ -19,8 +21,10 @@ export default class MacCormack extends Slabop {
             u_backwardTexture: { value: new THREE.Texture() },
             u_deltaTime: { value: 0.0 }
         }
-
+        
         super(renderer, tiledTex, vs, fs, uniforms);
+        
+        this.intermediate = new Slab(tiledTex.resolution);
     }
 
     compute(

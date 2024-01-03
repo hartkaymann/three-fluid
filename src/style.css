@@ -75,5 +75,6 @@ body {
 }
 
 .tooltip:hover .tooltiptext {
+  transition-delay:0.1s;
   visibility: visible;
 }

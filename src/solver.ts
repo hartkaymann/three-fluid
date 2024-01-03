@@ -88,7 +88,7 @@ export default class Solver {
         this.force = new Force(this.renderer, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentForce]);
         this.divergence = new Divergence(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentDivergence]);
         this.gradient = new Gradient(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentGradient]);
-        this.boundary = new Boundary(this.renderer, tiledTex, vertexOffset, [fragmentCommon, fragmentBoundary]);
+        this.boundary = new Boundary(this.renderer, tiledTex, vertexOffset, fragmentBoundary);
         this.jacobi = new Jacobi(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentJacobi]);
         this.buoyancy = new Buoyancy(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
         this.vorticity = new Vorticity(this.renderer, tiledTex, vertexBasic, [fragmentCommon, fragmentVorticity]);
@@ -100,12 +100,12 @@ export default class Solver {
         // Advection
         this.advectMackCormack(this.velocity, this.velocity, this.velocity, dt);
         this.advectMackCormack(this.density, this.velocity, this.density, dt);
-        this.boundary.compute(this.velocity, this.velocity, -1);
-
+        //this.advect.compute(this.density, this.velocity, this.density, dt);
+        //this.advect.compute(this.velocity, this.velocity, this.velocity, dt);
+        
         // Body forces  
         if (this.settings.hasGravity) {
             this.buoyancy.compute(this.velocity, this.density, this.velocity, this.settings.gravity, dt);
-            this.boundary.compute(this.velocity, this.velocity, -1);
         }
         this.addForce(dt, mouse, pointer);
 
@@ -114,7 +114,6 @@ export default class Solver {
             this.vorticity.compute(this.velocity, this.velocityVorticity);
             this.vorticityConfinement.compute(this.velocity, this.velocityVorticity, this.velocity, dt, this.settings.curl);
 
-            this.boundary.compute(this.velocity, this.velocity, -1);
         }
 
         // Viscous diffusion
@@ -126,7 +125,6 @@ export default class Solver {
             this.jacobi.beta = beta;
 
             this.jacobi.compute(this.velocity, this.velocity, this.velocity, this.settings.viscosityIterations, this.boundary, -1);
-            this.boundary.compute(this.velocity, this.velocity, -1);
         }
 
         // Projection
@@ -139,7 +137,7 @@ export default class Solver {
         output: Slab,
         dt: number,
     ) {
-        let intermediate = new Slab(advected.resolution, advected.read.texture.format);
+        let intermediate = this.maccormack.intermediate;
 
         // Forward step
         this.advect.compute(advected, velocity, intermediate, dt);
@@ -173,12 +171,12 @@ export default class Solver {
 
         if (mouse.keys[1]) {
             this.force.compute(this.velocity, this.velocity, dt, position, direction, this.settings.forceRadius, this.settings.forceVelocity);
-            this.boundary.compute(this.velocity, this.velocity, -1);
         }
     }
 
     project() {
         // Divergence
+        this.boundary.compute(this.velocity, this.velocity, -1);
         this.divergence.compute(this.velocity, this.velocityDivergence);
 
         // Poisson Pressure
@@ -188,7 +186,6 @@ export default class Solver {
 
         // Subtract gradient
         this.gradient.compute(this.velocity, this.pressure, this.velocity);
-        this.boundary.compute(this.velocity, this.velocity, -1);
     }
 
     getDebugSlabs(): { name: string, slab: Slab, bias: number }[] {

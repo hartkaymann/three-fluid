@@ -29,8 +29,6 @@ export default class DebugPanel {
     }
 
     create() {
-        //const debugHeader = document.getElementById('debug-header') as HTMLDivElement;
-
         this.elementResolution = document.querySelector('#debug-resolution .debug-text') as HTMLTableCellElement;
         this.elementTiles = document.querySelector('#debug-tiles .debug-text') as HTMLTableCellElement;
 
@@ -50,7 +48,6 @@ export default class DebugPanel {
         targetResolution: THREE.Vector2,
         tiles: number
     ) {
-        // TODO: target and actual resolution both here!
         this.elementResolution.innerHTML = `${resolution.x}\u2A2F${resolution.x} (${targetResolution.x}\u2A2F${targetResolution.x})`;
         this.elementTiles.innerHTML = `${tiles}`;
     }

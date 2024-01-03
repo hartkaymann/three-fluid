@@ -2,15 +2,18 @@ precision mediump float;
 
 uniform sampler2D u_readTexture;
 
+uniform vec3 u_resolution;
+uniform vec2 u_textureResolution;
+
 uniform float u_scale;
 
-varying vec3 v_offset;
+varying vec2 v_offset;
 
 void main( ) {
+    vec2 pos = (gl_FragCoord.xy + v_offset) / u_textureResolution;
 
-    vec3 pos = get3DFragCoord( );
-
-    gl_FragColor = vec4( u_scale * texture3D( u_readTexture, (pos + v_offset) ).xyz, 1.0 );
-    //gl_FragColor = vec4( v_offset, 1.0 );
-    //gl_FragColor = vec4( 0., 1.0, 0.5, 1.0);
+    gl_FragColor = vec4( u_scale * texture2D( u_readTexture, pos ).xyz, 1.0 );
+    
+    //gl_FragColor = vec4(pos, 0.0, 1.0);
+    // gl_FragColor = vec4(1.0, 0.0, 0.62, 1.0);
 }

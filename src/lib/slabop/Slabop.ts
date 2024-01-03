@@ -31,9 +31,9 @@ export abstract class Slabop {
 
         this.uniforms = uniforms;
         // TODO: Translate tiled texture class to GLSL struct
+        this.uniforms.u_resolution = {value: tiledTex.simulationResolution};
         this.uniforms.u_textureResolution = {value: tiledTex.resolution};
         this.uniforms.u_tileCount = {value: tiledTex.tileCount};
-        this.uniforms.u_resolution = {value: tiledTex.simulationResolution};
 
         let vs = Array.isArray(vertexShaders) ? vertexShaders.join('\n') : vertexShaders;
         let fs = Array.isArray(fragmentShaders) ? fragmentShaders.join('\n') : fragmentShaders;
