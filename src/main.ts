@@ -54,21 +54,40 @@ function initSlider() {
 
   let onPointerMove = (event: PointerEvent) => {
     event.preventDefault();
-    let sliderPos = Math.min(500, window.innerWidth - event.pageX);
+    let sliderPos = window.innerWidth - event.pageX;
 
-    if(sliderPos < 50) {
+    if (sliderPos < 50) {
       // TODO: Stop rendering debug panel
-      sidePanel.style.width = '1px';
-      slider.style.right = '-14px';
+      hide();
     } else {
-      sliderPos = Math.max(200, sliderPos);
-      slider.style.right = sliderPos - (slider.offsetWidth / 2) + 'px';
-      sidePanel.style.width = sliderPos + 'px';
+      sliderPos = Math.min(window.innerWidth / 3, Math.max(200, sliderPos));
+      show(sliderPos);
     }
 
     simulation.renderer?.resize(sliderPos);
   }
 
+  let onDoubleClick = () => {
+    if (sidePanel.style.width == '1px') {
+      show(350);
+      simulation.renderer?.resize(350);
+    } else {
+      hide();
+      simulation.renderer?.resize(1);
+    }
+  }
+
+  let hide = () => {
+    sidePanel.style.width = '1px';
+    slider.style.right = '-14px';
+  }
+
+  let show = (width: number) => {
+    slider.style.right = width - (slider.offsetWidth / 2) + 'px';
+    sidePanel.style.width = width + 'px';
+  }
+
+  slider.addEventListener('dblclick', onDoubleClick);
   slider.addEventListener('pointerdown', onPointerDown);
 }
 

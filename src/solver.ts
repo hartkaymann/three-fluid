@@ -41,7 +41,7 @@ export default class Solver {
         hasGravity: false,
         gravity: new THREE.Vector3(0, -9.81, 0),
         forceRadius: 2.0,
-        forceDensity: 20.0,
+        forceDensity: 5.0,
         forceVelocity: 2,
         targetDensity: 0.01,
         pressureMultiplier: 1.0

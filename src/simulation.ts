@@ -67,6 +67,7 @@ export default class Simulation {
 
         this._renderer = new Renderer(this._wgl, this._camera, this.settings.domain);
         this._renderer.reset(this.settings.domain, this._tiledTexture);
+        this._renderer.resize(sidePanel.clientWidth);
 
         this.debugPanel = new DebugPanel(this._wgl, container, this._solver.getDebugSlabs());
         this.debugPanel.create();
@@ -128,10 +129,10 @@ export default class Simulation {
         domainFolder.add(this.settings.domain, "y", 1, 100, 1).name("Height").onChange(() => { this.reset(); });
         domainFolder.add(this.settings.domain, "z", 1, 100, 1).name("Depth").onChange(() => { this.reset(); });
 
-        const viscosityFolder = simulationFolder.addFolder("Viscosity");
-        viscosityFolder.add(this._solver.settings, "hasViscosity").name("Apply Viscosity");
-        viscosityFolder.add(this._solver.settings, "viscosityIterations", 20, 50, 1).name("Iterations");
-        viscosityFolder.add(this._solver.settings, "viscosity", 0, 1, 0.01).name("Viscosity");
+        const viscosityFolder = simulationFolder.addFolder("VISCOSITY");
+        viscosityFolder.add(this._solver.settings, "hasViscosity").name("APPLY VISCOSITY");
+        viscosityFolder.add(this._solver.settings, "viscosityIterations", 20, 50, 1).name("ITERATIONS");
+        viscosityFolder.add(this._solver.settings, "viscosity", 0, 1, 0.01).name("VISCOSITY");
 
         const vorticityFolder = simulationFolder.addFolder("Vorticity");
         vorticityFolder.add(this._solver.settings, "hasVorticity").name("Apply Vorticity");
@@ -144,13 +145,13 @@ export default class Simulation {
         bodyForcesFolder.add(this._solver.settings, "hasGravity").name("Apply Gravity");
         bodyForcesFolder.add(this._solver.settings.gravity, "y", -9.81, 9.81, 0.01).name("Gravity Force");
         bodyForcesFolder.add(this._solver.settings, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
-        bodyForcesFolder.add(this._solver.settings, "forceDensity", -1, 100, 1).name("Added Density");
+        bodyForcesFolder.add(this._solver.settings, "forceDensity", -1, 10, 1).name("Added Density");
         bodyForcesFolder.add(this._solver.settings, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
 
         const renderingFolder = this._gui.addFolder("Rendering");
         renderingFolder.add(this._renderer.settings, "showGuides").name("Guides");
         renderingFolder.add(this._renderer.settings, "hasShading").name("Shading");
-        renderingFolder.add(this._renderer.settings, "slices", 10, 1000, 1).name("Volume Resolution").onChange(() => { this._renderer.reset(this.settings.domain, this._tiledTexture) });
+        renderingFolder.add(this._renderer.settings, "slices", 10, 1000, 1).name("Volume Slices").onChange(() => { this._renderer.reset(this.settings.domain, this._tiledTexture) });
         renderingFolder.addColor(this._renderer.settings, "color1").name("Color Slow");
         renderingFolder.addColor(this._renderer.settings, "color2").name("Color Fast");
         renderingFolder.add(this._renderer.settings, "ambient", 0.0, 1.0, 0.01).name("Ambient Intensity");

@@ -1,5 +1,6 @@
 html {
-  --main-color: #252525;
+  --main-color: #1c1c1c;
+  --white-color: #f0f0f0;
   --debug-panel-width: 350px;
 }
 
@@ -37,7 +38,7 @@ body {
   align-items: center;
   align-content: flex-start;
   overflow: scroll;
-  border-left: 1px solid #e1e1e1;
+  border-left: 1px solid var(--white-color);
 }
 
 .debug-item {
@@ -50,13 +51,13 @@ body {
 #debug-header {
   align-self: stretch;
   font-family: sans-serif;
-  color: #888;
+  color: var(--white-color);
 }
 
 .debug-item>div:nth-child(1) {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border: 1px solid #e1e1e1;
+  border: 1px solid var(--white-color);
 }
 
 .debug-item>div:nth-child(2) {
@@ -76,7 +77,7 @@ body {
   width: 20px;
   height: 20px;
   background-color: var(--main-color);
-  border: 1px solid #fff;
+  border: 1px solid var(--white-color);
   border-radius: 50%;
 }
 
@@ -84,14 +85,14 @@ body {
   display: inline-block;
   position: absolute;
   left: 0;
-  transform: translateX(-100%);
+  transform: translateX(-100%) translateX(-1em);
 }
 
 .tooltip .tooltiptext {
   visibility: hidden;
   width: 240px;
   background-color: rgba(0, 0, 0, 0.6);
-  color: #fff;
+  color: var(--white-color);
   text-align: center;
   padding: 5px 0;
   border-radius: 6px;
