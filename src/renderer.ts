@@ -120,6 +120,7 @@ export default class Renderer {
             new THREE.EdgesGeometry(geometryDomainBox),
             new THREE.LineBasicMaterial({ color: 0xffffff })
         );
+        this.domainBox.visible = this.settings.showGuides;
         this.scene.add(this.domainBox);
     }
 

@@ -113,7 +113,6 @@ export default class Solver {
         if (this.settings.hasVorticity && this.settings.curl > 0) {
             this.vorticity.compute(this.velocity, this.velocityVorticity);
             this.vorticityConfinement.compute(this.velocity, this.velocityVorticity, this.velocity, dt, this.settings.curl);
-
         }
 
         // Viscous diffusion
@@ -166,7 +165,11 @@ export default class Solver {
         direction.z *= -1;
 
         if (mouse.keys[0]) {
-            this.force.compute(this.density, this.density, dt, position, new THREE.Vector3(1, 1, 1), this.settings.forceRadius, this.settings.forceDensity);
+            let force = this.settings.forceDensity;
+            if(this.settings.forceDensity < 0)
+                force = -100;
+                
+            this.force.compute(this.density, this.density, dt, position, new THREE.Vector3(1, 1, 1), this.settings.forceRadius, force);
         }
 
         if (mouse.keys[1]) {

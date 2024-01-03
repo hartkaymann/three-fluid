@@ -133,9 +133,9 @@ export default class Simulation {
 
         const bodyForcesFolder = simulationFolder.addFolder("Body Forces");
         bodyForcesFolder.add(this.solver.settings, "hasGravity").name("Apply Gravity");
-        bodyForcesFolder.add(this.solver.settings.gravity, "y", -10, 0, 0.01).name("Gravity Force");
+        bodyForcesFolder.add(this.solver.settings.gravity, "y", -9.81, 9.81, 0.01).name("Gravity Force");
         bodyForcesFolder.add(this.solver.settings, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
-        bodyForcesFolder.add(this.solver.settings, "forceDensity", 0, 100, 1).name("Added Density");
+        bodyForcesFolder.add(this.solver.settings, "forceDensity", -1, 100, 1).name("Added Density");
         bodyForcesFolder.add(this.solver.settings, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
 
         simulationFolder.open();
