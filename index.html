@@ -11,25 +11,29 @@
 </head>
 
 <body>
-  <canvas id="c"></canvas>
-  <div id="debug-panel">
-    <div id="debug-header">
-      <table style="width:100%; border:1px solid; padding: 6px;">
-        <tr class="tooltip" id="debug-resolution">
-          <td>Resolution
-            <span class="tooltiptext">Resultion of a flat 3D texure. (Target resolution)</span>
-          </td>
-          <td class="debug-text"></td>
-        </tr>
-        <tr class="tooltip" id="debug-tiles">
-          <td>Tiles
-            <span class="tooltiptext">Number of individual tiles in a flat 3D texture.</span>
-          </td>
-          <td class="debug-text"></td>
-        </tr>
-      </table>
+  <canvas id="canvas">
+  </canvas>
+  <div id="side-panel">
+    <div class="panel-slider"></div>
+    <div id="debug-panel">
+      <div id="debug-header">
+        <table style="width:100%; border:1px solid; padding: 6px;">
+          <tr class="tooltip" id="debug-resolution">
+            <td>Resolution
+              <span class="tooltiptext">Resultion of a flat 3D texure. (Target resolution)</span>
+            </td>
+            <td class="debug-text"></td>
+          </tr>
+          <tr class="tooltip" id="debug-tiles">
+            <td>Tiles
+              <span class="tooltiptext">Number of individual tiles in a flat 3D texture.</span>
+            </td>
+            <td class="debug-text"></td>
+          </tr>
+        </table>
 
 
+      </div>
     </div>
   </div>
 

@@ -26,13 +26,14 @@ export default class Renderer {
         ambient: 0.1,
         color1: '#3f5efb',
         color2: '#fc466b',
-        minThreshold: 0.00001
+        minThreshold: 0.00001,
+        scissor: 0
     }
 
     constructor(
         renderer: THREE.WebGLRenderer,
         camera: THREE.PerspectiveCamera,
-        domain: THREE.Vector3
+        domain: THREE.Vector3,
     ) {
         this.renderer = renderer;
         this.camera = camera;
@@ -139,7 +140,7 @@ export default class Renderer {
 
         this.renderer.setRenderTarget(null);
         this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-        this.renderer.setScissor(0, 0, window.innerWidth - 350, window.innerHeight);
+        this.renderer.setScissor(0, 0, window.innerWidth - this.settings.scissor, window.innerHeight);
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -157,5 +158,9 @@ export default class Renderer {
         this.pointerArrow.position.set(position.x, position.y, position.z);
         this.pointerArrow.setDirection(direction.normalize());
         this.pointerArrow.setColor(color);
+    }
+
+    resize(width: number) {
+        this.settings.scissor = width;
     }
 }

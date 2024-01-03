@@ -1,6 +1,5 @@
 import * as THREE from 'three'
-import SlabDebug from './SlabDebug';
-
+import DebugSlab from './DebugSlab';
 
 import Slab from './Slab';
 
@@ -13,7 +12,7 @@ export default class DebugPanel {
     elementResolution: HTMLParagraphElement;
     elementTiles: HTMLParagraphElement;
 
-    slabDebugs: SlabDebug[] = [];
+    debugSlabs: DebugSlab[] = [];
 
     constructor(
         wgl: THREE.WebGLRenderer,
@@ -23,22 +22,24 @@ export default class DebugPanel {
         this.wgl = wgl;
         this.container = container;
 
-        slabs.forEach(element => {
-            this.slabDebugs.push(new SlabDebug(element.name, element.slab, element.bias));
-        })
-    }
-
-    create() {
         this.elementResolution = document.querySelector('#debug-resolution .debug-text') as HTMLTableCellElement;
         this.elementTiles = document.querySelector('#debug-tiles .debug-text') as HTMLTableCellElement;
 
-        this.slabDebugs.forEach(element => {
+        slabs.forEach(element => {
+            this.debugSlabs.push(new DebugSlab(element.name, element.slab, element.bias));
+        })
+
+    }
+
+    
+    create() {
+        this.debugSlabs.forEach(element => {
             element.create(this.container);
         });
     }
 
     render() {
-        this.slabDebugs.forEach(element => {
+        this.debugSlabs.forEach(element => {
             element.render(this.wgl);
         });
     }
@@ -53,13 +54,13 @@ export default class DebugPanel {
     }
 
     setSlabs(slabs: { name: string, slab: Slab, bias: number }[]) {
-        if (this.slabDebugs.length != slabs.length) {
+        if (this.debugSlabs.length != slabs.length) {
             console.warn("Warning! Slabs could not be reset.")
             return;
         }
 
-        for (let i = 0; i < this.slabDebugs.length; i++) {
-            this.slabDebugs[i].setSlab(slabs[i].slab);
+        for (let i = 0; i < this.debugSlabs.length; i++) {
+            this.debugSlabs[i].setSlab(slabs[i].slab);
         }
     }
 }

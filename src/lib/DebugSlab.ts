@@ -6,7 +6,7 @@ import vertexBasic from '../shaders/basic.vert'
 import fragmentDisplayVector from '../shaders/displayvector.frag'
 import fragmentDisplayScalar from '../shaders/displayscalar.frag'
     
-export default class SlabDebug {
+export default class DebugSlab {
 
     title: string;
     slab: Slab;
@@ -15,7 +15,8 @@ export default class SlabDebug {
     camera: THREE.OrthographicCamera;
 
     plane: THREE.Mesh;
-    sceneElement: HTMLDivElement;
+    container: HTMLDivElement;
+    scissirDiv: HTMLDivElement;
 
     material: THREE.RawShaderMaterial;
 
@@ -40,7 +41,7 @@ export default class SlabDebug {
         });
         this.reset();
 
-        this.sceneElement = document.createElement('div');
+        this.scissirDiv = document.createElement('div');
     }
 
     reset(): void {
@@ -61,21 +62,21 @@ export default class SlabDebug {
         this.scene.add(this.plane);
     }
 
-    create(container: HTMLElement): void {
-        const element = document.createElement('div');
-        element.className = 'debug-item';
+    create(panel: HTMLElement): void {
+        this.container = document.createElement('div');
+        this.container.className = 'debug-item';
 
-        element.appendChild(this.sceneElement);
+        this.container.appendChild(this.scissirDiv);
 
         const descriptionElemen = document.createElement('div');
         descriptionElemen.innerText = this.title;
-        element.appendChild(descriptionElemen);
+        this.container.appendChild(descriptionElemen);
 
-        container.appendChild(element);
+        panel.appendChild(this.container);
     }
 
     render(renderer: THREE.WebGLRenderer): void {
-        const rect = this.sceneElement.getBoundingClientRect();
+        const rect = this.scissirDiv.getBoundingClientRect();
 
         if (rect.bottom < 0 ||
             rect.top > renderer.domElement.clientHeight ||

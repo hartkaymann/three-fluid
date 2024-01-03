@@ -13,73 +13,82 @@ import Stats from 'three/examples/jsm/libs/stats.module.js';
 export default class Simulation {
 
     settings = {
-        domain: new THREE.Vector3(40, 40, 40),
+        domain: new THREE.Vector3(20, 20, 20),
         _res: 0, // required for gui to work
         resolution: new THREE.Vector2(512, 512)
     }
 
     timeout: number;
-    private wgl: THREE.WebGLRenderer;
+    private _wgl: THREE.WebGLRenderer;
 
-    private isRunning = false;
+    private _isRunning = false;
 
-    private tiledTexture: TiledTexture;
+    private _tiledTexture: TiledTexture;
 
-    private solver: Solver;
-    private renderer: Renderer;
+    private _solver: Solver;
+    private _renderer: Renderer;
 
-    private camera: THREE.PerspectiveCamera;
-    private mouse: Mouse;
-    private pointer: Pointer3D;
+    private _camera: THREE.PerspectiveCamera;
+    private _mouse: Mouse;
+    private _pointer: Pointer3D;
 
-    private controls: OrbitControls;
-    private stats: Stats;
-    private clock: Clock;
-    private gui: GUI;
+    private _controls: OrbitControls;
+    private _stats: Stats;
+    private _clock: Clock;
+    private _gui: GUI;
 
     private debugPanel: DebugPanel;
+
+    public get renderer() {
+        return this._renderer;
+    }
+
+    public get solver() {
+        return this._solver;
+    }
 
     // TODO: add instructions as text on screen! maybe with (i)-button that can be toggled
     constructor(
         wgl: THREE.WebGLRenderer,
+        sidePanel: HTMLElement,
         container: HTMLElement
     ) {
-        this.wgl = wgl;
+        this._wgl = wgl;
 
-        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
-        this.camera.position.z = 20;
+        this._camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1000);
+        this._camera.position.set(-15, 12, 25);
 
-        this.tiledTexture = new TiledTexture();
-        this.tiledTexture.computeResolution(this.settings.resolution, this.settings.domain);
+        this._tiledTexture = new TiledTexture();
+        this._tiledTexture.computeResolution(this.settings.resolution, this.settings.domain);
 
         // Initialize solver and renderer
-        this.solver = new Solver(this.wgl, this.settings.domain);
-        this.solver.reset(this.settings.domain, this.tiledTexture);
+        this._solver = new Solver(this._wgl, this.settings.domain);
+        this._solver.reset(this.settings.domain, this._tiledTexture);
 
-        this.renderer = new Renderer(this.wgl, this.camera, this.settings.domain);
-        this.renderer.reset(this.settings.domain, this.tiledTexture);
+        this._renderer = new Renderer(this._wgl, this._camera, this.settings.domain);
+        this._renderer.reset(this.settings.domain, this._tiledTexture);
 
-        this.debugPanel = new DebugPanel(this.wgl, container, this.solver.getDebugSlabs());
+        this.debugPanel = new DebugPanel(this._wgl, container, this._solver.getDebugSlabs());
         this.debugPanel.create();
-        this.debugPanel.setHeader(this.tiledTexture.resolution, this.settings.resolution, this.tiledTexture.tileCount.z);
+        this.debugPanel.setHeader(this._tiledTexture.resolution, this.settings.resolution, this._tiledTexture.tileCount.z);
 
-        this.initGui();
+        this.initGui(sidePanel);
 
         // Additionals
-        this.mouse = new Mouse();
-        this.pointer = new Pointer3D(this.camera, this.mouse, this.settings.domain);
+        this._mouse = new Mouse();
+        this._pointer = new Pointer3D(this._camera, this._mouse, this.settings.domain);
 
-        this.clock = new Clock();
-        this.clock.start();
+        this._clock = new Clock();
+        this._clock.start();
 
-        this.stats = new Stats();
-        document.body.appendChild(this.stats.dom);
+        this._stats = new Stats();
+        document.body.appendChild(this._stats.dom);
 
-        this.controls = new OrbitControls(this.camera, wgl.domElement);
-        this.controls.enabled = true;
-        this.controls.enablePan = false;
-        this.controls.enableZoom = true;
-        this.controls.mouseButtons = {
+        this._controls = new OrbitControls(this._camera, wgl.domElement);
+        this._controls.enabled = true;
+        this._controls.enablePan = false;
+        this._controls.enableZoom = true;
+        this._controls.mouseButtons = {
             MIDDLE: THREE.MOUSE.ROTATE
         }
 
@@ -87,13 +96,13 @@ export default class Simulation {
         this.step();
     }
 
-    initGui() {
+    initGui(parent: HTMLElement) {
         // TODO: add settings class that uses json files to generate an object that can be used in the gui
-        // does that make sense or doe sit just not work with callbacks at all and is overly complicated?
-
-        this.gui = new GUI();
-        this.gui.domElement.id = 'gui';
-        const simulationFolder = this.gui.addFolder("Simulation");
+        // Does that even make sense or does it just not work with callbacks and overly complicates things?
+        this._gui = new GUI({ autoPlace: false });
+        this._gui.domElement.id = 'gui';
+        this._gui.domElement
+        const simulationFolder = this._gui.addFolder("Simulation");
         simulationFolder.add(this, "start").name("Start");
         simulationFolder.add(this, "stop").name("Stop");
         simulationFolder.add(this, "reset").name("Reset");
@@ -120,46 +129,47 @@ export default class Simulation {
         domainFolder.add(this.settings.domain, "z", 1, 100, 1).name("Depth").onChange(() => { this.reset(); });
 
         const viscosityFolder = simulationFolder.addFolder("Viscosity");
-        viscosityFolder.add(this.solver.settings, "hasViscosity").name("Apply Viscosity");
-        viscosityFolder.add(this.solver.settings, "viscosityIterations", 20, 50, 1).name("Iterations");
-        viscosityFolder.add(this.solver.settings, "viscosity", 0, 1, 0.01).name("Viscosity");
+        viscosityFolder.add(this._solver.settings, "hasViscosity").name("Apply Viscosity");
+        viscosityFolder.add(this._solver.settings, "viscosityIterations", 20, 50, 1).name("Iterations");
+        viscosityFolder.add(this._solver.settings, "viscosity", 0, 1, 0.01).name("Viscosity");
 
         const vorticityFolder = simulationFolder.addFolder("Vorticity");
-        vorticityFolder.add(this.solver.settings, "hasVorticity").name("Apply Vorticity");
-        vorticityFolder.add(this.solver.settings, "curl", 0, 5, 0.01).name("Curl");
+        vorticityFolder.add(this._solver.settings, "hasVorticity").name("Apply Vorticity");
+        vorticityFolder.add(this._solver.settings, "curl", 0, 5, 0.01).name("Curl");
 
         const projectionFolder = simulationFolder.addFolder("Projection");
-        projectionFolder.add(this.solver.settings, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");
+        projectionFolder.add(this._solver.settings, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");
 
         const bodyForcesFolder = simulationFolder.addFolder("Body Forces");
-        bodyForcesFolder.add(this.solver.settings, "hasGravity").name("Apply Gravity");
-        bodyForcesFolder.add(this.solver.settings.gravity, "y", -9.81, 9.81, 0.01).name("Gravity Force");
-        bodyForcesFolder.add(this.solver.settings, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
-        bodyForcesFolder.add(this.solver.settings, "forceDensity", -1, 100, 1).name("Added Density");
-        bodyForcesFolder.add(this.solver.settings, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
+        bodyForcesFolder.add(this._solver.settings, "hasGravity").name("Apply Gravity");
+        bodyForcesFolder.add(this._solver.settings.gravity, "y", -9.81, 9.81, 0.01).name("Gravity Force");
+        bodyForcesFolder.add(this._solver.settings, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
+        bodyForcesFolder.add(this._solver.settings, "forceDensity", -1, 100, 1).name("Added Density");
+        bodyForcesFolder.add(this._solver.settings, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
+
+        const renderingFolder = this._gui.addFolder("Rendering");
+        renderingFolder.add(this._renderer.settings, "showGuides").name("Guides");
+        renderingFolder.add(this._renderer.settings, "hasShading").name("Shading");
+        renderingFolder.add(this._renderer.settings, "slices", 10, 1000, 1).name("Volume Resolution").onChange(() => { this._renderer.reset(this.settings.domain, this._tiledTexture) });
+        renderingFolder.addColor(this._renderer.settings, "color1").name("Color Slow");
+        renderingFolder.addColor(this._renderer.settings, "color2").name("Color Fast");
+        renderingFolder.add(this._renderer.settings, "ambient", 0.0, 1.0, 0.01).name("Ambient Intensity");
+        renderingFolder.add(this._renderer.settings, "minThreshold", 0.0, 1.1, 0.0001).name("Density Threshold");
 
         simulationFolder.open();
-
-        const renderingFolder = this.gui.addFolder("Rendering");
-        renderingFolder.add(this.renderer.settings, "showGuides").name("Guides");
-        renderingFolder.add(this.renderer.settings, "hasShading").name("Shading");
-        renderingFolder.add(this.renderer.settings, "slices", 10, 1000, 1).name("Volume Resolution").onChange(()=>{this.renderer.reset(this.settings.domain, this.tiledTexture)});
-        renderingFolder.addColor(this.renderer.settings, "color1").name("Color Slow");
-        renderingFolder.addColor(this.renderer.settings, "color2").name("Color Fast");
-        renderingFolder.add(this.renderer.settings, "ambient", 0.0, 1.0, 0.01).name("Ambient Intensity");
-        renderingFolder.add(this.renderer.settings, "minThreshold", 0.0, 1.1, 0.0001).name("Density Threshold");
+        parent.prepend(this._gui.domElement);
     }
 
     start = () => {
-        if (this.isRunning)
+        if (this._isRunning)
             return;
-        this.isRunning = true;
+        this._isRunning = true;
     }
 
     stop = () => {
-        if (!this.isRunning)
+        if (!this._isRunning)
             return;
-        this.isRunning = false;
+        this._isRunning = false;
     }
 
     reset = () => {
@@ -167,21 +177,21 @@ export default class Simulation {
         this.stop();
 
         const isResolutionPossible =
-            this.tiledTexture.computeResolution(this.settings.resolution, this.settings.domain);
+            this._tiledTexture.computeResolution(this.settings.resolution, this.settings.domain);
         if (!isResolutionPossible) {
-            (this.renderer.domainBox.material as THREE.MeshBasicMaterial).color.set(THREE.Color.NAMES.red);
+            (this._renderer.domainBox.material as THREE.MeshBasicMaterial).color.set(THREE.Color.NAMES.red);
             return;
         } else {
-            (this.renderer.domainBox.material as THREE.MeshBasicMaterial).color.set(THREE.Color.NAMES.white);
+            (this._renderer.domainBox.material as THREE.MeshBasicMaterial).color.set(THREE.Color.NAMES.white);
         }
 
-        this.solver.reset(this.settings.domain, this.tiledTexture);
-        this.renderer.reset(this.settings.domain, this.tiledTexture, true);
-        this.gui.updateDisplay();
+        this._solver.reset(this.settings.domain, this._tiledTexture);
+        this._renderer.reset(this.settings.domain, this._tiledTexture, true);
+        this._gui.updateDisplay();
 
-        this.pointer = new Pointer3D(this.camera, this.mouse, this.settings.domain);
-        this.debugPanel.setHeader(this.tiledTexture.resolution, this.settings.resolution, this.tiledTexture.tileCount.z);
-        this.debugPanel.setSlabs(this.solver.getDebugSlabs());
+        this._pointer = new Pointer3D(this._camera, this._mouse, this.settings.domain);
+        this.debugPanel.setHeader(this._tiledTexture.resolution, this.settings.resolution, this._tiledTexture.tileCount.z);
+        this.debugPanel.setSlabs(this._solver.getDebugSlabs());
 
         this.start();
     }
@@ -189,23 +199,23 @@ export default class Simulation {
     step = () => {
         this.timeout = requestAnimationFrame(this.step);
 
-        let dt = this.clock.getDelta();
-        if (this.isRunning) {
-            this.solver.step(dt, this.mouse, this.pointer);
+        let dt = this._clock.getDelta();
+        if (this._isRunning) {
+            this._solver.step(dt, this._mouse, this._pointer);
         }
 
-        this.renderer.render(this.solver.density, this.solver.velocity, this.solver.densityPressure);
-        this.renderer.updateGuides(this.pointer.position, this.pointer.direction, (this.mouse.keys[0] || this.mouse.keys[1]) && this.pointer.isHit);
+        this._renderer.render(this._solver.density, this._solver.velocity, this._solver.densityPressure);
+        this._renderer.updateGuides(this._pointer.position, this._pointer.direction, (this._mouse.keys[0] || this._mouse.keys[1]) && this._pointer.isHit);
         this.debugPanel.render();
 
         // Required updates
-        this.stats.update();
-        this.controls.update();
-        this.pointer.update();
+        this._stats.update();
+        this._controls.update();
+        this._pointer.update();
     }
 
     resize(w: number, h: number) {
-        this.camera.aspect = w / h;
-        this.camera.updateProjectionMatrix();
+        this._camera.aspect = w / h;
+        this._camera.updateProjectionMatrix();
     }
 }
