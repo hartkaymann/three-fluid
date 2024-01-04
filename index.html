@@ -3,18 +3,24 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-  <link rel="stylesheet" href="src/style.css" />
+  <link rel="icon" type="image/svg+xml" href="/assets/images/favicon.ico" />
+  <link rel="stylesheet" href="/styles/style.css" />
   <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-
+  <link rel="stylesheet" hfref="https://fonts.googleapis.com/css2?family=Source+Code+Pro">
   <title>Three Fluid</title>
 </head>
 
 <body>
   <canvas id="canvas">
   </canvas>
+  <div id="controls">
+    <p><b>left mouse + drag</b> to add density</p><br>
+    <p><b>right mouse + drag</b> to add velocity</p><br>
+    <p><b>middle mouse + drag</b> to rotate camera</p><br>
+    <p><b>scroll</b> to zoom</p>
+  </div>
   <div id="side-panel">
-    <div class="panel-slider"></div>
+    <div class="panel-slider">&lt;</div>
     <div id="debug-panel">
       <div id="debug-header">
         <table style="width:100%; border:1px solid; padding: 6px;">
@@ -39,4 +45,5 @@
 
   <script type="module" src="/src/main.ts"></script>
 </body>
+
 </html>

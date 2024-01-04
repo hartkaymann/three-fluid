@@ -41,7 +41,7 @@ export default class TiledTexture {
             newWidth = maxTextureResolution.x;
             newHeight = maxTextureResolution.x / domainRatio.x;
         }
-        console.log("Max Res: " +  maxTextureResolution.x + ", " + maxTextureResolution.y);
+        //console.log("Max Res: " +  maxTextureResolution.x + ", " + maxTextureResolution.y);
 
         let tileResolutionLow = new THREE.Vector2(0, 0); // low
         let tileResolutionHigh = new THREE.Vector2(newWidth, newHeight); // high
@@ -72,10 +72,9 @@ export default class TiledTexture {
         this._tileCount = new THREE.Vector3(tileCount.x, tileCount.y, totalTiles);
         this._simulationResolution = new THREE.Vector3(tileResolution.x, tileResolution.y, totalTiles);
 
-        console.log("Iterations: " + i);
-        console.log("Final Simulation Resolution: " + tileResolution.x + ", " + tileResolution.y + ", " + totalTiles);
-        console.log("Final Texture Resolution: " + tileResolution.x * tileCount.x + ", " + tileResolution.y * tileCount.y);
+        // console.log("Iterations: " + i);
+        // console.log("Final Simulation Resolution: " + tileResolution.x + ", " + tileResolution.y + ", " + totalTiles);
+        // console.log("Final Texture Resolution: " + tileResolution.x * tileCount.x + ", " + tileResolution.y * tileCount.y);
         return totalTiles != 0;
     }
-
 }

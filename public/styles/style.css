@@ -1,15 +1,20 @@
 html {
   --main-color: #1c1c1c;
+  --secondary-color: #4a4a4a;
   --white-color: #f0f0f0;
+  --brighter-color: #9c9c9c;
+  --darker-color: #0C0C0C;
+
   --debug-panel-width: 350px;
+  font-family: Source Code Pro, monospace, sans-serif;
 }
 
 html,
 body {
   margin: 0;
   height: 100%;
-  background-color: var(--main-color);
-  overflow-x: hidden;
+  overflow: hidden;
+  color: var(--brighter-color);
 }
 
 #canvas {
@@ -17,6 +22,18 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
+  background: var(--main-color);
+}
+
+#controls {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  padding: 1em;
+}
+
+#controls p {
+  display: inline;
 }
 
 #side-panel {
@@ -50,20 +67,17 @@ body {
 
 #debug-header {
   align-self: stretch;
-  font-family: sans-serif;
   color: var(--white-color);
 }
 
 .debug-item>div:nth-child(1) {
   width: 100%;
   aspect-ratio: 1 / 1;
-  border: 1px solid var(--white-color);
+  outline: 1px solid var(--white-color);
 }
 
 .debug-item>div:nth-child(2) {
-  color: #888;
-  font-family: sans-serif;
-  font-size: large;
+  color: var(--white-color);
   width: 100%;
   margin-top: 0.5em;
 }
@@ -71,7 +85,7 @@ body {
 .panel-slider {
   position: fixed;
   top: 50%;
-  right: calc(var(--debug-panel-width) - 10px);
+  right: calc(var(--debug-panel-width) - 11px);
   cursor: ew-resize;
 
   width: 20px;
@@ -79,6 +93,9 @@ body {
   background-color: var(--main-color);
   border: 1px solid var(--white-color);
   border-radius: 50%;
+
+  text-align: center;
+  color: var(--white-color);
 }
 
 #gui {
@@ -91,7 +108,7 @@ body {
 .tooltip .tooltiptext {
   visibility: hidden;
   width: 240px;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.8);
   color: var(--white-color);
   text-align: center;
   padding: 5px 0;
@@ -99,10 +116,56 @@ body {
   font-size: small;
 
   position: absolute;
-  z-index: 1;
 }
 
 .tooltip:hover .tooltiptext {
   transition-delay: 0.1s;
   visibility: visible;
 }
+
+.dg.gui-customized *{
+  font-family: Source Code Pro, monospace;
+  font-size: 11px;
+}
+
+.dg.gui-customized .c .slider-fg {
+  background: var(--brighter-color);
+}
+
+.dg.gui-customized .c .slider:hover .slider-fg {
+  background: var(--white-color);
+}
+
+.dg.gui-customized .cr.function {
+  border-left: 3px solid var(--secondary-color);
+}
+
+.dg.gui-customized .cr.function:hover {
+  border-left: 3px solid var(--brighter-color);
+}
+
+.dg.gui-customized .cr.number {
+  border-left: 3px solid var(--secondary-color);
+}
+
+.dg.gui-customized .cr.number:hover {
+  border-left: 3px solid var(--brighter-color);
+}
+
+.dg.gui-customized .cr.boolean {
+  border-left: 3px solid var(--secondary-color);
+}
+
+.dg.gui-customized .cr.boolean:hover {
+  border-left: 3px solid var(--brighter-color);
+}
+
+
+.dg.gui-customized .cr.number input[type="text"] {
+  color: var(--white-color);
+}
+
+.dg.gui-customized .c input[type="checkbox"] {
+  accent-color: var(--white-color);
+}
+

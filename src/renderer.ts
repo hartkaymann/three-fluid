@@ -141,6 +141,7 @@ export default class Renderer {
         this.renderer.setRenderTarget(null);
         this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
         this.renderer.setScissor(0, 0, window.innerWidth - this.settings.scissor, window.innerHeight);
+        this.renderer.clear();
         this.renderer.render(this.scene, this.camera);
     }
 

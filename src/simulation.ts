@@ -102,6 +102,7 @@ export default class Simulation {
         // Does that even make sense or does it just not work with callbacks and overly complicates things?
         this._gui = new GUI({ autoPlace: false });
         this._gui.domElement.id = 'gui';
+        this._gui.domElement.classList.add('gui-customized');
         this._gui.domElement
         const simulationFolder = this._gui.addFolder("Simulation");
         simulationFolder.add(this, "start").name("Start");
@@ -129,10 +130,10 @@ export default class Simulation {
         domainFolder.add(this.settings.domain, "y", 1, 100, 1).name("Height").onChange(() => { this.reset(); });
         domainFolder.add(this.settings.domain, "z", 1, 100, 1).name("Depth").onChange(() => { this.reset(); });
 
-        const viscosityFolder = simulationFolder.addFolder("VISCOSITY");
-        viscosityFolder.add(this._solver.settings, "hasViscosity").name("APPLY VISCOSITY");
-        viscosityFolder.add(this._solver.settings, "viscosityIterations", 20, 50, 1).name("ITERATIONS");
-        viscosityFolder.add(this._solver.settings, "viscosity", 0, 1, 0.01).name("VISCOSITY");
+        const viscosityFolder = simulationFolder.addFolder("Viscosity");
+        viscosityFolder.add(this._solver.settings, "hasViscosity").name("Apply Viscosity");
+        viscosityFolder.add(this._solver.settings, "viscosityIterations", 20, 50, 1).name("Iterations");
+        viscosityFolder.add(this._solver.settings, "viscosity", 0, 1, 0.01).name("Viscosity");
 
         const vorticityFolder = simulationFolder.addFolder("Vorticity");
         vorticityFolder.add(this._solver.settings, "hasVorticity").name("Apply Vorticity");
