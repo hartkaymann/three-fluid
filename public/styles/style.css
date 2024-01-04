@@ -70,6 +70,17 @@ body {
   color: var(--white-color);
 }
 
+td.debug-text {
+  text-align: right;
+}
+
+#debug-header td.stat-name {
+  max-width: 75px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .debug-item>div:nth-child(1) {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -107,13 +118,13 @@ body {
 
 .tooltip .tooltiptext {
   visibility: hidden;
-  width: 240px;
   background-color: rgba(0, 0, 0, 0.8);
   color: var(--white-color);
   text-align: center;
-  padding: 5px 0;
+  padding: 5px 10px;
   border-radius: 6px;
   font-size: small;
+  transform: translate(-50%, 10px);
 
   position: absolute;
 }

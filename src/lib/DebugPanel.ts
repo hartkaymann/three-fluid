@@ -10,6 +10,7 @@ export default class DebugPanel {
 
     container: HTMLElement;
     elementResolution: HTMLParagraphElement;
+    elementTileResolution: HTMLParagraphElement;
     elementTiles: HTMLParagraphElement;
 
     debugSlabs: DebugSlab[] = [];
@@ -23,6 +24,7 @@ export default class DebugPanel {
         this.container = container;
 
         this.elementResolution = document.querySelector('#debug-resolution .debug-text') as HTMLTableCellElement;
+        this.elementTileResolution = document.querySelector('#debug-tile-resolution .debug-text') as HTMLTableCellElement;
         this.elementTiles = document.querySelector('#debug-tiles .debug-text') as HTMLTableCellElement;
 
         slabs.forEach(element => {
@@ -46,10 +48,11 @@ export default class DebugPanel {
 
     setHeader(
         resolution: THREE.Vector2,
-        targetResolution: THREE.Vector2,
+        tileResolution: THREE.Vector2,
         tiles: number
     ) {
-        this.elementResolution.innerHTML = `${resolution.x}\u2A2F${resolution.x} (${targetResolution.x}\u2A2F${targetResolution.x})`;
+        this.elementResolution.innerHTML = `${resolution.x}\u2A2F${resolution.x}`;
+        this.elementTileResolution.innerHTML = `${tileResolution.x}\u2A2F${tileResolution.x}`;
         this.elementTiles.innerHTML = `${tiles}`;
     }
 

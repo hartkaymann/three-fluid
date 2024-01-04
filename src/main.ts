@@ -59,12 +59,12 @@ function initSlider() {
     if (sliderPos < 50) {
       // TODO: Stop rendering debug panel
       hide();
+      simulation.renderer?.resize(1);
     } else {
       sliderPos = Math.min(window.innerWidth / 3, Math.max(200, sliderPos));
       show(sliderPos);
+      simulation.renderer?.resize(sliderPos);
     }
-
-    simulation.renderer?.resize(sliderPos);
   }
 
   let onDoubleClick = () => {

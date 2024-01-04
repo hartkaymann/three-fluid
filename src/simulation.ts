@@ -71,7 +71,7 @@ export default class Simulation {
 
         this.debugPanel = new DebugPanel(this._wgl, container, this._solver.getDebugSlabs());
         this.debugPanel.create();
-        this.debugPanel.setHeader(this._tiledTexture.resolution, this.settings.resolution, this._tiledTexture.tileCount.z);
+        this.debugPanel.setHeader(this._tiledTexture.resolution, this._tiledTexture.tileResolution, this._tiledTexture.tileCount.z);
 
         this.initGui(sidePanel);
 
@@ -192,7 +192,7 @@ export default class Simulation {
         this._gui.updateDisplay();
 
         this._pointer = new Pointer3D(this._camera, this._mouse, this.settings.domain);
-        this.debugPanel.setHeader(this._tiledTexture.resolution, this.settings.resolution, this._tiledTexture.tileCount.z);
+        this.debugPanel.setHeader(this._tiledTexture.resolution, this._tiledTexture.tileResolution, this._tiledTexture.tileCount.z);
         this.debugPanel.setSlabs(this._solver.getDebugSlabs());
 
         this.start();
