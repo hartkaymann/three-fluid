@@ -15,7 +15,7 @@ export default class Simulation {
     settings = {
         domain: new THREE.Vector3(20, 20, 20),
         _res: 0, // required for gui to work
-        resolution: new THREE.Vector2(512, 512)
+        resolution: new THREE.Vector2(512, 512),
     }
 
     timeout: number;
@@ -124,6 +124,7 @@ export default class Simulation {
                 this.settings.resolution = new THREE.Vector2(val, val);
                 this.reset();
             });
+            generalFolder.add(this._solver.settings, "speed", 0.0, 10.0, 0.01).name("Speed");
 
         const domainFolder = generalFolder.addFolder("Domain");
         domainFolder.add(this.settings.domain, "x", 1, 100, 1).name("Width").onChange(() => { this.reset(); });
@@ -144,10 +145,10 @@ export default class Simulation {
 
         const bodyForcesFolder = simulationFolder.addFolder("Body Forces");
         bodyForcesFolder.add(this._solver.settings, "hasGravity").name("Apply Gravity");
-        bodyForcesFolder.add(this._solver.settings.gravity, "y", -9.81, 9.81, 0.01).name("Gravity Force");
-        bodyForcesFolder.add(this._solver.settings, "forceRadius", 0, 10, 0.1).name("Interaction Radius");
-        bodyForcesFolder.add(this._solver.settings, "forceDensity", -1, 10, 1).name("Added Density");
-        bodyForcesFolder.add(this._solver.settings, "forceVelocity", 0, 10, 0.1).name("Added Velocity");
+        bodyForcesFolder.add(this._solver.settings.gravity, "y", -2.0, 2.0, 0.01).name("Gravity Force");
+        bodyForcesFolder.add(this._solver.settings, "forceRadius", 0, 10, 0.1).name("Radius");
+        bodyForcesFolder.add(this._solver.settings, "forceDensity", -1, 5.0, 0.1).name("Added Density");
+        bodyForcesFolder.add(this._solver.settings, "forceVelocity", 0, 1.0, 0.01).name("Added Velocity");
 
         const renderingFolder = this._gui.addFolder("Rendering");
         renderingFolder.add(this._renderer.settings, "showGuides").name("Guides");
@@ -157,7 +158,7 @@ export default class Simulation {
         renderingFolder.addColor(this._renderer.settings, "color2").name("Color Fast");
         renderingFolder.addColor(this._renderer.settings, "background").name("Background").onChange(() => this._renderer.updateBackgroundColor());
         renderingFolder.add(this._renderer.settings, "ambient", 0.0, 1.0, 0.01).name("Ambient Intensity").onChange(() => this._renderer.updateBackgroundColor());
-        renderingFolder.add(this._renderer.settings, "minThreshold", 0.0, 1.1, 0.0001).name("Density Threshold");
+        renderingFolder.add(this._renderer.settings, "minThreshold", 0.0, 1.1, 0.0001).name("Min. Density");
 
         simulationFolder.open();
         parent.prepend(this._gui.domElement);

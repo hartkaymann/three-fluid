@@ -32,6 +32,7 @@ import MacCormack from './lib/slabop/MacCormack';
 export default class Solver {
 
     public settings = {
+        speed: 1.0,
         hasViscosity: false,
         viscosityIterations: 30,
         viscosity: 0.3,
@@ -39,12 +40,10 @@ export default class Solver {
         curl: 0.3,
         pressureIterations: 80,
         hasGravity: false,
-        gravity: new THREE.Vector3(0, -9.81, 0),
+        gravity: new THREE.Vector3(0, -0.98, 0),
         forceRadius: 2.0,
-        forceDensity: 5.0,
-        forceVelocity: 2,
-        targetDensity: 0.01,
-        pressureMultiplier: 1.0
+        forceDensity: 0.5,
+        forceVelocity: 0.5,
     }
 
     private _domain: THREE.Vector3;
@@ -96,6 +95,7 @@ export default class Solver {
     }
 
     step(dt: number, mouse: Mouse, pointer: Pointer3D) {
+        dt *= this.settings.speed;
 
         // Advection
         this.advectMackCormack(this.velocity, this.velocity, this.velocity, dt);
@@ -169,11 +169,11 @@ export default class Solver {
             if(this.settings.forceDensity < 0)
                 force = -100;
                 
-            this._force.compute(this.density, this.density, dt, position, new THREE.Vector3(1, 1, 1), this.settings.forceRadius, force);
+            this._force.compute(this.density, this.density, position, new THREE.Vector3(1, 1, 1), this.settings.forceRadius, force);
         }
 
         if (mouse.keys[1]) {
-            this._force.compute(this.velocity, this.velocity, dt, position, direction, this.settings.forceRadius, this.settings.forceVelocity);
+            this._force.compute(this.velocity, this.velocity, position, direction, this.settings.forceRadius, this.settings.forceVelocity);
         }
     }
 

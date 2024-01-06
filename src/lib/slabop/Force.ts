@@ -18,7 +18,6 @@ export default class Force extends Slabop {
             u_size: { value: size },
             u_resolution: { value: tiledTex.simulationResolution },
             u_readTexture: { value: new THREE.Texture() },
-            u_deltaTime: { value: 0.0 },
             u_position: { value: new THREE.Vector3() },
             u_color: { value: new THREE.Vector3() },
             u_radius: { value: 0.0 },
@@ -31,14 +30,12 @@ export default class Force extends Slabop {
     compute(
         read: Slab,
         output: Slab,
-        dt: number,
         position: THREE.Vector3,
         color: THREE.Vector3,
         radius: number,
         amount: number
     ): void {
         this.uniforms.u_readTexture.value = read.read.texture;
-        this.uniforms.u_deltaTime.value = dt;
         this.uniforms.u_position.value = position;
         this.uniforms.u_color.value = color;
         this.uniforms.u_radius.value = radius;

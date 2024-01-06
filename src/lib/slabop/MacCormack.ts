@@ -19,7 +19,6 @@ export default class MacCormack extends Slabop {
             u_velocityTexture: { value: new THREE.Texture() },
             u_forwardTexture: { value: new THREE.Texture() },
             u_backwardTexture: { value: new THREE.Texture() },
-            u_deltaTime: { value: 0.0 }
         }
         
         super(renderer, tiledTex, vs, fs, uniforms);

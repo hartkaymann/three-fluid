@@ -1,10 +1,11 @@
 import * as THREE from 'three'
 
+import Slab from './lib/Slab';
+import TiledTexture from './lib/TiledTexture';
+
 import vertexTiled from './shaders/displaytiled.vert'
 import fragmentCommon from './shaders/common.frag'
 import fragmentTiled from './shaders/displaytiled.frag'
-import Slab from './lib/Slab';
-import TiledTexture from './lib/TiledTexture';
 
 export default class Renderer {
 
@@ -46,8 +47,8 @@ export default class Renderer {
         this._camera = camera;
         this._scene = new THREE.Scene();
 
-        this.settings.slices = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z); // TODO: mention default slice count in vis cahpter
-
+        this.settings.slices = 100;
+        
         // Setup tiled rendering
         this._material = new THREE.RawShaderMaterial({
             uniforms: {

@@ -5,9 +5,7 @@ uniform sampler2D u_velocityTexture;
 
 uniform float u_deltaTime; 
 
-varying vec2 vUv;
-
-// Trilinear interpolation
+// Trilinear Interpolation
 // TODO: Maybe let texture do X,Y-interpolation and just do Z manually like in common.frag?
 vec3 trilerp( sampler2D tex, vec3 p ) {
   vec3 vi = floor( p - 0.5 ) + 0.5;
@@ -40,6 +38,7 @@ vec3 trilerp( sampler2D tex, vec3 p ) {
   );
 }
 
+// Semi-Lagrangian Advection Step
 void main( ) {
   vec3 pos = get3DFragCoord();
 

@@ -33,5 +33,5 @@ void main( ) {
     vec3 force = u_curl * cross( N, c.xyz );
 
     vec3 base = texture3D( u_velocityTexture, pos ).xyz;
-    gl_FragColor = vec4( base + force * u_deltaTime, 1.0 ); // * dt?
+    gl_FragColor = vec4( base + force, 1.0 );
 }
