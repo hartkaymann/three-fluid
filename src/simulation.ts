@@ -189,7 +189,7 @@ export default class Simulation {
         }
 
         this._solver.reset(this.settings.domain, this._tiledTexture);
-        this._renderer.reset(this.settings.domain, this._tiledTexture, true);
+        this._renderer.reset(this.settings.domain, this._tiledTexture);
         this._gui.updateDisplay();
 
         this._pointer = new Pointer3D(this._camera, this._mouse, this.settings.domain);
