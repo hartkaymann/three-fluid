@@ -5,11 +5,11 @@ import TiledTexture from '../TiledTexture';
 
 export default class Boundary {
 
-    private renderer: THREE.WebGLRenderer;
-    private scene: THREE.Scene;
-    private camera: THREE.Camera;
+    private _renderer: THREE.WebGLRenderer;
+    private _scene: THREE.Scene;
+    private _camera: THREE.Camera;
 
-    private uniforms: { [uniform: string]: THREE.IUniform<any> }
+    private _uniforms: { [uniform: string]: THREE.IUniform<any> }
 
     constructor(
         renderer: THREE.WebGLRenderer,
@@ -17,13 +17,13 @@ export default class Boundary {
         vs: string,
         fs: string
     ) {
-        this.renderer = renderer;
+        this._renderer = renderer;
 
-        this.scene = new THREE.Scene();
-        this.camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, 5);
-        this.camera.position.z = 4;
+        this._scene = new THREE.Scene();
+        this._camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, 5);
+        this._camera.position.z = 4;
 
-        this.uniforms = {
+        this._uniforms = {
             u_resolution: { value: tiledTex.simulationResolution },
             u_textureResolution : {value: tiledTex.resolution},
             u_readTexture: { value: new THREE.Texture() },
@@ -31,7 +31,7 @@ export default class Boundary {
         }
 
         const material = new THREE.RawShaderMaterial({
-            uniforms: this.uniforms,
+            uniforms: this._uniforms,
             vertexShader: vs,
             fragmentShader: fs
         });
@@ -55,7 +55,7 @@ export default class Boundary {
         // Create and add vertical boundary lines
         for (let i = 0; i < tiledTex.tileCount.x; i++) {
             let xr = x0 + (tiledTex.tileResolution.x - 1) + i * tiledTex.tileResolution.x
-            this.scene.add(
+            this._scene.add(
                 this.createLine(
                     new THREE.Vector3(xr, y0, 0),
                     new THREE.Vector3(xr, y1, 0),
@@ -64,7 +64,7 @@ export default class Boundary {
                 )
             );
             let xl = x0 + i * tiledTex.tileResolution.x;
-            this.scene.add(
+            this._scene.add(
                 this.createLine(
                     new THREE.Vector3(xl, y0, 0),
                     new THREE.Vector3(xl, y1, 0),
@@ -76,7 +76,7 @@ export default class Boundary {
         // Create and add horizontal boundary lines
         for (let i = 0; i < tiledTex.tileCount.z; i++) {
             let yt = y0 + (tiledTex.tileResolution.y - 1) + i * tiledTex.tileResolution.y
-            this.scene.add(
+            this._scene.add(
                 this.createLine(
                     new THREE.Vector3(x0, yt, 1),
                     new THREE.Vector3(x1, yt, 1),
@@ -86,7 +86,7 @@ export default class Boundary {
             );
 
             let yb = y0 + i * tiledTex.tileResolution.y;
-            this.scene.add(
+            this._scene.add(
                 this.createLine(
                     new THREE.Vector3(x0, yb, 1),
                     new THREE.Vector3(x1, yb, 1),
@@ -119,8 +119,8 @@ export default class Boundary {
         geometryBack.setAttribute("offset", new THREE.Float32BufferAttribute(attribOffsetBack, 2));
         const quadFront = new THREE.Mesh(geometryFront, material);
         const quadBack = new THREE.Mesh(geometryBack, material);
-        this.scene.add(quadFront);
-        this.scene.add(quadBack);
+        this._scene.add(quadFront);
+        this._scene.add(quadBack);
     }
 
     createLine(
@@ -139,15 +139,15 @@ export default class Boundary {
         output: Slab,
         scale: number
     ): void {
-        this.uniforms.u_readTexture.value = read.read.texture;
-        this.uniforms.u_scale.value = scale;
+        this._uniforms.u_readTexture.value = read.read.texture;
+        this._uniforms.u_scale.value = scale;
 
-        this.renderer.setRenderTarget(output.write);
-        this.renderer.render(this.scene, this.camera);
-        this.renderer.setRenderTarget(null);
+        this._renderer.setRenderTarget(output.write);
+        this._renderer.render(this._scene, this._camera);
+        this._renderer.setRenderTarget(null);
     }
 
     getScale() {
-        return this.uniforms.u_scale.value;
+        return this._uniforms.u_scale.value;
     }
 }

@@ -2,18 +2,18 @@ import * as THREE from 'three';
 
 export default class Slab {
 
-    private FBOs: THREE.WebGLRenderTarget[];
+    private _FBOs: THREE.WebGLRenderTarget[];
 
-    read: THREE.WebGLRenderTarget;
-    write: THREE.WebGLRenderTarget;
-    resolution: THREE.Vector2;
+    public read: THREE.WebGLRenderTarget;
+    public write: THREE.WebGLRenderTarget;
+    public resolution: THREE.Vector2;
 
     constructor(resolution: THREE.Vector2, format?: THREE.AnyPixelFormat) {
 
-        this.FBOs = [];
+        this._FBOs = [];
 
         for (let i = 0; i < 2; i++) {
-            this.FBOs[i] = new THREE.WebGLRenderTarget(
+            this._FBOs[i] = new THREE.WebGLRenderTarget(
                 resolution.x,
                 resolution.y,
                 {
@@ -28,8 +28,8 @@ export default class Slab {
             );
         }
 
-        this.read = this.FBOs[0];
-        this.write = this.FBOs[1];
+        this.read = this._FBOs[0];
+        this.write = this._FBOs[1];
         this.resolution = resolution;
     }
 

@@ -25,7 +25,6 @@ function init() {
 
   // Setup WebGL Renderer
   wgl = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-  wgl.setClearColor(0x0c0c0c, 0.66)  
   wgl.setPixelRatio(window.devicePixelRatio);
   wgl.setSize(width, height);
   wgl.setScissorTest(true);

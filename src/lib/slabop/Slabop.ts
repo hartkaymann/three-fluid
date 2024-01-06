@@ -5,14 +5,13 @@ import TiledTexture from '../TiledTexture';
 // Emulating a 3D textures with tiled 2D textures
 // the Z slices of a 3D texture are laid out along the X-Axis
 // the 2D dimensions of a 3D texture are therefore [width * depth, height]
-
 export abstract class Slabop {
 
     protected renderer: THREE.WebGLRenderer;
     protected scene: THREE.Scene;
     protected camera: THREE.Camera;
 
-    uniforms: { [uniform: string]: THREE.IUniform<any> }
+    public uniforms: { [uniform: string]: THREE.IUniform<any> }
 
     constructor(
         renderer: THREE.WebGLRenderer,

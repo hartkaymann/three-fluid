@@ -8,42 +8,48 @@ import TiledTexture from './lib/TiledTexture';
 
 export default class Renderer {
 
-    renderer: THREE.WebGLRenderer;
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
+    private _wgl: THREE.WebGLRenderer;
+    private _scene: THREE.Scene;
+    private _camera: THREE.PerspectiveCamera;
 
-    domainBox: THREE.LineSegments;
-    group: THREE.Group;
+    private _domainBox: THREE.LineSegments;
+    private _group: THREE.Group;
 
-    material: THREE.RawShaderMaterial;
-    pointerSphere: THREE.Mesh;
-    pointerArrow: THREE.ArrowHelper;
+    private _material: THREE.RawShaderMaterial;
+    private _pointerSphere: THREE.Mesh;
+    private _pointerArrow: THREE.ArrowHelper;
 
-    settings = {
+    public settings = {
         showGuides: true,
         hasShading: true,
         slices: 0,
         ambient: 0.1,
         color1: '#3f5efb',
         color2: '#fc466b',
+        background: 0x0c0c0c,
         minThreshold: 0.00001,
         scissor: 0
     }
 
+    public get domainBox() {
+        return this._domainBox;
+    }
+
     constructor(
-        renderer: THREE.WebGLRenderer,
+        wgl: THREE.WebGLRenderer,
         camera: THREE.PerspectiveCamera,
         domain: THREE.Vector3,
     ) {
-        this.renderer = renderer;
-        this.camera = camera;
+        this._wgl = wgl;
+        this.updateBackgroundColor();
 
-        this.scene = new THREE.Scene();
+        this._camera = camera;
+        this._scene = new THREE.Scene();
 
         this.settings.slices = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z); // TODO: mention default slice count in vis cahpter
 
         // Setup tiled rendering
-        this.material = new THREE.RawShaderMaterial({
+        this._material = new THREE.RawShaderMaterial({
             uniforms: {
                 density: { value: new THREE.Texture() },
                 velocity: { value: new THREE.Texture() },
@@ -66,13 +72,13 @@ export default class Renderer {
         });
 
         // Add visual guides
-        this.pointerSphere = new THREE.Mesh(
+        this._pointerSphere = new THREE.Mesh(
             new THREE.SphereGeometry(0.5, 16, 8),
             new THREE.MeshBasicMaterial({ color: 0x000000 })
         );
-        this.scene.add(this.pointerSphere);
+        this._scene.add(this._pointerSphere);
 
-        this.pointerArrow = new THREE.ArrowHelper(
+        this._pointerArrow = new THREE.ArrowHelper(
             new THREE.Vector3(1, 0, 0),
             new THREE.Vector3(0, 0, 0),
             1.5,
@@ -80,7 +86,7 @@ export default class Renderer {
             0.5,
             0.5
         );
-        this.scene.add(this.pointerArrow);
+        this._scene.add(this._pointerArrow);
     }
 
     reset(
@@ -88,19 +94,19 @@ export default class Renderer {
         tiledTex: TiledTexture,
         resetSlices?: boolean
     ) {
-        this.material.uniforms.u_size.value = domain;
-        this.material.uniforms.u_resolution.value = tiledTex.simulationResolution;
-        this.material.uniforms.u_textureResolution.value = tiledTex.resolution;
-        this.material.uniforms.u_tileCount.value = tiledTex.tileCount;
+        this._material.uniforms.u_size.value = domain;
+        this._material.uniforms.u_resolution.value = tiledTex.simulationResolution;
+        this._material.uniforms.u_textureResolution.value = tiledTex.resolution;
+        this._material.uniforms.u_tileCount.value = tiledTex.tileCount;
 
-        this.scene.remove(this.group);
-        this.scene.remove(this.domainBox);
+        this._scene.remove(this._group);
+        this._scene.remove(this._domainBox);
 
         let sideLength = Math.sqrt(domain.x * domain.x + domain.y * domain.y + domain.z * domain.z);
-        if(resetSlices) 
+        if (resetSlices)
             this.settings.slices = sideLength;
-        this.group = new THREE.Group();
-        this.group.matrixAutoUpdate = true;
+        this._group = new THREE.Group();
+        this._group.matrixAutoUpdate = true;
         for (let z = 0; z < this.settings.slices; z++) {
             const geometry = new THREE.PlaneGeometry(sideLength, sideLength);
             geometry.translate(0.0, 0.0, (sideLength / -2) + (sideLength / this.settings.slices) * z);
@@ -111,54 +117,62 @@ export default class Renderer {
             }
             geometry.setAttribute("depth", new THREE.Float32BufferAttribute(attribCoord, 1));
 
-            const quad = new THREE.Mesh(geometry, this.material);
-            this.group.add(quad);
+            const quad = new THREE.Mesh(geometry, this._material);
+            this._group.add(quad);
         }
-        this.scene.add(this.group);
+        this._scene.add(this._group);
 
         const geometryDomainBox = new THREE.BoxGeometry(domain.x, domain.y, domain.z);
-        this.domainBox = new THREE.LineSegments(
+        this._domainBox = new THREE.LineSegments(
             new THREE.EdgesGeometry(geometryDomainBox),
             new THREE.LineBasicMaterial({ color: 0xffffff })
         );
-        this.domainBox.visible = this.settings.showGuides;
-        this.scene.add(this.domainBox);
+        this._domainBox.visible = this.settings.showGuides;
+        this._scene.add(this._domainBox);
     }
 
     render(density: Slab, velocity: Slab, pressure: Slab) {
-        this.group.rotation.copy(this.camera.rotation);
+        this._group.rotation.copy(this._camera.rotation);
 
         // Render 
-        this.material.uniforms.density.value = density.read.texture;
-        this.material.uniforms.velocity.value = velocity.read.texture;
-        this.material.uniforms.pressure.value = pressure.read.texture;
-        this.material.uniforms.u_color1.value = new THREE.Color(this.settings.color1);
-        this.material.uniforms.u_color2.value = new THREE.Color(this.settings.color2);
-        this.material.uniforms.u_ambient.value = this.settings.ambient;
-        this.material.uniforms.u_minThreshold.value = this.settings.minThreshold;
-        this.material.uniforms.u_applyShading.value = this.settings.hasShading;
+        this._material.uniforms.density.value = density.read.texture;
+        this._material.uniforms.velocity.value = velocity.read.texture;
+        this._material.uniforms.pressure.value = pressure.read.texture;
+        this._material.uniforms.u_color1.value = new THREE.Color(this.settings.color1);
+        this._material.uniforms.u_color2.value = new THREE.Color(this.settings.color2);
+        this._material.uniforms.u_ambient.value = this.settings.ambient;
+        this._material.uniforms.u_minThreshold.value = this.settings.minThreshold;
+        this._material.uniforms.u_applyShading.value = this.settings.hasShading;
 
-        this.renderer.setRenderTarget(null);
-        this.renderer.setViewport(0, 0, window.innerWidth, window.innerHeight);
-        this.renderer.setScissor(0, 0, window.innerWidth - this.settings.scissor, window.innerHeight);
-        this.renderer.clear();
-        this.renderer.render(this.scene, this.camera);
+        this._wgl.setRenderTarget(null);
+        this._wgl.setViewport(0, 0, window.innerWidth, window.innerHeight);
+        this._wgl.setScissor(0, 0, window.innerWidth - this.settings.scissor, window.innerHeight);
+        this._wgl.clear();
+        this._wgl.render(this._scene, this._camera);
     }
 
     updateGuides(position: THREE.Vector3, direction: THREE.Vector3, isPointerVisible: boolean) {
-        this.domainBox.visible = this.settings.showGuides;
-        this.pointerSphere.visible = this.settings.showGuides && isPointerVisible;
-        this.pointerArrow.visible = this.settings.showGuides && isPointerVisible && (direction.length() > 0);
+        this._domainBox.visible = this.settings.showGuides;
+        this._pointerSphere.visible = this.settings.showGuides && isPointerVisible;
+        this._pointerArrow.visible = this.settings.showGuides && isPointerVisible && (direction.length() > 0);
 
         direction.z *= -1;
         let color = new THREE.Color(0.5 + direction.x, 0.5 + direction.y, 0.5 + direction.z);
 
-        this.pointerSphere.position.set(position.x, position.y, position.z);
-        (this.pointerSphere.material as THREE.MeshBasicMaterial).color.set(color);
+        this._pointerSphere.position.set(position.x, position.y, position.z);
+        (this._pointerSphere.material as THREE.MeshBasicMaterial).color.set(color);
 
-        this.pointerArrow.position.set(position.x, position.y, position.z);
-        this.pointerArrow.setDirection(direction.normalize());
-        this.pointerArrow.setColor(color);
+        this._pointerArrow.position.set(position.x, position.y, position.z);
+        this._pointerArrow.setDirection(direction.normalize());
+        this._pointerArrow.setColor(color);
+    }
+
+    updateBackgroundColor() {
+        let color = new THREE.Color(this.settings.background);
+        let colorVector = new THREE.Vector3().setFromColor(color);
+        colorVector.addScalar(this.settings.ambient);
+
+        this._wgl.setClearColor(color.setFromVector3(colorVector));
     }
 
     resize(width: number) {

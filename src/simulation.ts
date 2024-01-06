@@ -155,7 +155,8 @@ export default class Simulation {
         renderingFolder.add(this._renderer.settings, "slices", 10, 1000, 1).name("Volume Slices").onChange(() => { this._renderer.reset(this.settings.domain, this._tiledTexture) });
         renderingFolder.addColor(this._renderer.settings, "color1").name("Color Slow");
         renderingFolder.addColor(this._renderer.settings, "color2").name("Color Fast");
-        renderingFolder.add(this._renderer.settings, "ambient", 0.0, 1.0, 0.01).name("Ambient Intensity");
+        renderingFolder.addColor(this._renderer.settings, "background").name("Background").onChange(() => this._renderer.updateBackgroundColor());
+        renderingFolder.add(this._renderer.settings, "ambient", 0.0, 1.0, 0.01).name("Ambient Intensity").onChange(() => this._renderer.updateBackgroundColor());
         renderingFolder.add(this._renderer.settings, "minThreshold", 0.0, 1.1, 0.0001).name("Density Threshold");
 
         simulationFolder.open();
