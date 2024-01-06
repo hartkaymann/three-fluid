@@ -29,8 +29,7 @@ export default class Buoyancy extends Slabop {
         velocity: Slab,
         density: Slab,
         output: Slab,
-        gravity: THREE.Vector3,
-        dt: number
+        gravity: THREE.Vector3
     ): void {
         this.uniforms.u_velocityTexture.value = velocity.read.texture;
         this.uniforms.u_densityTexture.value = density.read.texture;

@@ -39,7 +39,6 @@ export default class Renderer {
     constructor(
         wgl: THREE.WebGLRenderer,
         camera: THREE.PerspectiveCamera,
-        domain: THREE.Vector3,
     ) {
         this._wgl = wgl;
         this.updateBackgroundColor();
@@ -48,7 +47,7 @@ export default class Renderer {
         this._scene = new THREE.Scene();
 
         this.settings.slices = 100;
-        
+
         // Setup tiled rendering
         this._material = new THREE.RawShaderMaterial({
             uniforms: {

@@ -65,7 +65,7 @@ export default class Simulation {
         this._solver = new Solver(this._wgl, this.settings.domain);
         this._solver.reset(this.settings.domain, this._tiledTexture);
 
-        this._renderer = new Renderer(this._wgl, this._camera, this.settings.domain);
+        this._renderer = new Renderer(this._wgl, this._camera);
         this._renderer.reset(this.settings.domain, this._tiledTexture);
         this._renderer.resize(sidePanel.clientWidth);
 

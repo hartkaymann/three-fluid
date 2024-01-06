@@ -105,9 +105,9 @@ export default class Solver {
         
         // Body forces  
         if (this.settings.hasGravity) {
-            this._buoyancy.compute(this.velocity, this.density, this.velocity, this.settings.gravity, dt);
+            this._buoyancy.compute(this.velocity, this.density, this.velocity, this.settings.gravity);
         }
-        this.addForce(dt, mouse, pointer);
+        this.addForce(mouse, pointer);
 
         // Vorticity confinement
         if (this.settings.hasVorticity && this.settings.curl > 0) {
@@ -148,7 +148,7 @@ export default class Solver {
         this._maccormack.compute(advected, velocity, intermediate.write.texture, intermediate.read.texture, output);
     }
 
-    addForce(dt: number, mouse: Mouse, pointer: Pointer3D) {
+    addForce(mouse: Mouse, pointer: Pointer3D) {
         if (!(mouse.keys[0] || mouse.keys[1]))
             return;
 
