@@ -19,13 +19,16 @@ export default class TiledTexture {
     get tileCount(): THREE.Vector3 { return this._tileCount; }
     get simulationResolution(): THREE.Vector3 { return this._simulationResolution; }
 
-    // TODO: 
-    // To keep ratio correct, the total tiles should be bigger than the target tile amount.
-    // The target tile amount should then be taken as the z value for the tile count. 
-    // This would waste a bit of space but the grid would be guaranteed equally spaced.
-    // Aternatively might have to change halfrdx in shaders when computing gradient. 
-    // Solution: Cache the best result and use that at the end.
-    computeResolution(maxTextureResolution: THREE.Vector2, domain: THREE.Vector3) : boolean {
+    /**
+     * Tries to compute the optimal resolution for the flat 3D texture based on the domain aspect ratio and 2D texture size.
+     * Uses binary search approach.
+     * Still not optimal, should be improved upon in the future.
+     * 
+     * @param maxTextureResolution - Resolution of the 2D texture that will represent the 3D space to be used as the maximum possible resolution.  
+     * @param domain - Dimensions of the domain, which the flat 3D texture will represent 
+     * @returns `true` if any result could be computed, `false` otherwise
+     */    
+    computeResolution(maxTextureResolution: THREE.Vector2, domain: THREE.Vector3): boolean {
         const domainRatio = new THREE.Vector3(domain.x / domain.y, domain.y / domain.z, domain.z / domain.x);
 
         let targetTileAmount = domainRatio.z;
@@ -56,7 +59,10 @@ export default class TiledTexture {
 
             targetTileAmount = tileResolution.x * domainRatio.z;
 
-            tileCount = new THREE.Vector2(Math.floor(maxTextureResolution.x / tileResolution.x), Math.floor(maxTextureResolution.y / tileResolution.y));
+            tileCount = new THREE.Vector2(
+                Math.floor(maxTextureResolution.x / tileResolution.x),
+                Math.floor(maxTextureResolution.y / tileResolution.y)
+            );
             totalTiles = tileCount.x * tileCount.y; // mid value
 
             if (totalTiles == targetTileAmount)
@@ -67,6 +73,7 @@ export default class TiledTexture {
                 tileResolutionLow.copy(tileResolution);
         }
 
+        // TODO: Cache the best result (define best) and compare to last
         this._resolution = new THREE.Vector2(tileResolution.x * tileCount.x, tileResolution.y * tileCount.y);
         this._tileResolution = tileResolution;
         this._tileCount = new THREE.Vector3(tileCount.x, tileCount.y, totalTiles);

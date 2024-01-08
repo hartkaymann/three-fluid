@@ -7,14 +7,16 @@ uniform sampler2D pressure;
 uniform vec3 u_size;
 uniform vec3 u_color1;
 uniform vec3 u_color2;
+uniform vec3 u_colorAmbient;
 
 uniform float u_minThreshold;
-uniform float u_ambient;
+uniform float u_ambientStrength;
 
 uniform bool u_applyShading;
 
 varying vec3 v_position;
 varying vec3 v_cameraPos;
+
 
 // TODO: Light position setting
 vec3 light = normalize( vec3( 2, -5, 3 ) );
@@ -53,7 +55,7 @@ void main( ) {
 
         vec3 grad = gradient( pos );
         float dot = max( dot( normalize( grad ), normalize( light ) ), 0.0 );
-        color *= dot + vec3( u_ambient );
+        color *= dot +  (u_colorAmbient * u_ambientStrength);
     }
 
     gl_FragColor = vec4( color, alpha );

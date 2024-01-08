@@ -24,10 +24,10 @@ export default class Renderer {
         showGuides: true,
         hasShading: true,
         slices: 0,
-        ambient: 0.1,
+        ambient: 0.5,
         color1: '#3f5efb',
         color2: '#fc466b',
-        background: 0x0c0c0c,
+        background: '#3f3f3f',
         minThreshold: 0.00001,
         scissor: 0
     }
@@ -41,7 +41,6 @@ export default class Renderer {
         camera: THREE.PerspectiveCamera,
     ) {
         this._wgl = wgl;
-        this.updateBackgroundColor();
 
         this._camera = camera;
         this._scene = new THREE.Scene();
@@ -60,15 +59,16 @@ export default class Renderer {
                 u_tileCount: { value: new THREE.Vector3() },
                 u_color1: { value: new THREE.Vector3() },
                 u_color2: { value: new THREE.Vector3() },
+                u_colorAmbient: { value: new THREE.Vector3() },
                 u_minThreshold: { value: 0.0 },
-                u_ambient: { value: 0.0 },
+                u_ambientStrength: { value: 0.0 },
                 u_applyShading: { value: true },
             },
             vertexShader: vertexTiled,
             fragmentShader: [fragmentCommon, fragmentTiled].join('\n'),
-            side: THREE.DoubleSide,
+            side: THREE.FrontSide,
             transparent: true,
-            depthTest: false,
+            depthTest: true,
         });
 
         // Add visual guides
@@ -137,7 +137,6 @@ export default class Renderer {
         this._material.uniforms.pressure.value = pressure.read.texture;
         this._material.uniforms.u_color1.value = new THREE.Color(this.settings.color1);
         this._material.uniforms.u_color2.value = new THREE.Color(this.settings.color2);
-        this._material.uniforms.u_ambient.value = this.settings.ambient;
         this._material.uniforms.u_minThreshold.value = this.settings.minThreshold;
         this._material.uniforms.u_applyShading.value = this.settings.hasShading;
 
@@ -166,10 +165,11 @@ export default class Renderer {
 
     updateBackgroundColor() {
         let color = new THREE.Color(this.settings.background);
-        let colorVector = new THREE.Vector3().setFromColor(color);
-        colorVector.addScalar(this.settings.ambient);
+        
+        this._material.uniforms.u_ambientStrength.value = this.settings.ambient;
+        this._material.uniforms.u_colorAmbient.value = color;
 
-        this._wgl.setClearColor(color.setFromVector3(colorVector));
+        this._wgl.setClearColor(color);
     }
 
     resize(width: number) {

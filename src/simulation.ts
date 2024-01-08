@@ -68,6 +68,7 @@ export default class Simulation {
         this._renderer = new Renderer(this._wgl, this._camera);
         this._renderer.reset(this.settings.domain, this._tiledTexture);
         this._renderer.resize(sidePanel.clientWidth);
+        this._renderer.updateBackgroundColor();
 
         this.debugPanel = new DebugPanel(this._wgl, container, this._solver.getDebugSlabs());
         this.debugPanel.create();
@@ -117,14 +118,15 @@ export default class Simulation {
                 'Medium': 256,
                 'High': 512,
                 'Very High': 1024,
-                'Super High': 2048
+                'Super High': 2048,
+                'Ultra(4K)': 4096
             }).name("Resolution")
             .setValue(this.settings.resolution.x)
             .onChange(val => {
                 this.settings.resolution = new THREE.Vector2(val, val);
                 this.reset();
             });
-            generalFolder.add(this._solver.settings, "speed", 0.0, 10.0, 0.01).name("Speed");
+        generalFolder.add(this._solver.settings, "speed", 0.0, 10.0, 0.01).name("Speed");
 
         const domainFolder = generalFolder.addFolder("Domain");
         domainFolder.add(this.settings.domain, "x", 1, 100, 1).name("Width").onChange(() => { this.reset(); });
