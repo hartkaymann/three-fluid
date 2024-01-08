@@ -37,7 +37,7 @@ export default class Solver {
         viscosityIterations: 30,
         viscosity: 0.3,
         hasVorticity: false,
-        curl: 0.3,
+        curl: 0.03,
         pressureIterations: 80,
         hasGravity: false,
         gravity: new THREE.Vector3(0, -0.98, 0),
