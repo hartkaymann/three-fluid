@@ -15,7 +15,7 @@ export default class Simulation {
     settings = {
         domain: new THREE.Vector3(20, 20, 20),
         _res: 0, // required for gui to work
-        resolution: new THREE.Vector2(512, 512),
+        resolution: new THREE.Vector2(256, 256),
     }
 
     timeout: number;
