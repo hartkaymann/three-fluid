@@ -41,9 +41,9 @@ export default class Force extends Slabop {
         this.uniforms.u_radius.value = radius;
         this.uniforms.u_amount.value = amount;
 
-        this.renderer.setRenderTarget(output.write);
-        this.renderer.render(this.scene, this.camera);
+        this.wgl.setRenderTarget(output.write);
+        this.wgl.render(this.scene, this.camera);
         output.swap();
-        this.renderer.setRenderTarget(null);
+        this.wgl.setRenderTarget(null);
     }
 }

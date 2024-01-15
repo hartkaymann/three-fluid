@@ -37,9 +37,9 @@ export default class Vorticity extends Slabop {
         this.uniforms.u_deltaTime.value = dt;
         this.uniforms.u_strength.value = strength;
 
-        this.renderer.setRenderTarget(output.write);
-        this.renderer.render(this.scene, this.camera);
+        this.wgl.setRenderTarget(output.write);
+        this.wgl.render(this.scene, this.camera);
         output.swap();
-        this.renderer.setRenderTarget(null);
+        this.wgl.setRenderTarget(null);
     }
 }

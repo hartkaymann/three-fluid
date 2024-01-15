@@ -7,6 +7,7 @@ uniform float u_deltaTime;
 uniform float u_halfrdx;
 uniform float u_strength;
 
+// Applies vorticies into velocity based on the gradient of its curl.
 void main( ) {
     vec3 pos = get3DFragCoord( );
     mat3 offset = mat3( 1.0 );

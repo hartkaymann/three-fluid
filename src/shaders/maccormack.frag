@@ -7,6 +7,8 @@ uniform sampler2D u_backwardTexture;
 
 uniform float u_deltaTime;
 
+// MacCormack advection step.
+// Takes error from forward and backward intermediate fields and uses it to correct initial advection step. 
 void main( ) {
   vec3 pos = get3DFragCoord();
 

@@ -5,6 +5,8 @@ uniform sampler2D u_velocityTexture;
 
 uniform float u_halfrdx;
 
+// Subtracts gradient of pressure texture from velocity.
+// Last step of projection.
 void main( ) {
   vec3 pos = get3DFragCoord( );
   mat3 offset = mat3(1.0);

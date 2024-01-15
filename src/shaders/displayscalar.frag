@@ -11,5 +11,4 @@ void main( ) {
     vec3 color = u_bias + u_scale * texture2D( u_readTexture, v_uv ).xxx;
 
     gl_FragColor = vec4( color, 1.0 );
-    //gl_FragColor = vec4( 1.0, 0.0, 1.0, 1.0 );
 }

@@ -48,7 +48,7 @@ export default class Jacobi extends Slabop {
             boundary.compute(output, x, scale);
         }
 
-        this.renderer.setRenderTarget(null);
+        this.wgl.setRenderTarget(null);
     }
 
     step(
@@ -59,8 +59,8 @@ export default class Jacobi extends Slabop {
         this.uniforms.u_pressureTexture.value = x.read.texture;
         this.uniforms.u_divergenceTexture.value = b.read.texture;
 
-        this.renderer.setRenderTarget(output.write);
-        this.renderer.render(this.scene, this.camera);
+        this.wgl.setRenderTarget(output.write);
+        this.wgl.render(this.scene, this.camera);
         output.swap();
     }
 

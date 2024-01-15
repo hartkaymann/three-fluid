@@ -6,6 +6,7 @@ uniform sampler2D u_divergenceTexture; // b
 uniform float u_alpha;
 uniform float u_rbeta;
 
+// One step of iterative Jacobi solver.
 void main( ) {
   vec3 pos = get3DFragCoord( );
   mat3 offset = mat3( 1.0 );

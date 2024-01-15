@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 
-
+/**
+ * Keeps track of the screen position and buttons of the mouse.
+ */
 export default class Mouse {
 
     keys: [boolean, boolean];
@@ -19,9 +21,7 @@ export default class Mouse {
     }
 
     mouseDown(event: MouseEvent) {
-        let x = event.clientX / window.innerWidth;
-        let y = event.clientY / window.innerHeight;
-        this.position.set(x, y);
+       
         this.keys[0] = event.button === 0 ? true : this.keys[0];
         this.keys[1] = event.button === 2 ? true : this.keys[1];
     }
@@ -37,6 +37,7 @@ export default class Mouse {
 
         let x = event.clientX / window.innerWidth;
         let y = event.clientY / window.innerHeight;
+        this.position.set(x, y);
 
         if (this.keys[0] || this.keys[1]) {
             let dx = x - this.position.x;

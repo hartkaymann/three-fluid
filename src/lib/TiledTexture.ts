@@ -1,5 +1,9 @@
 import * as THREE from 'three'
 
+/**
+ * Implementation of a flat 3D texture.
+ * Represents a 3D space as on a 2D texture. 
+ */
 export default class TiledTexture {
 
     private _resolution: THREE.Vector2;

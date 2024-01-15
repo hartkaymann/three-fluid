@@ -7,9 +7,9 @@ uniform mat4 modelViewMatrix;
 varying vec2 v_uv;
 varying float v_z;
 
-void main() {
+void main( ) {
     v_uv = uv;
     v_z = position.z;
-    
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 }

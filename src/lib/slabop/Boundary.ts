@@ -5,19 +5,19 @@ import TiledTexture from '../TiledTexture';
 
 export default class Boundary {
 
-    private _renderer: THREE.WebGLRenderer;
+    private _wgl: THREE.WebGLRenderer;
     private _scene: THREE.Scene;
     private _camera: THREE.Camera;
 
     private _uniforms: { [uniform: string]: THREE.IUniform<any> }
 
     constructor(
-        renderer: THREE.WebGLRenderer,
+        wgl: THREE.WebGLRenderer,
         tiledTex: TiledTexture,
         vs: string,
         fs: string
     ) {
-        this._renderer = renderer;
+        this._wgl = wgl;
 
         this._scene = new THREE.Scene();
         this._camera = new THREE.OrthographicCamera(0, tiledTex.resolution.x, tiledTex.resolution.y, 0, 1, 5);
@@ -39,9 +39,9 @@ export default class Boundary {
         this.createGeometry(tiledTex, material);
     }
 
-    // This setup can cause bugs when the only slab in the top row is the boundary plane
-    // This should never happen, because that is not efficient use of spcae in the flat 3D texture
-    // TODO: Look into that, either by improving the computeResolution function or by changing this setup to proper 3D
+    /**
+     * Add boundary geometry with with offsets as additional attribute.
+     */
     createGeometry(
         tiledTex: TiledTexture,
         material: THREE.Material
@@ -84,7 +84,6 @@ export default class Boundary {
                     new THREE.Vector2(0, -1)
                 )
             );
-
             let yb = y0 + i * tiledTex.tileResolution.y;
             this._scene.add(
                 this.createLine(
@@ -142,9 +141,9 @@ export default class Boundary {
         this._uniforms.u_readTexture.value = read.read.texture;
         this._uniforms.u_scale.value = scale;
 
-        this._renderer.setRenderTarget(output.write);
-        this._renderer.render(this._scene, this._camera);
-        this._renderer.setRenderTarget(null);
+        this._wgl.setRenderTarget(output.write);
+        this._wgl.render(this._scene, this._camera);
+        this._wgl.setRenderTarget(null);
     }
 
     getScale() {

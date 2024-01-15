@@ -1,7 +1,9 @@
 import * as THREE from 'three';
 import Mouse from './Mouse';
 
-
+/**
+ * Tracks position of cursor in 3D world space.
+ */
 export default class Pointer3D extends THREE.Raycaster {
 
     camera: THREE.Camera;
@@ -13,10 +15,13 @@ export default class Pointer3D extends THREE.Raycaster {
     first: THREE.Vector3;
     last: THREE.Vector3;
     direction: THREE.Vector3;
-    
+
     isHit: boolean;
 
-    constructor(camera: THREE.Camera, mouse: Mouse, domain: THREE.Vector3) {
+    constructor(
+        camera: THREE.Camera,
+        mouse: Mouse, domain: THREE.Vector3
+    ) {
         super();
         this.camera = camera;
         this.mouse = mouse;
@@ -33,6 +38,11 @@ export default class Pointer3D extends THREE.Raycaster {
         );
     }
 
+    /**
+     * Shoots a ray into the scene.
+     * When ray intersects with the domain box, the position of the pointer is updated.
+     * @returns null
+     */
     update() {
         let mousePosition = new THREE.Vector2(
             this.mouse.position.x * 2 - 1,

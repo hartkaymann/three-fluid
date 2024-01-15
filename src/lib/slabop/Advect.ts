@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 
 import { Slabop } from './Slabop';
+
 import Slab from '../Slab';
 import TiledTexture from '../TiledTexture';
 
@@ -31,10 +32,9 @@ export default class Advect extends Slabop {
         this.uniforms.u_advectedTexture.value = advected.read.texture;
         this.uniforms.u_deltaTime.value = dt;
 
-        this.renderer.setRenderTarget(output.write);
-        this.renderer.render(this.scene, this.camera);
+        this.wgl.setRenderTarget(output.write);
+        this.wgl.render(this.scene, this.camera);
         output.swap();
-        this.renderer.setRenderTarget(null);
+        this.wgl.setRenderTarget(null);
     }
-
 }

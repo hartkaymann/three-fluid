@@ -13,12 +13,12 @@ varying vec3 v_position;
 varying vec3 v_cameraPos;
 varying float v_z;
 
-void main() {
+void main( ) {
     v_uv = uv;
     v_z = depth;
     v_cameraPos = cameraPosition;
 
-    v_position = (modelMatrix * vec4(position, 1.0)).xyz;
+    v_position = ( modelMatrix * vec4( position, 1.0 ) ).xyz;
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
 }

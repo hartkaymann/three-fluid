@@ -1,15 +1,22 @@
 import * as THREE from 'three'
-import TiledTexture from './lib/TiledTexture';
+
 import Solver from './solver';
 import Renderer from './renderer';
+
 import Mouse from './lib/Mouse';
 import Pointer3D from './lib/Pointer3D';
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { GUI } from 'dat.gui';
-import { Clock } from 'three/src/core/Clock.js'
 import DebugPanel from './lib/DebugPanel';
+import TiledTexture from './lib/TiledTexture';
+
 import Stats from 'three/examples/jsm/libs/stats.module.js';
 
+import { GUI } from 'dat.gui';
+import { Clock } from 'three/src/core/Clock.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+/**
+ * Inititializes, updates and controls the simulation.
+ */
 export default class Simulation {
 
     settings = {
@@ -47,11 +54,18 @@ export default class Simulation {
         return this._solver;
     }
 
-    // TODO: add instructions as text on screen! maybe with (i)-button that can be toggled
+    /**
+     * @param wgl
+     * The current WebGL Renderer element.
+     * @param elemSidePanel
+     * The HTML element that serves as the container for the side panel.
+     * @param elemDebugPanel 
+     * The HTML element that serves as the container for the debug panel. 
+     */
     constructor(
         wgl: THREE.WebGLRenderer,
-        sidePanel: HTMLElement,
-        container: HTMLElement
+        elemSidePanel: HTMLElement,
+        elemDebugPanel: HTMLElement
     ) {
         this._wgl = wgl;
 
@@ -67,14 +81,14 @@ export default class Simulation {
 
         this._renderer = new Renderer(this._wgl, this._camera);
         this._renderer.reset(this.settings.domain, this._tiledTexture);
-        this._renderer.resize(sidePanel.clientWidth);
+        this._renderer.resize(elemSidePanel.clientWidth);
         this._renderer.updateBackgroundColor();
 
-        this.debugPanel = new DebugPanel(this._wgl, container, this._solver.getDebugSlabs());
-        this.debugPanel.create();
-        this.debugPanel.setHeader(this._tiledTexture.resolution, this._tiledTexture.tileResolution, this._tiledTexture.tileCount.z);
+        this.debugPanel = new DebugPanel(this._wgl, elemDebugPanel, this._solver.getDebugSlabs());
+        this.debugPanel.createSlabHTMLElements();
+        this.debugPanel.updateHeaderValues(this._tiledTexture.resolution, this._tiledTexture.tileResolution, this._tiledTexture.tileCount.z);
 
-        this.initGui(sidePanel);
+        this.initGui(elemSidePanel);
 
         // Additionals
         this._mouse = new Mouse();
@@ -86,6 +100,7 @@ export default class Simulation {
         this._stats = new Stats();
         document.body.appendChild(this._stats.dom);
 
+        // Initializes camera controls and sets available movements
         this._controls = new OrbitControls(this._camera, wgl.domElement);
         this._controls.enabled = true;
         this._controls.enablePan = false;
@@ -98,6 +113,11 @@ export default class Simulation {
         this.step();
     }
 
+    /**
+     * Initialize the GUI and sets the available parameters.
+     * @param parent 
+     * The HTML element that the GUI element will be attached to.
+     */
     initGui(parent: HTMLElement) {
         // TODO: add settings class that uses json files to generate an object that can be used in the gui
         // Does that even make sense or does it just not work with callbacks and overly complicates things?
@@ -166,18 +186,33 @@ export default class Simulation {
         parent.prepend(this._gui.domElement);
     }
 
+    /**
+     * Continue the simulation.
+     * @returns null
+     */
     start = () => {
         if (this._isRunning)
             return;
         this._isRunning = true;
     }
 
+    /**
+     * Pauses update calls of the solver.
+     * @returns null
+     */
     stop = () => {
         if (!this._isRunning)
             return;
         this._isRunning = false;
     }
 
+    /**
+     * Resets the entire simulation.
+     * Reinitializes important fields.
+     *
+     * Should be called whenever changes to the resolution or domain are made.
+     * @returns null
+     */
     reset = () => {
         // TODO: add function that copies existing slabs into new ones if possible
         this.stop();
@@ -196,12 +231,15 @@ export default class Simulation {
         this._gui.updateDisplay();
 
         this._pointer = new Pointer3D(this._camera, this._mouse, this.settings.domain);
-        this.debugPanel.setHeader(this._tiledTexture.resolution, this._tiledTexture.tileResolution, this._tiledTexture.tileCount.z);
+        this.debugPanel.updateHeaderValues(this._tiledTexture.resolution, this._tiledTexture.tileResolution, this._tiledTexture.tileCount.z);
         this.debugPanel.setSlabs(this._solver.getDebugSlabs());
 
         this.start();
     }
 
+    /**
+     *  Update the simulation once.
+     */ 
     step = () => {
         this.timeout = requestAnimationFrame(this.step);
 
@@ -210,8 +248,8 @@ export default class Simulation {
             this._solver.step(dt, this._mouse, this._pointer);
         }
 
-        this._renderer.render(this._solver.density, this._solver.velocity, this._solver.densityPressure);
-        this._renderer.updateGuides(this._pointer.position, this._pointer.direction, (this._mouse.keys[0] || this._mouse.keys[1]) && this._pointer.isHit);
+        this._renderer.render(this._solver.density, this._solver.velocity);
+        this._renderer.updateGuides(this._pointer.position, this._pointer.direction, this._pointer.isHit, (this._mouse.keys[0] || this._mouse.keys[1]));
         this.debugPanel.render();
 
         // Required updates

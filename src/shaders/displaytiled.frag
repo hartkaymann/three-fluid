@@ -2,7 +2,6 @@ precision mediump float;
 
 uniform sampler2D density;
 uniform sampler2D velocity;
-uniform sampler2D pressure;
 
 uniform vec3 u_size;
 uniform vec3 u_color1;
@@ -17,8 +16,7 @@ uniform bool u_applyShading;
 varying vec3 v_position;
 varying vec3 v_cameraPos;
 
-
-// TODO: Light position setting
+// TODO: Light position setting. Pretty easy but looks bad in current GUI.
 vec3 light = normalize( vec3( 2, -5, 3 ) );
 
 vec3 gradient( vec3 coords ) {
@@ -34,12 +32,14 @@ vec3 gradient( vec3 coords ) {
     return 0.5 * vec3( right - left, up - down, back - front );
 }
 
+// Renders fluid in volume.
+// Either with ambient and diffuse shading, or no/flat shading.
 void main( ) {
     vec3 pos = ( v_position + u_size / 2.0 ) / u_size;
     pos.z = pos.z * -1.0 + 1.0;
 
     if ( pos.x < 0.0 || pos.y < 0.0 || pos.z < 0.0 || pos.x > 1.0 || pos.y > 1.0 || pos.z > 1.0 )
-        discard;
+        discard; // outside of domain, don't render
 
     pos *= u_resolution;
     vec3 d = texture3D( density, pos ).xxx;
@@ -50,12 +50,13 @@ void main( ) {
 
     vec3 color = mix( u_color1, u_color2, length( vel ) );
 
+    // Add diffuse and ambient light influence
     if ( u_applyShading && visible ) {
         gl_FragColor = vec4( color, alpha );
 
         vec3 grad = gradient( pos );
         float dot = max( dot( normalize( grad ), normalize( light ) ), 0.0 );
-        color *= dot +  (u_colorAmbient * u_ambientStrength);
+        color *= dot + ( u_colorAmbient * u_ambientStrength );
     }
 
     gl_FragColor = vec4( color, alpha );

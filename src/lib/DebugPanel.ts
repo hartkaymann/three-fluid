@@ -1,7 +1,7 @@
 import * as THREE from 'three'
-import DebugSlab from './DebugSlab';
 
 import Slab from './Slab';
+import DebugSlab from './DebugSlab';
 
 
 export default class DebugPanel {
@@ -9,9 +9,9 @@ export default class DebugPanel {
     wgl: THREE.WebGLRenderer;
 
     container: HTMLElement;
+    elementTiles: HTMLParagraphElement;
     elementResolution: HTMLParagraphElement;
     elementTileResolution: HTMLParagraphElement;
-    elementTiles: HTMLParagraphElement;
 
     debugSlabs: DebugSlab[] = [];
 
@@ -30,11 +30,9 @@ export default class DebugPanel {
         slabs.forEach(element => {
             this.debugSlabs.push(new DebugSlab(element.name, element.slab, element.bias));
         })
-
     }
 
-    
-    create() {
+    createSlabHTMLElements() {
         this.debugSlabs.forEach(element => {
             element.create(this.container);
         });
@@ -46,7 +44,7 @@ export default class DebugPanel {
         });
     }
 
-    setHeader(
+    updateHeaderValues(
         resolution: THREE.Vector2,
         tileResolution: THREE.Vector2,
         tiles: number

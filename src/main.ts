@@ -36,6 +36,7 @@ function init() {
 }
 init();
 
+// Adds event listeners to the slider of the degbug panel.
 function initSlider() {
   const slider = document.querySelector('.panel-slider') as HTMLDivElement;
 

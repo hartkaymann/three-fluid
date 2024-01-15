@@ -35,9 +35,9 @@ export default class Buoyancy extends Slabop {
         this.uniforms.u_densityTexture.value = density.read.texture;
         this.uniforms.u_gravity.value = gravity;
 
-        this.renderer.setRenderTarget(output.write);
-        this.renderer.render(this.scene, this.camera);
+        this.wgl.setRenderTarget(output.write);
+        this.wgl.render(this.scene, this.camera);
         output.swap();
-        this.renderer.setRenderTarget(null);
+        this.wgl.setRenderTarget(null);
     }
 }

@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 
+/**
+ * Holds two framebuffer objects and provides access to either, depending on the requested function as a read or write buffer.
+ */
 export default class Slab {
 
     private _FBOs: THREE.WebGLRenderTarget[];
@@ -8,7 +11,10 @@ export default class Slab {
     public write: THREE.WebGLRenderTarget;
     public resolution: THREE.Vector2;
 
-    constructor(resolution: THREE.Vector2, format?: THREE.AnyPixelFormat) {
+    constructor(
+        resolution: THREE.Vector2,
+        format?: THREE.AnyPixelFormat
+    ) {
 
         this._FBOs = [];
 
