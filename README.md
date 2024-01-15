@@ -8,6 +8,7 @@ This is still a work in progess.
 To run the code on your own device, do:
 ```
 git clone https://github.com/hartkaymann/three-fluid.git
+cd three-fluid
 npm install
 npm run dev
 ```
