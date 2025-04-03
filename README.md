@@ -1,8 +1,6 @@
 # three-fluid
 Interactive real-time 3D eulerian fluid simulation implemented with Three.js.
 
-This is still a work in progess.
-
 
 ## Running it
 To run the code on your own device, do:
