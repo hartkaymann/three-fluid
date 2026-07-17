@@ -1,11 +1,8 @@
 precision mediump float;
 
 uniform sampler2D u_advectedTexture;
-uniform sampler2D u_velocityTexture;
 uniform sampler2D u_forwardTexture;
 uniform sampler2D u_backwardTexture;
-
-uniform float u_deltaTime;
 
 // MacCormack advection step.
 // Takes error from forward and backward intermediate fields and uses it to correct initial advection step. 
@@ -14,13 +11,11 @@ void main( ) {
 
   // Get values of the initial and intermadiate textures
   vec3 advected = texture3D(u_advectedTexture, pos).xyz;
-  vec3 velocity = texture3D(u_velocityTexture, pos).xyz;
   vec3 forward = texture3D(u_forwardTexture, pos).xyz;
   vec3 backward = texture3D(u_backwardTexture, pos).xyz;
 
-  // Get values at the closest eight cell centers of position after one semi-lagrangian step
-  vec3 pos_new = pos - velocity * u_resolution * u_deltaTime;
-  vec3 vi = floor( pos_new - 0.5 );
+  // Symmetric, tight clamp neighbourhood around the current cell
+  vec3 vi = floor( pos - 0.5 );
   vec3 vj = vi + 1.0 ;
 
   vec3 tex000 = texture3D( u_advectedTexture, vec3( vi.xyz ) ).xyz; // l b f

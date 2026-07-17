@@ -18,7 +18,6 @@ import TiledTexture from './lib/TiledTexture';
 
 import vertexBasic from './shaders/basic.vert'
 import fragmentCurl from './shaders/curl.frag'
-import vertexOffset from './shaders/offset.vert'
 import fragmentForce from './shaders/force.frag'
 import fragmentAdvect from './shaders/advect.frag'
 import fragmentJacobi from './shaders/jacobi.frag'
@@ -26,9 +25,9 @@ import fragmentCommon from './shaders/common.frag'
 import fragmentGradient from './shaders/gradient.frag'
 import fragmentBoundary from './shaders/boundary.frag'
 import fragmentBuoyancy from './shaders/buoyancy.frag'
+import fragmentVorticity from './shaders/vorticity.frag'
 import fragmentDivergence from './shaders/divergence.frag'
 import fragmentMacCormack from './shaders/maccormack.frag'
-import fragmentVorticity from './shaders/vorticity.frag'
 
 /**
  * Handles updating of the fluid quantities according to governing equations. 
@@ -41,12 +40,12 @@ export default class Solver {
         hasViscosity: false,
         viscosityIterations: 30,
         hasVorticity: false,
-        vorticityStrength: 0.03,
+        vorticityStrength: 1.0,
         pressureIterations: 80,
-        hasGravity: false,
+        hasGravity: true,
         forceRadius: 2.0,
         forceDensity: 0.5,
-        forceVelocity: 0.5,
+        forceVelocity: 1.0,
         gravity: new THREE.Vector3(0, -0.98, 0),
     }
 
@@ -103,12 +102,12 @@ export default class Solver {
         this._velocityCurl = new Slab(tiledTex.resolution);
 
         // Initialize slabops
-        this._advect = new Advect(this._wgl, tiledTex, vertexBasic, [fragmentCommon, fragmentAdvect]);
-        this._maccormack = new MacCormack(this._wgl, tiledTex, vertexBasic, [fragmentCommon, fragmentMacCormack])
+        this._advect = new Advect(this._wgl, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentAdvect]);
+        this._maccormack = new MacCormack(this._wgl, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentMacCormack])
         this._force = new Force(this._wgl, domain, tiledTex, vertexBasic, [fragmentCommon, fragmentForce]);
         this._divergence = new Divergence(this._wgl, tiledTex, vertexBasic, [fragmentCommon, fragmentDivergence]);
         this._gradient = new Gradient(this._wgl, tiledTex, vertexBasic, [fragmentCommon, fragmentGradient]);
-        this._boundary = new Boundary(this._wgl, tiledTex, vertexOffset, fragmentBoundary);
+        this._boundary = new Boundary(this._wgl, tiledTex, vertexBasic, [fragmentCommon, fragmentBoundary]);
         this._jacobi = new Jacobi(this._wgl, tiledTex, vertexBasic, [fragmentCommon, fragmentJacobi]);
         this._buoyancy = new Buoyancy(this._wgl, tiledTex, vertexBasic, [fragmentCommon, fragmentBuoyancy]);
         this._curl = new Curl(this._wgl, tiledTex, vertexBasic, [fragmentCommon, fragmentCurl]);
@@ -137,7 +136,7 @@ export default class Solver {
 
         // Body forces  
         if (this.settings.hasGravity) {
-            this._buoyancy.compute(this._velocity, this._density, this._velocity, this.settings.gravity);
+            this._buoyancy.compute(this._velocity, this._density, this._velocity, this.settings.gravity, dt);
             this._boundary.compute(this._velocity, this._velocity, -1);
         }
         this.addForce(mouse, pointer);
@@ -157,7 +156,7 @@ export default class Solver {
             this._jacobi.alpha = alpha;
             this._jacobi.beta = beta;
 
-            this._jacobi.compute(this._velocity, this._velocity, this._velocity, this.settings.viscosityIterations, this._boundary, -1);
+            this._jacobi.compute(this._velocity, this._velocity, this._velocity, this.settings.viscosityIterations, -1);
         }
 
         // Projection
@@ -179,7 +178,7 @@ export default class Solver {
         this._advect.compute(intermediate, velocity, intermediate, -dt);
 
         // Correction
-        this._maccormack.compute(advected, velocity, intermediate.write.texture, intermediate.read.texture, output);
+        this._maccormack.compute(advected, velocity, intermediate.write.texture, intermediate.read.texture, output, dt);
     }
 
     /**
@@ -222,7 +221,7 @@ export default class Solver {
         // Poisson Pressure
         this._jacobi.alpha = -1.0;
         this._jacobi.beta = 6.0;
-        this._jacobi.compute(this._pressure, this._velocityDivergence, this._pressure, this.settings.pressureIterations, this._boundary, 1);
+        this._jacobi.compute(this._pressure, this._velocityDivergence, this._pressure, this.settings.pressureIterations, 1);
 
         // Subtract gradient
         this._gradient.compute(this._velocity, this._pressure, this._velocity);

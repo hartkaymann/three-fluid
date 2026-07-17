@@ -160,7 +160,7 @@ export default class Simulation {
 
         const vorticityFolder = simulationFolder.addFolder("Vorticity");
         vorticityFolder.add(this._solver.settings, "hasVorticity").name("Apply Vorticity");
-        vorticityFolder.add(this._solver.settings, "vorticityStrength", 0, 0.1, 0.001).name("Strength");
+        vorticityFolder.add(this._solver.settings, "vorticityStrength", 0, 5, 0.01).name("Strength");
 
         const projectionFolder = simulationFolder.addFolder("Projection");
         projectionFolder.add(this._solver.settings, "pressureIterations", 0, 200, 1).name("Jacobi Iterations");

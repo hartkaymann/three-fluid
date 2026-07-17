@@ -3,7 +3,8 @@ precision mediump float;
 uniform sampler2D u_advectedTexture;
 uniform sampler2D u_velocityTexture;
 
-uniform float u_deltaTime; 
+uniform vec3 u_domain;
+uniform float u_deltaTime;
 
 // Trilinear Interpolation
 // TODO: Maybe let texture do X,Y-interpolation and just do Z manually like in common.frag?
@@ -44,7 +45,9 @@ void main( ) {
 
   vec3 velocity = texture3D( u_velocityTexture, pos ).xyz;
 
-  vec3 pos_prev = pos - velocity * u_resolution * u_deltaTime;
+  // rdx: world-unit velocity -> grid cells
+  vec3 rdx = u_resolution / u_domain;
+  vec3 pos_prev = pos - velocity * rdx * u_deltaTime;
 
   gl_FragColor = vec4( trilerp( u_advectedTexture, pos_prev ), 1.0 );
 }

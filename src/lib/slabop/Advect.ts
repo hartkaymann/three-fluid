@@ -9,11 +9,13 @@ export default class Advect extends Slabop {
 
     constructor(
         renderer: THREE.WebGLRenderer,
+        domain: THREE.Vector3,
         tiledTex: TiledTexture,
         vs: string | string[],
         fs: string | string[]
     ) {
         let uniforms = {
+            u_domain: { value: domain },
             u_advectedTexture: { value: new THREE.Texture() },
             u_velocityTexture: { value: new THREE.Texture() },
             u_deltaTime: { value: 0.0 },

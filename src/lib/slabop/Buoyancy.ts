@@ -20,6 +20,7 @@ export default class Buoyancy extends Slabop {
             u_rise: { value: 1.0 },
             u_fall: { value: 1.0 },
             u_gravity: { value: new THREE.Vector3() },
+            u_deltaTime: { value: 0.0 },
         }
 
         super(renderer, tiledTex, vs, fs, uniforms);
@@ -29,11 +30,13 @@ export default class Buoyancy extends Slabop {
         velocity: Slab,
         density: Slab,
         output: Slab,
-        gravity: THREE.Vector3
+        gravity: THREE.Vector3,
+        dt: number
     ): void {
         this.uniforms.u_velocityTexture.value = velocity.read.texture;
         this.uniforms.u_densityTexture.value = density.read.texture;
         this.uniforms.u_gravity.value = gravity;
+        this.uniforms.u_deltaTime.value = dt;
 
         this.wgl.setRenderTarget(output.write);
         this.wgl.render(this.scene, this.camera);

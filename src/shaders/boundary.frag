@@ -2,16 +2,15 @@ precision mediump float;
 
 uniform sampler2D u_readTexture;
 
-uniform vec3 u_resolution;
-uniform vec2 u_textureResolution;
-
 uniform float u_scale;
 
-varying vec2 v_offset;
-
-// Sets color to scaled value of the fragment at the offset position.
+// Copies the field; on walls writes u_scale * interior neighbour.
 void main( ) {
-    vec2 pos = ( gl_FragCoord.xy + v_offset ) / u_textureResolution;
+    vec3 pos = get3DFragCoord( );
 
-    gl_FragColor = vec4( u_scale * texture2D( u_readTexture, pos ).xyz, 1.0 );
+    if ( isBoundary( pos ) ) {
+        gl_FragColor = vec4( u_scale * texture3D( u_readTexture, interiorNeighbor( pos ) ).xyz, 1.0 );
+    } else {
+        gl_FragColor = vec4( texture3D( u_readTexture, pos ).xyz, 1.0 );
+    }
 }

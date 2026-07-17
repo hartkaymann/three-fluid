@@ -6,13 +6,23 @@ uniform vec3 u_tileCount;
 
 varying float v_z;
 
-// Returns position at center of fragment in range [0, 0, 0] - [u_resolution.x, u_resolution.x, u_resolution.z] 
+// Returns position at center of fragment in range [0, 0, 0] - [u_resolution.x, u_resolution.x, u_resolution.z]
 vec3 get3DFragCoord () {
   return vec3(
     mod(gl_FragCoord.x, u_resolution.x),
     mod(gl_FragCoord.y, u_resolution.y),
     v_z + 0.5
   );
+}
+
+// True if cell is on a domain wall
+bool isBoundary( vec3 p ) {
+  return any( lessThan( p, vec3( 1.0 ) ) ) || any( greaterThan( p, u_resolution - 1.0 ) );
+}
+
+// Nearest interior cell (diagonal for edges/corners)
+vec3 interiorNeighbor( vec3 p ) {
+  return clamp( p, vec3( 1.5 ), u_resolution - 1.5 );
 }
 
 // Texture lookup in tiled grid
